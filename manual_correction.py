@@ -325,9 +325,10 @@ def main():
 
     # Get list of segmentations files for all subjects in -path-in (if -add-seg-only)
     if args.add_seg_only:
-        path_list = glob.glob(args.path_in + "/**/*_seg.nii.gz", recursive=True)  # TODO: add other extension
+        path_list = glob.glob(args.path_in + "/**/*" + args.suffix_files_seg + ".nii.gz", recursive=True)
         # Get only filenames without suffix _seg  to match files in -config .yml list
-        file_list = [utils.remove_suffix(os.path.split(path)[-1], '_seg') for path in path_list]
+        # TODO: check if the line below is robust enough
+        file_list = [utils.remove_suffix(os.path.split(path)[-1], args.suffix_files_seg) for path in path_list]
 
     # TODO: address "none" issue if no file present under a key
     # Perform manual corrections
