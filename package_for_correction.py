@@ -70,6 +70,24 @@ def get_parser():
         default='data_to_correct'
     )
     parser.add_argument(
+        '-suffix-files-seg',
+        help="FILES-SEG suffix. Available options: '_seg' (default), '_label-SC_mask'.",
+        choices=['_seg', '_label-SC_mask'],
+        default='_seg'
+    )
+    parser.add_argument(
+        '-suffix-files-gmseg',
+        help="FILES-GMSEG suffix. Available options: '_gmseg' (default), '_label-GM_mask'.",
+        choices=['_gmseg', '_label-GM_mask'],
+        default='_gmseg'
+    )
+    parser.add_argument(
+        '-suffix-files-label',
+        help="FILES-LABEL suffix. Available options: '_labels' (default), '_labels-disc'.",
+        choices=['_labels', '_labels-disc'],
+        default='_labels'
+    )
+    parser.add_argument(
         '-v', '--verbose',
         help="Full verbose (for debugging)",
         action='store_true'
@@ -104,7 +122,14 @@ def main():
     dict_yml = utils.curate_dict_yml(dict_yml)
 
     # Check for missing files before starting the whole process
-    utils.check_files_exist(dict_yml, args.path_in)
+    utils.check_files_exist(dict_yml, utils.get_full_path(args.path_in))
+
+    suffix_dict = {
+        'FILES_SEG': args.suffix_files_seg,         # e.g., _seg or _label-SC_mask
+        'FILES_GMSEG': args.suffix_files_gmseg,     # e.g., _gmseg or _label-GM_mask
+        'FILES_LABEL': args.suffix_files_label,     # e.g., _labels or _labels-disc
+        'FILES_PMJ': '_pmj'
+    }
 
     # Create temp folder
     path_tmp = tempfile.mkdtemp()
@@ -113,12 +138,8 @@ def main():
     # Note: in case the file is listed twice, we just overwrite it in the destination dir.
     for task, files in dict_yml.items():
         for file in files:
-            if task == 'FILES_SEG':
-                suffix_label = '_seg'
-            elif task == 'FILES_LABEL':
-                suffix_label = None
-            elif task == 'FILES_PMJ':
-                suffix_label = None
+            if task in suffix_dict.keys():
+                suffix_label = suffix_dict[task]
             else:
                 sys.exit('Task not recognized from yml file: {}'.format(task))
             # Copy image
