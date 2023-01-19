@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8
 #
-# Collection of useful functions from spine_generic, used for manual segmentation
+# Collection of useful functions used by other scripts
 #
 # Authors: Jan Valosek, Sandrine Bédard, Julien Cohen-Adad
 #
@@ -216,7 +216,7 @@ def check_output_folder(path_bids, folder_derivatives):
     """
     Make sure path exists, has writing permissions, and create derivatives folder if it does not exist.
     :param path_bids:
-    :return: path_bids_derivatives
+    :return: folder_derivatives:
     """
     if path_bids is None:
         logging.error("-path-out should be provided.")
