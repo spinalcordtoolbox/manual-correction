@@ -283,6 +283,24 @@ def ask_if_modify(fname_label):
     return do_labeling, overwrite
 
 
+def generate_qc(fname, fname_label, task, fname_qc, subject, config_file):
+    """
+    Generate QC report.
+    :param fname:
+    :param fname_seg:
+    :param fname_label:
+    :param fname_pmj:
+    :param qc_folder:
+    :return:
+    """
+    os.system('sct_qc -i {} -s {} -p {} -qc {} -qc-subject {}'.format(
+        fname, fname_label, get_function_for_qc(task), fname_qc, subject))
+    # Archive QC folder
+    shutil.copy(utils.get_full_path(config_file), fname_qc)
+    shutil.make_archive(fname_qc, 'zip', fname_qc)
+    print("Archive created:\n--> {}".format(fname_qc + '.zip'))
+
+
 def main():
 
     # Parse the command line arguments
@@ -379,15 +397,12 @@ def main():
                             sys.exit('Task not recognized from yml file: {}'.format(task))
                         # create json sidecar with the name of the expert rater
                         create_json(fname_label, name_rater)
+                        # Generate QC report
+                        generate_qc(fname, fname_label, task, fname_qc, subject, args.config)
 
-                # generate QC report (only for vertebral labeling or for qc only)
-                if args.qc_only or task != 'FILES_SEG':
-                    os.system('sct_qc -i {} -s {} -p {} -qc {} -qc-subject {}'.format(
-                        fname, fname_label, get_function_for_qc(task), fname_qc, subject))
-                    # Archive QC folder
-                    shutil.copy(utils.get_full_path(args.config), fname_qc)
-                    shutil.make_archive(fname_qc, 'zip', fname_qc)
-                    print("Archive created:\n--> {}".format(fname_qc+'.zip'))
+                # Generate QC report only
+                if args.qc_only:
+                    generate_qc(fname, fname_label, task, fname_qc, subject, args.config)
 
 
 if __name__ == '__main__':
