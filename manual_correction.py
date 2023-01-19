@@ -75,6 +75,55 @@ def get_parser():
         default='./'
     )
     parser.add_argument(
+        '-path-derivatives',
+        metavar="<folder>",
+        help=
+        "R|Path to the 'derivatives' BIDS-complaint folder where the corrected labels will be saved. "
+        "Example: derivatives/labels"
+        "Note: if the provided folder (e.g., 'derivatives/labels') does not already exist, it will be created."
+        "Note: if segmentation or labels files already exist and you would like to correct them, provide path to them "
+        "within this flag.",
+        default=os.path.join('derivatives', 'labels')
+    )
+    parser.add_argument(
+        '-suffix-files-in',
+        help=
+        "R|Suffix of the input files. For example: '_RPI_r'."
+        "Note: this flag is useful in cases when the input files have been processed and thus contains a specific "
+        "suffix.",
+        default=''
+    )
+    parser.add_argument(
+        '-suffix-files-seg',
+        help="FILES-SEG suffix. Available options: '_seg' (default), '_label-SC_mask'.",
+        choices=['_seg', '_label-SC_mask'],
+        default='_seg'
+    )
+    parser.add_argument(
+        '-suffix-files-gmseg',
+        help="FILES-GMSEG suffix. Available options: '_gmseg' (default), '_label-GM_mask'.",
+        choices=['_gmseg', '_label-GM_mask'],
+        default='_gmseg'
+    )
+    parser.add_argument(
+        '-suffix-files-label',
+        help="FILES-LABEL suffix. Available options: '_labels' (default), '_labels-disc'.",
+        choices=['_labels', '_labels-disc'],
+        default='_labels'
+    )
+    parser.add_argument(
+        '-label-list',
+        help="Provide a comma-separated list containing individual values and/or intervals. Example: '1:4,6,8' or 1:20 "
+             "(default)",
+        default='1:20'
+    )
+    parser.add_argument(
+        '-viewer',
+        help="Viewer used for manual correction. Available options: 'itksnap' (default), 'fsleyes', 'slicer'.",
+        choices=['fsleyes', 'itksnap', 'slicer'],
+        default='itksnap'
+    )
+    parser.add_argument(
         '-qc-only',
         help="Only output QC report based on the manually-corrected files already present in the derivatives folder. "
              "Skip the copy of the source files, and the opening of the manual correction pop-up windows.",
