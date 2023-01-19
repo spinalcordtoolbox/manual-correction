@@ -290,6 +290,7 @@ def main():
     args = parser.parse_args()
 
     # Logging level
+    # TODO: how is this actually used?
     if args.verbose:
         coloredlogs.install(fmt='%(message)s', level='DEBUG')
     else:
@@ -333,7 +334,8 @@ def main():
     # TODO: address "none" issue if no file present under a key
     # Perform manual corrections
     for task, files in dict_yml.items():
-        # Get the list of segmentation files to add to derivatives, excluding the manually corrrected files in -config.
+        # Get the list of segmentation files to add to derivatives, excluding the manually corrected files in -config.
+        # TODO: probably extend also for other tasks (such as FILES_GMSEG)
         if args.add_seg_only and task == 'FILES_SEG':
             # Remove the files in the -config list
             for file in files:
