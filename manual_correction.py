@@ -228,16 +228,18 @@ def correct_vertebral_labeling(fname, fname_label, label_list, viewer='sct_label
         viewer_not_found(viewer)
 
 
-def correct_pmj_label(fname, fname_label):
+def correct_pmj_label(fname, fname_label, viewer='sct_label_utils'):
     """
     Open sct_label_utils to manually label PMJ.
     :param fname:
     :param fname_label:
-    :param name_rater:
     :return:
     """
-    message = "Click at the posterior tip of the pontomedullary junction (PMJ) then click 'Save and Quit'."
-    os.system('sct_label_utils -i {} -create-viewer 50 -o {} -msg "{}"'.format(fname, fname_label, message))
+    if shutil.which(viewer) is not None:  # Check if command 'sct_label_utils' exists
+        message = "Click at the posterior tip of the pontomedullary junction (PMJ). Then click 'Save and Quit'."
+        os.system('sct_label_utils -i {} -create-viewer 50 -o {} -msg "{}"'.format(fname, fname_label, message))
+    else:
+        viewer_not_found(viewer)
 
 
 def create_json(fname_nifti, name_rater):
