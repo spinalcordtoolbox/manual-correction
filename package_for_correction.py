@@ -101,7 +101,7 @@ def copy_file(fname_in, path_out):
     os.makedirs(path_out, exist_ok=True)
     # copy file
     fname_out = shutil.copy(fname_in, path_out)
-    print("-> {}".format(fname_out))
+    print(f'Copying: {fname_in} to {fname_out}')
 
 
 def main():
