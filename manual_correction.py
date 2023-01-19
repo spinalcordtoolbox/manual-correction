@@ -163,37 +163,51 @@ def get_function_for_qc(task):
         raise ValueError("This task is not recognized: {}".format(task))
 
 
-def get_suffix(task, suffix=''):
-    if task == 'FILES_SEG':
-        return '_seg'+suffix
-    elif task == 'FILES_LABEL':
-        return '_labels'+suffix
-    elif task == 'FILES_PMJ':
-        return '_pmj'+suffix
-
-    else:
-        raise ValueError("This task is not recognized: {}".format(task))
-
-
-def correct_segmentation(fname, fname_seg_out):
+def correct_segmentation(fname, fname_seg_out, viewer):
     """
-    Copy fname_seg in fname_seg_out, then open ITK-SNAP with fname and fname_seg_out.
+    Open viewer (ITK-SNAP, FSLeyes, or 3D Slicer) with fname and fname_seg_out.
     :param fname:
-    :param fname_seg:
     :param fname_seg_out:
-    :param name_rater:
+    :param viewer:
     :return:
     """
     # launch ITK-SNAP
-    # Note: command line differs for macOs/Linux and Windows
-    print("In ITK-SNAP, correct the segmentation, then save it with the same name (overwrite).")
-    if shutil.which('itksnap') is not None:  # Check if command 'itksnap' exists
-        os.system('itksnap -g ' + fname + ' -s ' + fname_seg_out)  # for macOS and Linux
-    elif shutil.which('ITK-SNAP') is not None:  # Check if command 'ITK-SNAP' exists
-        os.system('ITK-SNAP -g ' + fname + ' -s ' + fname_seg_out)  # For windows
-    else:
-        sys.exit("ITK-SNAP not found. Please install it before using this program or check if it was added to PATH variable. Exit program.")
+    if viewer == 'itksnap':
+        print("In ITK-SNAP, correct the segmentation, then save it with the same name (overwrite).")
+        # Note: command line differs for macOs/Linux and Windows
+        if shutil.which('itksnap') is not None:  # Check if command 'itksnap' exists
+            # macOS and Linux
+            os.system('itksnap -g {} -s {}'.format(fname, fname_seg_out))
+        elif shutil.which('ITK-SNAP') is not None:  # Check if command 'ITK-SNAP' exists
+            # Windows
+            os.system('ITK-SNAP -g {} -s {}'.format(fname, fname_seg_out))
+        else:
+            viewer_not_found(viewer)
+    # launch FSLeyes
+    elif viewer == 'fsleyes':
+        if shutil.which('fsleyes') is not None:  # Check if command 'fsleyes' exists
+            print("In FSLeyes, click on 'Edit mode', correct the segmentation, and then save it with the same name "
+                  "(overwrite).")
+            os.system('fsleyes {} {} -cm red'.format(fname, fname_seg_out))
+        else:
+            viewer_not_found(viewer)
+    # launch 3D Slicer
+    elif viewer == 'slicer':
+        if shutil.which('slicer') is not None:
+            # TODO: Add instructions for 3D Slicer
+            pass
+        else:
+            viewer_not_found(viewer)
 
+
+def viewer_not_found(viewer):
+    """
+    Print that viewer is not installed and exit the program.
+    :param viewer:
+    :return:
+    """
+    sys.exit("{} not found. Please install it before using this program or check if it was added to PATH variable. "
+             "You can also use another viewer by using the flag -viewer.".format(viewer))
 
 def correct_vertebral_labeling(fname, fname_label):
     """
