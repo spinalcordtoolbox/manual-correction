@@ -141,6 +141,29 @@ def remove_suffix(fname, suffix):
     return os.path.join(stem.replace(suffix, '') + ext)
 
 
+def fetch_yaml_config(config_file):
+    """
+    Fetch configuration from YAML file
+    :param config_file: YAML file
+    :return: dictionary with configuration
+    """
+    config_file = get_full_path(config_file)
+    # Check if input yml file exists
+    if os.path.isfile(config_file):
+        fname_yml = config_file
+    else:
+        sys.exit("ERROR: Input yml file {} does not exist or path is wrong.".format(config_file))
+
+    # Fetch input yml file as dict
+    with open(fname_yml, 'r') as stream:
+        try:
+            dict_yml = yaml.safe_load(stream)
+        except yaml.YAMLError as exc:
+            print(exc)
+
+    return dict_yml
+
+
 def curate_dict_yml(dict_yml):
     """
     Curate dict_yml to only have filenames instead of absolute path

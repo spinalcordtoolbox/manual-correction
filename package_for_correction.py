@@ -97,19 +97,9 @@ def main():
     else:
         coloredlogs.install(fmt='%(message)s', level='INFO')
 
-    # Check if input yml file exists
-    if os.path.isfile(args.config):
-        fname_yml = args.config
-    else:
-        sys.exit("ERROR: Input yml file {} does not exist or path is wrong.".format(args.config))
+    # Fetch configuration from YAML file
+    dict_yml = utils.fetch_yaml_config(args.config)
 
-    # Fetch input yml file as dict
-    with open(fname_yml, 'r') as stream:
-        try:
-            dict_yml = yaml.safe_load(stream)
-        except yaml.YAMLError as exc:
-            print(exc)
-    
     # Curate dict_yml to only have filenames instead of absolute path
     dict_yml = utils.curate_dict_yml(dict_yml)
 
