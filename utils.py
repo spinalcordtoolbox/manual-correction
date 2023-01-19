@@ -176,6 +176,15 @@ def curate_dict_yml(dict_yml):
     return dict_yml_curate
 
 
+def get_full_path(path):
+    """
+    Return full path. If ~ is passed, expand it to home directory.
+    :param path: str: Input path
+    :return: str: Full path
+    """
+    return os.path.abspath(os.path.expanduser(path))
+
+
 def check_files_exist(dict_files, path_data):
     """
     Check if all files listed in the input dictionary exist
