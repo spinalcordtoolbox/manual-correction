@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 #
-# Script to package data for manual correction from SpineGeneric adapted for ukbiobank cord CSA project.
+# Script to package data for manual correction from SpineGeneric adapted for canproco project.
 #
 # For usage, type: python package_for_correction.py -h
 #
-# Author: Julien Cohen-Adad
+# Authors: Jan Valosek, Sandrine Bédard, Julien Cohen-Adad
+#
 
 
 import os
@@ -13,10 +14,8 @@ import shutil
 import tempfile
 from textwrap import dedent
 import argparse
-import yaml
 import coloredlogs
-
-import pipeline_ukbiobank.utils as utils
+import utils
 
 
 def get_parser():
@@ -35,26 +34,34 @@ def get_parser():
         metavar="<file>",
         required=True,
         help=
-        "R|Config .yml file listing images that require manual corrections for segmentation and vertebral "
-        "labeling. 'FILES_SEG' lists images associated with spinal cord segmentation,"
-        "and 'FILES_LABEL' lists images associated with vertebral labeling. "
-        "You can validate your .yml file at this website: http://www.yamllint.com/. Below is an example .yml file:\n"
+        "R|Config yaml file listing images that require manual corrections for segmentation and vertebral "
+        "labeling. 'FILES_SEG' lists images associated with spinal cord segmentation "
+        ",'FILES_GMSEG' lists images associated with gray matter segmentation "
+        ",'FILES_LABEL' lists images associated with vertebral labeling "
+        "and 'FILES_PMJ' lists images associated with pontomedullary junction labeling"
+        "You can validate your .yml file at this website: http://www.yamllint.com/."
+        "Below is an example .yml file:\n"
         + dedent(
             """
             FILES_SEG:
-            - sub-1000032_T1w.nii.gz
-            - sub-1000083_T2w.nii.gz
+            - sub-001_T1w.nii.gz
+            - sub-002_T2w.nii.gz
+            FILES_GMSEG:
+            - sub-001_T1w.nii.gz
+            - sub-002_T2w.nii.gz
             FILES_LABEL:
-            - sub-1000032_T1w.nii.gz
-            - sub-1000710_T1w.nii.gz\n
+            - sub-001_T1w.nii.gz
+            - sub-002_T1w.nii.gz
+            FILES_PMJ:
+            - sub-001_T1w.nii.gz
+            - sub-002_T1w.nii.gz\n
             """)
     )
     parser.add_argument(
         '-path-in',
         metavar="<folder>",
         required=True,
-        help='Path to the processed data. Example: ~/ukbiobank_results/data_processed',
-        default='./'
+        help='Path to the processed data. Example: ~/<your_dataset>/data_processed',
     )
     parser.add_argument(
         '-o',

@@ -1,16 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8
+#
 # Collection of useful functions from spine_generic, used for manual segmentation
+#
+# Authors: Jan Valosek, Sandrine Bédard, Julien Cohen-Adad
+#
 
 import os
 import re
 import logging
+import sys
 import textwrap
 import argparse
 import subprocess
 import shutil
-from pathlib import Path
-from enum import Enum
+import yaml
+
 
 # BIDS utility tool
 def get_subject(file):

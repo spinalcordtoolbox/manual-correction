@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 #
-# Script to perform manual correction of segmentations and vertebral labeling.
+# Script to perform manual correction of spinal cord segmentation, gray matter segmentation, vertebral labeling, and
+# pontomedullary junction labeling.
 #
 # For usage, type: python manual_correction.py -h
 #
-# Authors: Jan Valosek, Julien Cohen-Adad
-# Adapted by Sandrine Bédard for cord CSA project UK Biobank
+# Authors: Jan Valosek, Sandrine Bédard, Julien Cohen-Adad
+#
 
 import argparse
 import coloredlogs
@@ -16,12 +17,7 @@ import sys
 import shutil
 from textwrap import dedent
 import time
-import yaml
-import pipeline_ukbiobank.utils as utils
-
-# Folder where to output manual labels, at the root of a BIDS dataset.
-# TODO: make it an input argument (with default value)
-FOLDER_DERIVATIVES = os.path.join('derivatives', 'labels')
+import utils
 
 
 def get_parser():
@@ -29,8 +25,9 @@ def get_parser():
     parser function
     """
     parser = argparse.ArgumentParser(
-        description='Manual correction of spinal cord segmentation, vertebral and pontomedullary junction labeling. '
-                    'Manually corrected files are saved under derivatives/ folder (BIDS standard).',
+        description='Manual correction of spinal cord segmentation, gray matter segmentation, vertebral labeling, and '
+                    'pontomedullary junction labeling.'
+                    'Manually corrected files are saved under derivatives/ folder (according to BIDS standard).',
         formatter_class=utils.SmartFormatter,
         prog=os.path.basename(__file__).strip('.py')
     )
@@ -41,35 +38,40 @@ def get_parser():
         help=
         "R|Config yaml file listing images that require manual corrections for segmentation and vertebral "
         "labeling. 'FILES_SEG' lists images associated with spinal cord segmentation "
+        ",'FILES_GMSEG' lists images associated with gray matter segmentation "
         ",'FILES_LABEL' lists images associated with vertebral labeling "
         "and 'FILES_PMJ' lists images associated with pontomedullary junction labeling"
         "You can validate your .yml file at this website: http://www.yamllint.com/."
-        " If you want to correct segmentation only, ommit 'FILES_LABEL' in the list. Below is an example .yml file:\n"
+        "Below is an example .yml file:\n"
         + dedent(
             """
             FILES_SEG:
-            - sub-1000032_T1w.nii.gz
-            - sub-1000083_T2w.nii.gz
+            - sub-001_T1w.nii.gz
+            - sub-002_T2w.nii.gz
+            FILES_GMSEG:
+            - sub-001_T1w.nii.gz
+            - sub-002_T2w.nii.gz
             FILES_LABEL:
-            - sub-1000032_T1w.nii.gz
-            - sub-1000710_T1w.nii.gz
+            - sub-001_T1w.nii.gz
+            - sub-002_T1w.nii.gz
             FILES_PMJ:
-            - sub-1000032_T1w.nii.gz
-            - sub-1000710_T1w.nii.gz\n
+            - sub-001_T1w.nii.gz
+            - sub-002_T1w.nii.gz\n
             """)
     )
     parser.add_argument(
         '-path-in',
         metavar="<folder>",
-        help='Path to the processed data. Example: ~/ukbiobank_results/data_processed',
-        default='./'
+        required=True,
+        help='Path to the processed data. Example: ~/<your_dataset>/data_processed',
     )
     parser.add_argument(
         '-path-out',
         metavar="<folder>",
-        help="Path to the BIDS dataset where the corrected labels will be generated. Note: if the derivatives/ folder "
-             "does not already exist, it will be created."
-             "Example: ~/data-ukbiobank",
+        help=
+        "R|Path to the output folder where the corrected labels will be saved. Example: ~/<your_dataset>/"
+        "Note: The path provided within this flag will be combined with the path provided within the "
+        "'-path-derivatives' flag. ",
         default='./'
     )
     parser.add_argument(
