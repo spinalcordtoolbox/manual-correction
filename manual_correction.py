@@ -253,6 +253,34 @@ def create_json(fname_nifti, name_rater):
     fname_json = fname_nifti.rstrip('.nii').rstrip('.nii.gz') + '.json'
     with open(fname_json, 'w') as outfile:
         json.dump(metadata, outfile, indent=4)
+        # Add last newline
+        outfile.write("\n")
+
+
+def ask_if_modify(fname_label):
+    """
+    Check if file under derivatives already exists. If so, asks user if they want to modify it.
+    :param fname_label:
+    :return:
+    """
+    if os.path.isfile(fname_label):
+        answer = None
+        while answer not in ("y", "n"):
+            answer = input("WARNING! The file {} already exists. "
+                           "Would you like to modify it? [y/n] ".format(fname_label))
+            if answer == "y":
+                do_labeling = True
+                overwrite = False
+            elif answer == "n":
+                do_labeling = False
+                overwrite = False
+            else:
+                print("Please answer with 'y' or 'n'")
+    else:
+        do_labeling = True
+        overwrite = True
+
+    return do_labeling, overwrite
 
 
 def main():
