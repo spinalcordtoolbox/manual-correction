@@ -209,16 +209,23 @@ def viewer_not_found(viewer):
     sys.exit("{} not found. Please install it before using this program or check if it was added to PATH variable. "
              "You can also use another viewer by using the flag -viewer.".format(viewer))
 
-def correct_vertebral_labeling(fname, fname_label):
+
+def correct_vertebral_labeling(fname, fname_label, label_list, viewer='sct_label_utils'):
     """
     Open sct_label_utils to manually label vertebral levels.
     :param fname:
     :param fname_label:
-    :param name_rater:
+    :param label_list: Comma-separated list containing individual values and/or intervals. Example: '1:4,6,8' or 1:20
     :return:
     """
-    message = "Click at the posterior tip of the disc between C1-C2, C2-C3 and C3-C4 vertebral levels, then click 'Save and Quit'."
-    os.system('sct_label_utils -i {} -create-viewer 2,3,4 -o {} -msg "{}"'.format(fname, fname_label, message))
+    if shutil.which(viewer) is not None:  # Check if command 'sct_label_utils' exists
+        message = "Click at the posterior tip of the disc(s). Then click 'Save and Quit'."
+        if os.path.exists(fname_label):
+            os.system('sct_label_utils -i {} -create-viewer {} -o {} -ilabel {} -msg "{}"'.format(fname, label_list, fname_label, fname_label, message))
+        else:
+            os.system('sct_label_utils -i {} -create-viewer {} -o {} -msg "{}"'.format(fname, label_list, fname_label, message))
+    else:
+        viewer_not_found(viewer)
 
 
 def correct_pmj_label(fname, fname_label):
