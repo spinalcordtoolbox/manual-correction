@@ -203,7 +203,8 @@ def check_files_exist(dict_files, path_data):
     for task, files in dict_files.items():
         if files is not None:
             for file in files:
-                fname = os.path.join(path_data, get_subject(file), get_contrast(file), file)
+                subject, ses, filename, contrast = fetch_subject_and_session(file)
+                fname = os.path.join(path_data, subject, ses, contrast, filename)
                 if not os.path.exists(fname):
                     missing_files.append(fname)
     if missing_files:
