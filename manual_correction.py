@@ -304,6 +304,14 @@ def main():
     # check for missing files before starting the whole process
     utils.check_files_exist(dict_yml, args.path_in)
 
+    suffix_dict = {
+        'FILES_SEG': args.suffix_files_seg,         # e.g., _seg or _label-SC_mask
+        'FILES_GMSEG': args.suffix_files_gmseg,     # e.g., _gmseg or _label-GM_mask
+        'FILES_LABEL': args.suffix_files_label,     # e.g., _labels or _labels-disc
+        'FILES_PMJ': '_pmj'
+    }
+
+    path_out = utils.get_full_path(args.path_out)
     # check that output folder exists and has write permission
     path_out_deriv = utils.check_output_folder(args.path_out, FOLDER_DERIVATIVES)
 
