@@ -301,8 +301,8 @@ def main():
     # Curate dict_yml to only have filenames instead of absolute path
     dict_yml = utils.curate_dict_yml(dict_yml)
 
-    # check for missing files before starting the whole process
-    utils.check_files_exist(dict_yml, args.path_in)
+    # Check for missing files before starting the whole process
+    utils.check_files_exist(dict_yml, utils.get_full_path(args.path_in))
 
     suffix_dict = {
         'FILES_SEG': args.suffix_files_seg,         # e.g., _seg or _label-SC_mask
@@ -313,7 +313,7 @@ def main():
 
     path_out = utils.get_full_path(args.path_out)
     # check that output folder exists and has write permission
-    path_out_deriv = utils.check_output_folder(args.path_out, FOLDER_DERIVATIVES)
+    path_out_deriv = utils.check_output_folder(path_out, args.path_derivatives)
 
     # Get name of expert rater (skip if -qc-only is true)
     if not args.qc_only:
@@ -321,7 +321,7 @@ def main():
                            "corrected file: ")
 
     # Build QC report folder name
-    fname_qc = 'qc_corr_' + time.strftime('%Y%m%d%H%M%S')
+    fname_qc = os.path.join(path_out, 'qc_corr_' + time.strftime('%Y%m%d%H%M%S'))
 
     # Get list of segmentations files for all subjects in -path-in (if -add-seg-only)
     if args.add_seg_only:
@@ -371,8 +371,6 @@ def main():
                         elif task == 'FILES_LABEL':
                             correct_vertebral_labeling(fname, fname_label, args.label_list)
                         elif task == 'FILES_PMJ':
-                            if not utils.check_software_installed():
-                                sys.exit("Some required software are not installed. Exit program.")
                             correct_pmj_label(fname, fname_label)
                         else:
                             sys.exit('Task not recognized from yml file: {}'.format(task))
@@ -382,9 +380,9 @@ def main():
                 # generate QC report (only for vertebral labeling or for qc only)
                 if args.qc_only or task != 'FILES_SEG':
                     os.system('sct_qc -i {} -s {} -p {} -qc {} -qc-subject {}'.format(
-                        fname, fname_label, get_function(task), fname_qc, subject))
+                        fname, fname_label, get_function_for_qc(task), fname_qc, subject))
                     # Archive QC folder
-                    shutil.copy(fname_yml, fname_qc)
+                    shutil.copy(utils.get_full_path(args.config), fname_qc)
                     shutil.make_archive(fname_qc, 'zip', fname_qc)
                     print("Archive created:\n--> {}".format(fname_qc+'.zip'))
 
