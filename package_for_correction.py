@@ -142,14 +142,20 @@ def main():
                 suffix_label = suffix_dict[task]
             else:
                 sys.exit('Task not recognized from yml file: {}'.format(task))
+            subject, ses, filename, contrast = utils.fetch_subject_and_session(file)
+            # Construct absolute path to the input file
+            # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w.nii.gz'
+            fname = os.path.join(utils.get_full_path(args.path_in), subject, ses, contrast, filename)
+            # Construct absolute path to the temp folder
+            path_out = os.path.join(path_tmp, subject, ses, contrast)
             # Copy image
-            copy_file(os.path.join(args.path_in, utils.get_subject(file), utils.get_contrast(file), file),
-                      os.path.join(path_tmp, utils.get_subject(file), utils.get_contrast(file)))
+            copy_file(fname, path_out)
             # Copy label if exists
             if suffix_label is not None:
-                copy_file(os.path.join(args.path_in, utils.get_subject(file), utils.get_contrast(file),
-                                       utils.add_suffix(file, suffix_label)),
-                          os.path.join(path_tmp, utils.get_subject(file), utils.get_contrast(file)))
+                # Construct absolute path to the input label (segmentation, labeling etc.) file
+                # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w_seg.nii.gz'
+                fname_seg = utils.add_suffix(fname, suffix_dict[task])
+                copy_file(fname_seg, path_out)
 
     # Package to zip file
     print("Creating archive...")
@@ -159,7 +165,7 @@ def main():
     if os.path.isdir(new_path_tmp):
         shutil.rmtree(new_path_tmp)
     shutil.move(path_tmp, new_path_tmp)
-    fname_archive = shutil.make_archive(args.o, 'zip', root_dir_tmp, base_dir_name)
+    fname_archive = shutil.make_archive(utils.get_full_path(args.o), 'zip', root_dir_tmp, base_dir_name)
     print("-> {}".format(fname_archive))
 
 
