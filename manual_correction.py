@@ -144,9 +144,17 @@ def get_parser():
     return parser
 
 
-def get_function(task):
+# TODO: add also sct_get_centerline
+def get_function_for_qc(task):
+    """
+    Get the function to use for QC based on the task.
+    :param task:
+    :return:
+    """
     if task == 'FILES_SEG':
         return 'sct_deepseg_sc'
+    elif task == "FILES_GMSEG":
+        return "sct_deepseg_gm"
     elif task == 'FILES_LABEL':
         return 'sct_label_utils'
     elif task == 'FILES_PMJ':
