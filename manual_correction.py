@@ -334,41 +334,34 @@ def main():
         if files is not None:
             for file in files:
                 # build file names
-                subject = file.split('_')[0]
-                contrast = utils.get_contrast(file)
-                fname = os.path.join(args.path_in, subject, contrast, file)
-                fname_label = os.path.join(
-                    path_out_deriv, subject, contrast, utils.add_suffix(file, get_suffix(task, '-manual')))
-                os.makedirs(os.path.join(path_out_deriv, subject, contrast), exist_ok=True)
+                subject, ses, filename, contrast = utils.fetch_subject_and_session(file)
+                # Construct absolute path to the input file
+                # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w.nii.gz'
+                fname = os.path.join(utils.get_full_path(args.path_in), subject, ses, contrast, filename)
+                # Construct absolute path to the input label (segmentation, labeling etc.) file
+                # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w_seg.nii.gz'
+                fname_seg = utils.add_suffix(fname, suffix_dict[task])
+                # Construct absolute path to the derivative file (i.e., path where manually corrected file will be saved)
+                # For example: '/Users/user/dataset/derivatives/labels/sub-001/anat/sub-001_T2w_seg-manual.nii.gz'
+                fname_label = os.path.join(path_out_deriv, subject, ses, contrast,
+                                           utils.add_suffix(utils.remove_suffix(filename, args.suffix_files_in),
+                                                            suffix_dict[task] + '-manual'))
+                # Create output folders under derivative if they do not exist
+                os.makedirs(os.path.join(path_out_deriv, subject, ses, contrast), exist_ok=True)
                 if not args.qc_only:
-                    if os.path.isfile(fname_label):
-                        # if corrected file already exists, asks user if they want to overwrite it
-                        answer = None
-                        while answer not in ("y", "n"):
-                            answer = input("WARNING! The file {} already exists. "
-                                           "Would you like to modify it? [y/n] ".format(fname_label))
-                            if answer == "y":
-                                do_labeling = True
-                                overwrite = False
-                            elif answer == "n":
-                                do_labeling = False
-                            else:
-                                print("Please answer with 'y' or 'n'")
-                    else:
-                        do_labeling = True
-                        overwrite = True
-                    # Perform labeling for the specific task
+                    # Check if file under derivatives already exists. If so, asks user if they want to modify it.
+                    do_labeling, overwrite = ask_if_modify(fname_label)
+                    # Perform labeling (i.e., segmentation correction, labeling correction etc.) for the specific task
                     if do_labeling:
-                        if task in ['FILES_SEG']:
-                            fname_seg = utils.add_suffix(fname, get_suffix(task))
-                            if overwrite:
-                                shutil.copyfile(fname_seg, fname_label)
+                        if overwrite:
+                            # Copy file to derivatives folder
+                            shutil.copyfile(fname_seg, fname_label)
+                            print(f'Copying: {fname_seg} to {fname_label}')
+                        if task in ['FILES_SEG', 'FILES_GMSEG']:
                             if not args.add_seg_only:
-                                correct_segmentation(fname, fname_label)
+                                correct_segmentation(fname, fname_label, args.viewer)
                         elif task == 'FILES_LABEL':
-                            if not utils.check_software_installed():
-                                sys.exit("Some required software are not installed. Exit program.")
-                            correct_vertebral_labeling(fname, fname_label)
+                            correct_vertebral_labeling(fname, fname_label, args.label_list)
                         elif task == 'FILES_PMJ':
                             if not utils.check_software_installed():
                                 sys.exit("Some required software are not installed. Exit program.")
