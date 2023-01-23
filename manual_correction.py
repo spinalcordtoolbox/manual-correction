@@ -357,6 +357,8 @@ def main():
         if args.add_seg_only and task == 'FILES_SEG':
             # Remove the files in the -config list
             for file in files:
+                # Remove the file suffix (e.g., '_RPI_r') to match the list of files in -path-in
+                file = utils.remove_suffix(file, args.suffix_files_in)
                 if file in file_list:
                     file_list.remove(file)
             files = file_list  # Rename to use those files instead of the ones to exclude
