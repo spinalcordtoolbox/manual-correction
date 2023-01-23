@@ -347,7 +347,6 @@ def main():
     if args.add_seg_only:
         path_list = glob.glob(args.path_in + "/**/*" + args.suffix_files_seg + ".nii.gz", recursive=True)
         # Get only filenames without suffix _seg  to match files in -config .yml list
-        # TODO: check if the line below is robust enough
         file_list = [utils.remove_suffix(os.path.split(path)[-1], args.suffix_files_seg) for path in path_list]
 
     # TODO: address "none" issue if no file present under a key
