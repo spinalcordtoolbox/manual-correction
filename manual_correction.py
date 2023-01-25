@@ -106,6 +106,12 @@ def get_parser():
         default='_gmseg'
     )
     parser.add_argument(
+        '-suffix-files-lesion',
+        help="FILES-LESION suffix. Available options: '_lesion' (default).",
+        choices=['_lesion'],
+        default='_lesion'
+    )
+    parser.add_argument(
         '-suffix-files-label',
         help="FILES-LABEL suffix. Available options: '_labels' (default), '_labels-disc'.",
         choices=['_labels', '_labels-disc'],
@@ -327,6 +333,7 @@ def main():
     suffix_dict = {
         'FILES_SEG': args.suffix_files_seg,         # e.g., _seg or _label-SC_mask
         'FILES_GMSEG': args.suffix_files_gmseg,     # e.g., _gmseg or _label-GM_mask
+        'FILES_LESION': args.suffix_files_lesion,     # e.g., _lesion
         'FILES_LABEL': args.suffix_files_label,     # e.g., _labels or _labels-disc
         'FILES_PMJ': '_pmj'
     }
@@ -391,6 +398,8 @@ def main():
                         if task in ['FILES_SEG', 'FILES_GMSEG']:
                             if not args.add_seg_only:
                                 correct_segmentation(fname, fname_label, args.viewer)
+                        elif task == 'FILES_LESION':
+                            correct_segmentation(fname, fname_label, args.viewer)
                         elif task == 'FILES_LABEL':
                             correct_vertebral_labeling(fname, fname_label, args.label_list)
                         elif task == 'FILES_PMJ':
@@ -404,7 +413,9 @@ def main():
 
                 # Generate QC report only
                 if args.qc_only:
-                    generate_qc(fname, fname_label, task, fname_qc, subject, args.config)
+                    # Note: QC for lesion segmentation is not implemented yet
+                    if task != "FILES_LESION":
+                        generate_qc(fname, fname_label, task, fname_qc, subject, args.config)
 
 
 if __name__ == '__main__':
