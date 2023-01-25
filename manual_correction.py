@@ -266,9 +266,10 @@ def create_json(fname_nifti, name_rater):
 def ask_if_modify(fname_label):
     """
     Check if file under derivatives already exists. If so, asks user if they want to modify it.
-    :param fname_label:
+    :param fname_label: file under derivatives
     :return:
     """
+    # Check if file under derivatives already exists
     if os.path.isfile(fname_label):
         answer = None
         while answer not in ("y", "n"):
