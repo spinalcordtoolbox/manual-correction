@@ -276,17 +276,18 @@ def ask_if_modify(fname_label):
                            "Would you like to modify it? [y/n] ".format(fname_label))
             if answer == "y":
                 do_labeling = True
-                overwrite = False
             elif answer == "n":
                 do_labeling = False
-                overwrite = False
             else:
                 print("Please answer with 'y' or 'n'")
+            # We don't want to copy because we want to modify the existing file
+            copy = False
+    # If the file under derivatives does not exist, copy it from processed data
     else:
         do_labeling = True
-        overwrite = True
+        copy = True
 
-    return do_labeling, overwrite
+    return do_labeling, copy
 
 
 def generate_qc(fname, fname_label, task, fname_qc, subject, config_file):
@@ -388,10 +389,10 @@ def main():
                 os.makedirs(os.path.join(path_out_deriv, subject, ses, contrast), exist_ok=True)
                 if not args.qc_only:
                     # Check if file under derivatives already exists. If so, asks user if they want to modify it.
-                    do_labeling, overwrite = ask_if_modify(fname_label)
+                    do_labeling, copy = ask_if_modify(fname_label)
                     # Perform labeling (i.e., segmentation correction, labeling correction etc.) for the specific task
                     if do_labeling:
-                        if overwrite:
+                        if copy:
                             # Copy file to derivatives folder
                             shutil.copyfile(fname_seg, fname_label)
                             print(f'Copying: {fname_seg} to {fname_label}')
