@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Script to package data for manual correction from SpineGeneric adapted for canproco project.
+# Script to package data for manual correction.
 #
 # For usage, type: python package_for_correction.py -h
 #
