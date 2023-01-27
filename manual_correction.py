@@ -5,7 +5,7 @@
 #
 # For usage, type: python manual_correction.py -h
 #
-# Authors: Jan Valosek, Sandrine Bédard, Julien Cohen-Adad
+# Authors: Jan Valosek, Sandrine Bédard, Naga Karthik, Julien Cohen-Adad
 #
 
 import argparse
