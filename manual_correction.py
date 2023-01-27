@@ -79,7 +79,7 @@ def get_parser():
         metavar="<folder>",
         help=
         "R|Path to the 'derivatives' BIDS-complaint folder where the corrected labels will be saved. "
-        "Example: derivatives/labels"
+        "Default: derivatives/labels"
         "Note: if the provided folder (e.g., 'derivatives/labels') does not already exist, it will be created."
         "Note: if segmentation or labels files already exist and you would like to correct them, provide path to them "
         "within this flag.",
