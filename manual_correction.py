@@ -415,10 +415,16 @@ def main():
                             correct_pmj_label(fname, fname_label)
                         else:
                             sys.exit('Task not recognized from yml file: {}'.format(task))
-                        # create json sidecar with the name of the expert rater
-                        create_json(fname_label, name_rater)
-                        # Generate QC report
-                        generate_qc(fname, fname_label, task, fname_qc, subject, args.config)
+                        
+                        if task == 'FILES_LESION':
+                            # create json sidecar with the name of the expert rater
+                            create_json(fname_label, name_rater)
+                            # NOTE: QC for lesion segmentation does not exist or not implemented yet
+                        else:
+                            # create json sidecar with the name of the expert rater
+                            create_json(fname_label, name_rater)
+                            # Generate QC report
+                            generate_qc(fname, fname_label, task, fname_qc, subject, args.config)
 
                 # Generate QC report only
                 if args.qc_only:
