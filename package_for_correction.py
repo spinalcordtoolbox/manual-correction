@@ -82,6 +82,12 @@ def get_parser():
         default='_gmseg'
     )
     parser.add_argument(
+        '-suffix-files-lesion',
+        help="FILES-LESION suffix. Available options: '_lesion' (default).",
+        choices=['_lesion'],
+        default='_lesion'
+    )
+    parser.add_argument(
         '-suffix-files-label',
         help="FILES-LABEL suffix. Available options: '_labels' (default), '_labels-disc'.",
         choices=['_labels', '_labels-disc'],
@@ -133,6 +139,7 @@ def main():
     suffix_dict = {
         'FILES_SEG': args.suffix_files_seg,         # e.g., _seg or _label-SC_mask
         'FILES_GMSEG': args.suffix_files_gmseg,     # e.g., _gmseg or _label-GM_mask
+        'FILES_LESION': args.suffix_files_lesion,   # e.g., _lesion
         'FILES_LABEL': args.suffix_files_label,     # e.g., _labels or _labels-disc
         'FILES_PMJ': args.suffix_files_pmj          # e.g., _pmj or _label-pmj
     }
