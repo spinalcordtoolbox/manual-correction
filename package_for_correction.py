@@ -88,6 +88,12 @@ def get_parser():
         default='_labels'
     )
     parser.add_argument(
+        '-suffix-files-pmj',
+        help="FILES-PMJ suffix. Available options: '_pmj' (default), '_label-pmj'.",
+        choices=['_pmj', '_label-pmj'],
+        default='_pmj'
+    )
+    parser.add_argument(
         '-v', '--verbose',
         help="Full verbose (for debugging)",
         action='store_true'
@@ -128,7 +134,7 @@ def main():
         'FILES_SEG': args.suffix_files_seg,         # e.g., _seg or _label-SC_mask
         'FILES_GMSEG': args.suffix_files_gmseg,     # e.g., _gmseg or _label-GM_mask
         'FILES_LABEL': args.suffix_files_label,     # e.g., _labels or _labels-disc
-        'FILES_PMJ': '_pmj'
+        'FILES_PMJ': args.suffix_files_pmj          # e.g., _pmj or _label-pmj
     }
 
     # Create temp folder

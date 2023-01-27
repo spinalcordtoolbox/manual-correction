@@ -118,6 +118,12 @@ def get_parser():
         default='_labels'
     )
     parser.add_argument(
+        '-suffix-files-pmj',
+        help="FILES-PMJ suffix. Available options: '_pmj' (default), '_label-pmj'.",
+        choices=['_pmj', '_label-pmj'],
+        default='_pmj'
+    )
+    parser.add_argument(
         '-label-list',
         help="Provide a comma-separated list containing individual values and/or intervals. Example: '1:4,6,8' or 1:20 "
              "(default)",
@@ -345,7 +351,7 @@ def main():
         'FILES_GMSEG': args.suffix_files_gmseg,     # e.g., _gmseg or _label-GM_mask
         'FILES_LESION': args.suffix_files_lesion,     # e.g., _lesion
         'FILES_LABEL': args.suffix_files_label,     # e.g., _labels or _labels-disc
-        'FILES_PMJ': '_pmj'
+        'FILES_PMJ': args.suffix_files_pmj          # e.g., _pmj or _label-pmj
     }
 
     path_out = utils.get_full_path(args.path_out)
