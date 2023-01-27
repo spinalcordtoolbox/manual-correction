@@ -130,6 +130,13 @@ def get_parser():
         default='itksnap'
     )
     parser.add_argument(
+        '-fsl-color',
+        help="Color to be used for loading the label file on FSLeyes (default: red). `fsleyes -h` gives all the available color options. " 
+             "If using a combination of colors, specify them with '-'. E.g. red-yellow ",
+        type=str,
+        default='red'
+    )
+    parser.add_argument(
         '-qc-only',
         help="Only output QC report based on the manually-corrected files already present in the derivatives folder. "
              "Skip the copy of the source files, and the opening of the manual correction pop-up windows.",
@@ -169,7 +176,7 @@ def get_function_for_qc(task):
         raise ValueError("This task is not recognized: {}".format(task))
 
 
-def correct_segmentation(fname, fname_seg_out, viewer):
+def correct_segmentation(fname, fname_seg_out, viewer, viewer_color):
     """
     Open viewer (ITK-SNAP, FSLeyes, or 3D Slicer) with fname and fname_seg_out.
     :param fname:
@@ -194,7 +201,7 @@ def correct_segmentation(fname, fname_seg_out, viewer):
         if shutil.which('fsleyes') is not None:  # Check if command 'fsleyes' exists
             print("In FSLeyes, click on 'Edit mode', correct the segmentation, and then save it with the same name "
                   "(overwrite).")
-            os.system('fsleyes {} {} -cm red'.format(fname, fname_seg_out))
+            os.system('fsleyes {} {} -cm {}'.format(fname, fname_seg_out, viewer_color))
         else:
             viewer_not_found(viewer)
     # launch 3D Slicer
@@ -399,9 +406,9 @@ def main():
                             print(f'Copying: {fname_seg} to {fname_label}')
                         if task in ['FILES_SEG', 'FILES_GMSEG']:
                             if not args.add_seg_only:
-                                correct_segmentation(fname, fname_label, args.viewer)
+                                correct_segmentation(fname, fname_label, args.viewer, args.fsl_color)
                         elif task == 'FILES_LESION':
-                            correct_segmentation(fname, fname_label, args.viewer)
+                            correct_segmentation(fname, fname_label, args.viewer, args.fsl_color)
                         elif task == 'FILES_LABEL':
                             correct_vertebral_labeling(fname, fname_label, args.label_list)
                         elif task == 'FILES_PMJ':
