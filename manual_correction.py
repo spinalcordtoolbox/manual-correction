@@ -131,8 +131,8 @@ def get_parser():
     )
     parser.add_argument(
         '-fsl-color',
-        help="Color to be used for loading the label file on FSLeyes (default: red). `fsleyes -h` gives all the available color options. " 
-             "If using a combination of colors, specify them with '-'. E.g. red-yellow ",
+        help="Color to be used for loading the label file on FSLeyes (default: red). `fsleyes -h` gives all the "
+             "available color options. If using a combination of colors, specify them with '-', e.g. 'red-yellow'.",
         type=str,
         default='red'
     )
@@ -182,6 +182,7 @@ def correct_segmentation(fname, fname_seg_out, viewer, viewer_color):
     :param fname:
     :param fname_seg_out:
     :param viewer:
+    :param viewer_color: color to be used for the label. Only valid for on FSLeyes (default: red).
     :return:
     """
     # launch ITK-SNAP
