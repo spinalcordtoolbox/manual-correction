@@ -25,8 +25,8 @@ def get_parser():
     parser function
     """
     parser = argparse.ArgumentParser(
-        description='Manual correction of spinal cord segmentation, gray matter segmentation, vertebral labeling, and '
-                    'pontomedullary junction labeling.'
+        description='Manual correction of spinal cord segmentation, gray matter segmentation, multiple sclerosis '
+                    'lesion segmentation, vertebral labeling, and pontomedullary junction labeling. '
                     'Manually corrected files are saved under derivatives/ folder (according to BIDS standard).',
         formatter_class=utils.SmartFormatter,
         prog=os.path.basename(__file__).strip('.py')
@@ -37,10 +37,12 @@ def get_parser():
         required=True,
         help=
         "R|Config yaml file listing images that require manual corrections for segmentation and vertebral "
-        "labeling. 'FILES_SEG' lists images associated with spinal cord segmentation "
-        ",'FILES_GMSEG' lists images associated with gray matter segmentation "
-        ",'FILES_LABEL' lists images associated with vertebral labeling "
-        "and 'FILES_PMJ' lists images associated with pontomedullary junction labeling"
+        "labeling. "
+        "'FILES_SEG' lists images associated with spinal cord segmentation, "
+        "'FILES_GMSEG' lists images associated with gray matter segmentation, "
+        "'FILES_LESION' lists images associated with multiple sclerosis lesion segmentation, "
+        "'FILES_LABEL' lists images associated with vertebral labeling, "
+        "and 'FILES_PMJ' lists images associated with pontomedullary junction labeling. "
         "You can validate your .yml file at this website: http://www.yamllint.com/."
         "Below is an example .yml file:\n"
         + dedent(
@@ -49,6 +51,9 @@ def get_parser():
             - sub-001_T1w.nii.gz
             - sub-002_T2w.nii.gz
             FILES_GMSEG:
+            - sub-001_T1w.nii.gz
+            - sub-002_T2w.nii.gz
+            FILES_LESION:
             - sub-001_T1w.nii.gz
             - sub-002_T2w.nii.gz
             FILES_LABEL:
