@@ -5,6 +5,10 @@
 #
 # For usage, type: python manual_correction.py -h
 #
+# Examples:
+#   - MS lesion segmentation correction (using FSLeyes, with denoising of the input image, and loading an additional contrast):
+#           python manual_correction.py -path-in <path_to_dataset> -config <path_to_config> -path-out <output_path> -viewer fsleyes -load-other-contrast PSIR -denoise
+#
 # Authors: Jan Valosek, Sandrine Bédard, Naga Karthik, Julien Cohen-Adad
 #
 
@@ -148,6 +152,17 @@ def get_parser():
         default='red'
     )
     parser.add_argument(
+        '-denoise',
+        help="Denoise the input image using 'sct_maths -denoise p=1,b=2'.",
+        action='store_true'
+    )
+    parser.add_argument(
+        '-load-other-contrast',
+        help="Load additional image to the viewer. This flag is useful if you want to load a different contrast than "
+             "provided by the .yml file. Only valid for '-viewer fsleyes'. Example: 'PSIR', 'STIR', 'acq-sag_T1w' etc.",
+        type=str,
+    )
+    parser.add_argument(
         '-qc-only',
         help="Only output QC report based on the manually-corrected files already present in the derivatives folder. "
              "Skip the copy of the source files, and the opening of the manual correction pop-up windows.",
@@ -187,10 +202,12 @@ def get_function_for_qc(task):
         raise ValueError("This task is not recognized: {}".format(task))
 
 
-def correct_segmentation(fname, fname_seg_out, viewer, viewer_color):
+def correct_segmentation(fname, fname_other_contrast, fname_seg_out, viewer, viewer_color):
     """
     Open viewer (ITK-SNAP, FSLeyes, or 3D Slicer) with fname and fname_seg_out.
     :param fname:
+    :param fname_other_contrast: other contrast to load in the viewer (specified by the '-load-other-contrast' flag).
+    Only valid for FSLeyes.
     :param fname_seg_out:
     :param viewer:
     :param viewer_color: color to be used for the label. Only valid for on FSLeyes (default: red).
@@ -213,7 +230,10 @@ def correct_segmentation(fname, fname_seg_out, viewer, viewer_color):
         if shutil.which('fsleyes') is not None:  # Check if command 'fsleyes' exists
             print("In FSLeyes, click on 'Edit mode', correct the segmentation, and then save it with the same name "
                   "(overwrite).")
-            os.system('fsleyes {} {} -cm {}'.format(fname, fname_seg_out, viewer_color))
+            if fname_other_contrast:
+                os.system('fsleyes {} {} {} -cm {}'.format(fname, fname_other_contrast, fname_seg_out, viewer_color))
+            else:
+                os.system('fsleyes {} {} -cm {}'.format(fname, fname_seg_out, viewer_color))
         else:
             viewer_not_found(viewer)
     # launch 3D Slicer
@@ -328,6 +348,29 @@ def generate_qc(fname, fname_label, task, fname_qc, subject, config_file):
     print("Archive created:\n--> {}".format(fname_qc + '.zip'))
 
 
+def denoise_image(fname):
+    """
+    Denoise image using non-local means adaptative denoising from P. Coupe et al. as implemented in dipy. For details,
+    run sct_maths -h
+    :param fname:
+    :return:
+    """
+    print("Denoising {}".format(fname))
+    fname_denoised = utils.add_suffix(fname, '_denoised-p1b2')
+    os.system('sct_maths -i {} -denoise p=1,b=2 -o {}'.format(fname, fname_denoised))
+    return fname_denoised
+
+
+def remove_denoised_file(fname):
+    """
+    Remove denoised file
+    :param fname:
+    :return:
+    """
+    print("Removing {}".format(fname))
+    os.remove(fname)
+
+
 def main():
 
     # Parse the command line arguments
@@ -397,6 +440,10 @@ def main():
                 # Construct absolute path to the input file
                 # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w.nii.gz'
                 fname = os.path.join(utils.get_full_path(args.path_in), subject, ses, contrast, filename)
+                # Construct absolute path to the other contrast file
+                if args.load_other_contrast:
+                    fname_other_contrast = os.path.join(utils.get_full_path(args.path_in), subject, ses, contrast,
+                                                        subject + '_' + ses + '_' + args.load_other_contrast + '.nii.gz')
                 # Construct absolute path to the input label (segmentation, labeling etc.) file
                 # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w_seg.nii.gz'
                 fname_seg = utils.add_suffix(fname, suffix_dict[task])
@@ -412,22 +459,28 @@ def main():
                     do_labeling, copy = ask_if_modify(fname_label)
                     # Perform labeling (i.e., segmentation correction, labeling correction etc.) for the specific task
                     if do_labeling:
+                        if args.denoise:
+                            # Denoise the input file
+                            fname = denoise_image(fname)
                         if copy:
                             # Copy file to derivatives folder
                             shutil.copyfile(fname_seg, fname_label)
                             print(f'Copying: {fname_seg} to {fname_label}')
                         if task in ['FILES_SEG', 'FILES_GMSEG']:
                             if not args.add_seg_only:
-                                correct_segmentation(fname, fname_label, args.viewer, args.fsl_color)
+                                correct_segmentation(fname, fname_other_contrast, fname_label, args.viewer, args.fsl_color)
                         elif task == 'FILES_LESION':
-                            correct_segmentation(fname, fname_label, args.viewer, args.fsl_color)
+                            correct_segmentation(fname, fname_other_contrast, fname_label, args.viewer, args.fsl_color)
                         elif task == 'FILES_LABEL':
                             correct_vertebral_labeling(fname, fname_label, args.label_list)
                         elif task == 'FILES_PMJ':
                             correct_pmj_label(fname, fname_label)
                         else:
                             sys.exit('Task not recognized from yml file: {}'.format(task))
-                        
+                        if args.denoise:
+                            # Remove the denoised file (we do not need it anymore)
+                            remove_denoised_file(fname)
+
                         if task == 'FILES_LESION':
                             # create json sidecar with the name of the expert rater
                             create_json(fname_label, name_rater)
