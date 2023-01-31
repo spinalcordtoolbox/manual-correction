@@ -129,9 +129,9 @@ def get_parser():
         default='_pmj'
     )
     parser.add_argument(
-        '-label-list',
-        help="Provide a comma-separated list containing individual values and/or intervals. Example: '1:4,6,8' or 1:20 "
-             "(default)",
+        '-label-disc-list',
+        help="Comma-separated list containing individual values and/or intervals for disc labeling. Example: '1:4,6,8' "
+             "or 1:20 (default)",
         default='1:20'
     )
     parser.add_argument(
@@ -422,7 +422,7 @@ def main():
                         elif task == 'FILES_LESION':
                             correct_segmentation(fname, fname_label, args.viewer, args.fsl_color)
                         elif task == 'FILES_LABEL':
-                            correct_vertebral_labeling(fname, fname_label, args.label_list)
+                            correct_vertebral_labeling(fname, fname_label, args.label_disc_list)
                         elif task == 'FILES_PMJ':
                             correct_pmj_label(fname, fname_label)
                         else:
