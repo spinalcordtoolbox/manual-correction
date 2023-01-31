@@ -161,7 +161,7 @@ def get_parser():
     )
     parser.add_argument(
         '-load-other-contrast',
-        help="Load additional image to the viewer. This flag is useful if you want to load a different contrast than "
+        help="Load additional image to the viewer. This flag is useful if you want to use an additional contrast than "
              "provided by the .yml file. Only valid for '-viewer fsleyes'. Example: 'PSIR', 'STIR', 'acq-sag_T1w' etc.",
         type=str,
     )
