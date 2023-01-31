@@ -6,8 +6,11 @@
 # For usage, type: python manual_correction.py -h
 #
 # Examples:
-#   - MS lesion segmentation correction (using FSLeyes, with denoising of the input image, and loading an additional contrast):
-#           python manual_correction.py -path-in <path_to_dataset> -config <path_to_config> -path-out <output_path> -viewer fsleyes -load-other-contrast PSIR -denoise
+#   1) MS lesion segmentation correction (using FSLeyes, with denoising of the input image, and loading an additional contrast):
+#       python manual_correction.py -path-in <path_to_dataset> -config config.yml -path-out <output_path> -viewer fsleyes -load-other-contrast PSIR -denoise
+#       config.yml:
+#           FILES_LESION:
+#               - sub-001_ses-M0_T2w.nii.gz
 #
 # Authors: Jan Valosek, Sandrine Bédard, Naga Karthik, Julien Cohen-Adad
 #
