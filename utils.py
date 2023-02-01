@@ -1,34 +1,46 @@
 #!/usr/bin/env python
 # -*- coding: utf-8
-# Collection of useful functions from spine_generic, used for manual segmentation
+#
+# Collection of useful functions used by other scripts
+#
+# Authors: Jan Valosek, Sandrine Bédard, Julien Cohen-Adad
+#
 
 import os
 import re
 import logging
+import sys
 import textwrap
 import argparse
 import subprocess
 import shutil
-from pathlib import Path
-from enum import Enum
+import yaml
+
 
 # BIDS utility tool
-def get_subject(file):
+def fetch_subject_and_session(filename_path):
     """
-    Get subject from BIDS file name
-    :param file:
-    :return: subject
+    Get subject ID, session ID and filename from the input BIDS-compatible filename or file path
+    The function works both on absolute file path as well as filename
+    :param filename_path: input nifti filename (e.g., sub-001_ses-01_T1w.nii.gz) or file path
+    (e.g., /home/user/MRI/bids/derivatives/labels/sub-001/ses-01/anat/sub-001_ses-01_T1w.nii.gz
+    :return: subjectID: subject ID (e.g., sub-001)
+    :return: sessionID: session ID (e.g., ses-01)
+    :return: filename: nii filename (e.g., sub-001_ses-01_T1w.nii.gz)
     """
-    return file.split('_')[0]
 
+    _, filename = os.path.split(filename_path)              # Get just the filename (i.e., remove the path)
+    subject = re.search('sub-(.*?)[_/]', filename_path)
+    subjectID = subject.group(0)[:-1] if subject else ""    # [:-1] removes the last underscore or slash
+    session = re.findall(r'ses-..', filename_path)
+    sessionID = session[0] if session else ""               # Return None if there is no session
+    contrast = 'dwi' if 'dwi' in filename_path else 'anat'  # Return contrast (dwi or anat)
+    # REGEX explanation
+    # \d - digit
+    # \d? - no or one occurrence of digit
+    # *? - match the previous element as few times as possible (zero or more times)
 
-def get_contrast(file):
-    """
-    Get contrast from BIDS file name
-    :param file:
-    :return:
-    """
-    return 'dwi' if (file.split('_')[-1]).split('.')[0] == 'dwi' else 'anat'
+    return subjectID, sessionID, filename, contrast
 
 
 class SmartFormatter(argparse.HelpFormatter):
@@ -136,6 +148,29 @@ def remove_suffix(fname, suffix):
     return os.path.join(stem.replace(suffix, '') + ext)
 
 
+def fetch_yaml_config(config_file):
+    """
+    Fetch configuration from YAML file
+    :param config_file: YAML file
+    :return: dictionary with configuration
+    """
+    config_file = get_full_path(config_file)
+    # Check if input yml file exists
+    if os.path.isfile(config_file):
+        fname_yml = config_file
+    else:
+        sys.exit("ERROR: Input yml file {} does not exist or path is wrong.".format(config_file))
+
+    # Fetch input yml file as dict
+    with open(fname_yml, 'r') as stream:
+        try:
+            dict_yml = yaml.safe_load(stream)
+        except yaml.YAMLError as exc:
+            print(exc)
+
+    return dict_yml
+
+
 def curate_dict_yml(dict_yml):
     """
     Curate dict_yml to only have filenames instead of absolute path
@@ -146,6 +181,15 @@ def curate_dict_yml(dict_yml):
     for task, files in dict_yml.items():
         dict_yml_curate[task] = [os.path.basename(file) for file in files]
     return dict_yml_curate
+
+
+def get_full_path(path):
+    """
+    Return full path. If ~ is passed, expand it to home directory.
+    :param path: str: Input path
+    :return: str: Full path
+    """
+    return os.path.abspath(os.path.expanduser(path))
 
 
 def check_files_exist(dict_files, path_data):
@@ -159,7 +203,8 @@ def check_files_exist(dict_files, path_data):
     for task, files in dict_files.items():
         if files is not None:
             for file in files:
-                fname = os.path.join(path_data, get_subject(file), get_contrast(file), file)
+                subject, ses, filename, contrast = fetch_subject_and_session(file)
+                fname = os.path.join(path_data, subject, ses, contrast, filename)
                 if not os.path.exists(fname):
                     missing_files.append(fname)
     if missing_files:
@@ -171,7 +216,7 @@ def check_output_folder(path_bids, folder_derivatives):
     """
     Make sure path exists, has writing permissions, and create derivatives folder if it does not exist.
     :param path_bids:
-    :return: path_bids_derivatives
+    :return: folder_derivatives:
     """
     if path_bids is None:
         logging.error("-path-out should be provided.")

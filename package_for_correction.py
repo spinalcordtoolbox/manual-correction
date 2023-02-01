@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 #
-# Script to package data for manual correction from SpineGeneric adapted for ukbiobank cord CSA project.
+# Script to package data for manual correction.
 #
 # For usage, type: python package_for_correction.py -h
 #
-# Author: Julien Cohen-Adad
+# Authors: Jan Valosek, Sandrine Bédard, Julien Cohen-Adad
+#
 
 
 import os
@@ -13,10 +14,8 @@ import shutil
 import tempfile
 from textwrap import dedent
 import argparse
-import yaml
 import coloredlogs
-
-import pipeline_ukbiobank.utils as utils
+import utils
 
 
 def get_parser():
@@ -35,32 +34,70 @@ def get_parser():
         metavar="<file>",
         required=True,
         help=
-        "R|Config .yml file listing images that require manual corrections for segmentation and vertebral "
-        "labeling. 'FILES_SEG' lists images associated with spinal cord segmentation,"
-        "and 'FILES_LABEL' lists images associated with vertebral labeling. "
-        "You can validate your .yml file at this website: http://www.yamllint.com/. Below is an example .yml file:\n"
+        "R|Config yaml file listing images that require manual corrections for segmentation and vertebral "
+        "labeling. 'FILES_SEG' lists images associated with spinal cord segmentation "
+        ",'FILES_GMSEG' lists images associated with gray matter segmentation "
+        ",'FILES_LABEL' lists images associated with vertebral labeling "
+        "and 'FILES_PMJ' lists images associated with pontomedullary junction labeling"
+        "You can validate your .yml file at this website: http://www.yamllint.com/."
+        "Below is an example .yml file:\n"
         + dedent(
             """
             FILES_SEG:
-            - sub-1000032_T1w.nii.gz
-            - sub-1000083_T2w.nii.gz
+            - sub-001_T1w.nii.gz
+            - sub-002_T2w.nii.gz
+            FILES_GMSEG:
+            - sub-001_T1w.nii.gz
+            - sub-002_T2w.nii.gz
             FILES_LABEL:
-            - sub-1000032_T1w.nii.gz
-            - sub-1000710_T1w.nii.gz\n
+            - sub-001_T1w.nii.gz
+            - sub-002_T1w.nii.gz
+            FILES_PMJ:
+            - sub-001_T1w.nii.gz
+            - sub-002_T1w.nii.gz\n
             """)
     )
     parser.add_argument(
         '-path-in',
         metavar="<folder>",
         required=True,
-        help='Path to the processed data. Example: ~/ukbiobank_results/data_processed',
-        default='./'
+        help='Path to the processed data. Example: ~/<your_dataset>/data_processed',
     )
     parser.add_argument(
         '-o',
         metavar="<folder>",
         help="Zip file that contains the packaged data, without the extension. Default: data_to_correct",
         default='data_to_correct'
+    )
+    parser.add_argument(
+        '-suffix-files-seg',
+        help="FILES-SEG suffix. Available options: '_seg' (default), '_label-SC_mask'.",
+        choices=['_seg', '_label-SC_mask'],
+        default='_seg'
+    )
+    parser.add_argument(
+        '-suffix-files-gmseg',
+        help="FILES-GMSEG suffix. Available options: '_gmseg' (default), '_label-GM_mask'.",
+        choices=['_gmseg', '_label-GM_mask'],
+        default='_gmseg'
+    )
+    parser.add_argument(
+        '-suffix-files-lesion',
+        help="FILES-LESION suffix. Available options: '_lesion' (default).",
+        choices=['_lesion'],
+        default='_lesion'
+    )
+    parser.add_argument(
+        '-suffix-files-label',
+        help="FILES-LABEL suffix. Available options: '_labels' (default), '_labels-disc'.",
+        choices=['_labels', '_labels-disc'],
+        default='_labels'
+    )
+    parser.add_argument(
+        '-suffix-files-pmj',
+        help="FILES-PMJ suffix. Available options: '_pmj' (default), '_label-pmj'.",
+        choices=['_pmj', '_label-pmj'],
+        default='_pmj'
     )
     parser.add_argument(
         '-v', '--verbose',
@@ -76,7 +113,7 @@ def copy_file(fname_in, path_out):
     os.makedirs(path_out, exist_ok=True)
     # copy file
     fname_out = shutil.copy(fname_in, path_out)
-    print("-> {}".format(fname_out))
+    print(f'Copying: {fname_in} to {fname_out}')
 
 
 def main():
@@ -90,24 +127,22 @@ def main():
     else:
         coloredlogs.install(fmt='%(message)s', level='INFO')
 
-    # Check if input yml file exists
-    if os.path.isfile(args.config):
-        fname_yml = args.config
-    else:
-        sys.exit("ERROR: Input yml file {} does not exist or path is wrong.".format(args.config))
+    # Fetch configuration from YAML file
+    dict_yml = utils.fetch_yaml_config(args.config)
 
-    # Fetch input yml file as dict
-    with open(fname_yml, 'r') as stream:
-        try:
-            dict_yml = yaml.safe_load(stream)
-        except yaml.YAMLError as exc:
-            print(exc)
-    
     # Curate dict_yml to only have filenames instead of absolute path
     dict_yml = utils.curate_dict_yml(dict_yml)
 
     # Check for missing files before starting the whole process
-    utils.check_files_exist(dict_yml, args.path_in)
+    utils.check_files_exist(dict_yml, utils.get_full_path(args.path_in))
+
+    suffix_dict = {
+        'FILES_SEG': args.suffix_files_seg,         # e.g., _seg or _label-SC_mask
+        'FILES_GMSEG': args.suffix_files_gmseg,     # e.g., _gmseg or _label-GM_mask
+        'FILES_LESION': args.suffix_files_lesion,   # e.g., _lesion
+        'FILES_LABEL': args.suffix_files_label,     # e.g., _labels or _labels-disc
+        'FILES_PMJ': args.suffix_files_pmj          # e.g., _pmj or _label-pmj
+    }
 
     # Create temp folder
     path_tmp = tempfile.mkdtemp()
@@ -116,22 +151,24 @@ def main():
     # Note: in case the file is listed twice, we just overwrite it in the destination dir.
     for task, files in dict_yml.items():
         for file in files:
-            if task == 'FILES_SEG':
-                suffix_label = '_seg'
-            elif task == 'FILES_LABEL':
-                suffix_label = None
-            elif task == 'FILES_PMJ':
-                suffix_label = None
+            if task in suffix_dict.keys():
+                suffix_label = suffix_dict[task]
             else:
                 sys.exit('Task not recognized from yml file: {}'.format(task))
+            subject, ses, filename, contrast = utils.fetch_subject_and_session(file)
+            # Construct absolute path to the input file
+            # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w.nii.gz'
+            fname = os.path.join(utils.get_full_path(args.path_in), subject, ses, contrast, filename)
+            # Construct absolute path to the temp folder
+            path_out = os.path.join(path_tmp, subject, ses, contrast)
             # Copy image
-            copy_file(os.path.join(args.path_in, utils.get_subject(file), utils.get_contrast(file), file),
-                      os.path.join(path_tmp, utils.get_subject(file), utils.get_contrast(file)))
+            copy_file(fname, path_out)
             # Copy label if exists
             if suffix_label is not None:
-                copy_file(os.path.join(args.path_in, utils.get_subject(file), utils.get_contrast(file),
-                                       utils.add_suffix(file, suffix_label)),
-                          os.path.join(path_tmp, utils.get_subject(file), utils.get_contrast(file)))
+                # Construct absolute path to the input label (segmentation, labeling etc.) file
+                # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w_seg.nii.gz'
+                fname_seg = utils.add_suffix(fname, suffix_dict[task])
+                copy_file(fname_seg, path_out)
 
     # Package to zip file
     print("Creating archive...")
@@ -141,7 +178,7 @@ def main():
     if os.path.isdir(new_path_tmp):
         shutil.rmtree(new_path_tmp)
     shutil.move(path_tmp, new_path_tmp)
-    fname_archive = shutil.make_archive(args.o, 'zip', root_dir_tmp, base_dir_name)
+    fname_archive = shutil.make_archive(utils.get_full_path(args.o), 'zip', root_dir_tmp, base_dir_name)
     print("-> {}".format(fname_archive))
 
 
