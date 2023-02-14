@@ -148,6 +148,13 @@ def get_parser():
         default='red'
     )
     parser.add_argument(
+        '-fsleyes-dr',
+        help="Display range (dr) in % to be used for loading the input file on FSLeyes (default: 0,70). Note: Use "
+             "comma to separate values, e.g., 0,70.",
+        type=str,
+        default='0,70'
+    )
+    parser.add_argument(
         '-qc-only',
         help="Only output QC report based on the manually-corrected files already present in the derivatives folder. "
              "Skip the copy of the source files, and the opening of the manual correction pop-up windows.",
@@ -187,13 +194,14 @@ def get_function_for_qc(task):
         raise ValueError("This task is not recognized: {}".format(task))
 
 
-def correct_segmentation(fname, fname_seg_out, viewer, viewer_color):
+def correct_segmentation(fname, fname_seg_out, viewer, viewer_color, viewer_dr):
     """
     Open viewer (ITK-SNAP, FSLeyes, or 3D Slicer) with fname and fname_seg_out.
     :param fname:
     :param fname_seg_out:
     :param viewer:
     :param viewer_color: color to be used for the label. Only valid for on FSLeyes (default: red).
+    :param viewer_dr: display range to be used for the input image. Only valid for on FSLeyes (default: 0, 70).
     :return:
     """
     # launch ITK-SNAP
@@ -211,9 +219,16 @@ def correct_segmentation(fname, fname_seg_out, viewer, viewer_color):
     # launch FSLeyes
     elif viewer == 'fsleyes':
         if shutil.which('fsleyes') is not None:  # Check if command 'fsleyes' exists
+            # Get min and max intensity
+            min_intensity, max_intensity = utils.get_image_intensities(fname)
+            # Set min intensity
+            min_dr = str((max_intensity * int(viewer_dr.split(',')[0]))/100)
+            # Decrease max intensity
+            max_dr = str((max_intensity * int(viewer_dr.split(',')[1]))/100)
+
             print("In FSLeyes, click on 'Edit mode', correct the segmentation, and then save it with the same name "
                   "(overwrite).")
-            os.system('fsleyes {} {} -cm {}'.format(fname, fname_seg_out, viewer_color))
+            os.system('fsleyes {} -dr {} {} {} -cm {}'.format(fname, min_dr, max_dr, fname_seg_out, viewer_color))
         else:
             viewer_not_found(viewer)
     # launch 3D Slicer
@@ -418,9 +433,9 @@ def main():
                             print(f'Copying: {fname_seg} to {fname_label}')
                         if task in ['FILES_SEG', 'FILES_GMSEG']:
                             if not args.add_seg_only:
-                                correct_segmentation(fname, fname_label, args.viewer, args.fsleyes_cm)
+                                correct_segmentation(fname, fname_label, args.viewer, args.fsleyes_cm, args.fsleyes_dr)
                         elif task == 'FILES_LESION':
-                            correct_segmentation(fname, fname_label, args.viewer, args.fsleyes_cm)
+                            correct_segmentation(fname, fname_label, args.viewer, args.fsleyes_cm, args.fsleyes_dr)
                         elif task == 'FILES_LABEL':
                             correct_vertebral_labeling(fname, fname_label, args.label_disc_list)
                         elif task == 'FILES_PMJ':

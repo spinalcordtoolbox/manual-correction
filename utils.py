@@ -16,6 +16,9 @@ import subprocess
 import shutil
 import yaml
 
+import nibabel as nib
+import numpy as np
+
 
 # BIDS utility tool
 def fetch_subject_and_session(filename_path):
@@ -246,3 +249,20 @@ def check_software_installed(list_software=['sct']):
             logging.error("'{}' is not installed. Please install it before using this program.".format(software))
             install_ok = False
     return install_ok
+
+
+def get_image_intensities(fname_image):
+    """
+    Get min and max intensities for input nifti image
+    :param fname_image: str: input nifti image
+    :return: min_intensity: float64: minimum intensity of input image
+    :return: max_intensity: float64: maximum intensity of input image
+    """
+    # Load nii image
+    image = nib.load(fname_image)
+    # Get min intensity
+    min_intensity = np.min(image.get_fdata())
+    # Get max intensity
+    max_intensity = np.max(image.get_fdata())
+
+    return min_intensity, max_intensity
