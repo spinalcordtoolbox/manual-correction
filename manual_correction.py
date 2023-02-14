@@ -141,9 +141,9 @@ def get_parser():
         default='itksnap'
     )
     parser.add_argument(
-        '-fsl-color',
-        help="Color to be used for loading the label file on FSLeyes (default: red). `fsleyes -h` gives all the "
-             "available color options. If using a combination of colors, specify them with '-', e.g. 'red-yellow'.",
+        '-fsleyes-cm',
+        help="Colormap (cm) to be used for loading the label file on FSLeyes (default: red). `fsleyes -h` gives all "
+             "the available color options. If using a combination of colors, specify them with '-', e.g. 'red-yellow'.",
         type=str,
         default='red'
     )
@@ -418,9 +418,9 @@ def main():
                             print(f'Copying: {fname_seg} to {fname_label}')
                         if task in ['FILES_SEG', 'FILES_GMSEG']:
                             if not args.add_seg_only:
-                                correct_segmentation(fname, fname_label, args.viewer, args.fsl_color)
+                                correct_segmentation(fname, fname_label, args.viewer, args.fsleyes_cm)
                         elif task == 'FILES_LESION':
-                            correct_segmentation(fname, fname_label, args.viewer, args.fsl_color)
+                            correct_segmentation(fname, fname_label, args.viewer, args.fsleyes_cm)
                         elif task == 'FILES_LABEL':
                             correct_vertebral_labeling(fname, fname_label, args.label_disc_list)
                         elif task == 'FILES_PMJ':
