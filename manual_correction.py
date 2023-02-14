@@ -162,7 +162,10 @@ def get_parser():
     parser.add_argument(
         '-load-other-contrast',
         help="Load additional image to the viewer. This flag is useful if you want to use an additional contrast than "
-             "provided by the .yml file. Only valid for '-viewer fsleyes'. Example: 'PSIR', 'STIR', 'acq-sag_T1w' etc.",
+             "provided by the .yml file. Only valid for '-viewer fsleyes'. The filenames of the additional contrast "
+             "are derived from the filename provided by '-config'. For instance, if you want to open T2w overlaid by "
+             "PSIR image, specify T2w filename using '-config' flag and within this flag provides only PSIR. Another "
+             "examples: 'PSIR', 'STIR', 'acq-sag_T1w' etc.",
         type=str,
     )
     parser.add_argument(
