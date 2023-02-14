@@ -452,10 +452,9 @@ def main():
                 fname_seg = utils.add_suffix(fname, suffix_dict[task])
                 # Construct absolute path to the derivative file (i.e., path where manually corrected file will be saved)
                 # For example: '/Users/user/dataset/derivatives/labels/sub-001/anat/sub-001_T2w_seg-manual.nii.gz'
-                # fname_label = os.path.join(path_out_deriv, subject, ses, contrast,
-                #                            utils.add_suffix(utils.remove_suffix(filename, args.suffix_files_in),
-                #                                             suffix_dict[task] + '-manual'))
-                fname_label = os.path.join(path_out_deriv, subject, ses, contrast, subject + '_' + ses + '_' + args.load_other_contrast + suffix_dict[task] + '-manual.nii.gz')
+                fname_label = os.path.join(path_out_deriv, subject, ses, contrast,
+                                           utils.add_suffix(utils.remove_suffix(filename, args.suffix_files_in),
+                                                            suffix_dict[task] + '-manual'))
                 # Create output folders under derivative if they do not exist
                 os.makedirs(os.path.join(path_out_deriv, subject, ses, contrast), exist_ok=True)
                 if not args.qc_only:
