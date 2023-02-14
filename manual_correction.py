@@ -231,7 +231,7 @@ def correct_segmentation(fname, fname_seg_out, viewer, viewer_color, viewer_dr):
             os.system('fsleyes -S {} -dr {} {} {} -cm {}'.format(fname, min_dr, max_dr, fname_seg_out, viewer_color))
             # -S, --skipfslcheck    Skip $FSLDIR check/warning
             # -dr, --displayRange   Set display range (min max) for the specified overlay
-            # -cm, --colourMap      Set colour map for the specified overlay
+            # -cm, --cmap           Set colour map for the specified overlay
         else:
             viewer_not_found(viewer)
     # launch 3D Slicer
