@@ -254,9 +254,8 @@ def check_software_installed(list_software=['sct']):
 def create_empty_mask(fname, fname_label):
     """
     Create empty mask from reference image
-    :param fname_ref: str: reference image
-    :param suffix: str: suffix to add to output mask
-    :return: fname_mask: str: output mask
+    :param fname: path to reference image
+    :param fname_label: path to output mask under derivatives
     """
     img = nib.load(fname)
     data = np.zeros(img.shape)
