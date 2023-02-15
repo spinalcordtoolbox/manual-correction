@@ -16,6 +16,9 @@ import subprocess
 import shutil
 import yaml
 
+import numpy as np
+import nibabel as nib
+
 
 # BIDS utility tool
 def fetch_subject_and_session(filename_path):
@@ -246,3 +249,17 @@ def check_software_installed(list_software=['sct']):
             logging.error("'{}' is not installed. Please install it before using this program.".format(software))
             install_ok = False
     return install_ok
+
+
+def create_empty_mask(fname, fname_label):
+    """
+    Create empty mask from reference image
+    :param fname_ref: str: reference image
+    :param suffix: str: suffix to add to output mask
+    :return: fname_mask: str: output mask
+    """
+    img = nib.load(fname)
+    data = np.zeros(img.shape)
+    img_mask = nib.Nifti1Image(data, img.affine, img.header)
+    nib.save(img_mask, fname_label)
+    print("Empty mask created: {}".format(fname_label))
