@@ -44,6 +44,7 @@ def get_parser():
         "'FILES_LABEL' lists images associated with vertebral labeling, "
         "and 'FILES_PMJ' lists images associated with pontomedullary junction labeling. "
         "You can validate your .yml file at this website: http://www.yamllint.com/."
+        "Note: if you want to iterate over all subjects, you can use the wildcard '*' (e.g. sub-*_T1w.nii.gz)"
         "Below is an example .yml file:\n"
         + dedent(
             """
@@ -391,6 +392,10 @@ def main():
                     file_list.remove(file)
             files = file_list  # Rename to use those files instead of the ones to exclude
         if files is not None:
+            # Handle regex (i.e., iterate over all subjects)
+            if '*' in files[0] and len(files) == 1:
+                subject, ses, filename, contrast = utils.fetch_subject_and_session(files[0])
+                files = sorted(glob.glob(os.path.join(utils.get_full_path(args.path_in), subject, ses, contrast, filename)))
             for file in files:
                 # build file names
                 subject, ses, filename, contrast = utils.fetch_subject_and_session(file)

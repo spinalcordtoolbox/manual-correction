@@ -7,8 +7,8 @@
 # Authors: Jan Valosek, Sandrine Bédard, Julien Cohen-Adad
 #
 
-
 import os
+import glob
 import sys
 import shutil
 import tempfile
@@ -40,6 +40,7 @@ def get_parser():
         ",'FILES_LABEL' lists images associated with vertebral labeling "
         "and 'FILES_PMJ' lists images associated with pontomedullary junction labeling"
         "You can validate your .yml file at this website: http://www.yamllint.com/."
+        "Note: if you want to iterate over all subjects, you can use the wildcard '*' (e.g. sub-*_T1w.nii.gz)"
         "Below is an example .yml file:\n"
         + dedent(
             """
@@ -150,6 +151,10 @@ def main():
     # Loop across files and copy them in the appropriate directory
     # Note: in case the file is listed twice, we just overwrite it in the destination dir.
     for task, files in dict_yml.items():
+        # Handle regex (i.e., iterate over all subjects)
+        if '*' in files[0] and len(files) == 1:
+            subject, ses, filename, contrast = utils.fetch_subject_and_session(files[0])
+            files = sorted(glob.glob(os.path.join(utils.get_full_path(args.path_in), subject, ses, contrast, filename)))
         for file in files:
             if task in suffix_dict.keys():
                 suffix_label = suffix_dict[task]
