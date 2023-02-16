@@ -136,9 +136,9 @@ def get_parser():
         default='_pmj'
     )
     parser.add_argument(
-        '-label-list',
-        help="Provide a comma-separated list containing individual values and/or intervals. Example: '1:4,6,8' or 1:20 "
-             "(default)",
+        '-label-disc-list',
+        help="Comma-separated list containing individual values and/or intervals for disc labeling. Example: '1:4,6,8' "
+             "or 1:20 (default)",
         default='1:20'
     )
     parser.add_argument(
@@ -308,10 +308,13 @@ def create_json(fname_nifti, name_rater):
         outfile.write("\n")
 
 
-def ask_if_modify(fname_label):
+def ask_if_modify(fname_label, fname_seg):
     """
-    Check if file under derivatives already exists. If so, asks user if they want to modify it.
+    Check if the label file under derivatives already exists. If so, asks user if they want to modify it.
+    If the label file under derivatives does not exist, copy it from processed data.
+    If the file under derivatives and the file under processed data do not exist, create a new empty mask.
     :param fname_label: file under derivatives
+    :param fname_seg: file under processed data
     :return:
     """
     # Check if file under derivatives already exists
@@ -328,12 +331,19 @@ def ask_if_modify(fname_label):
                 print("Please answer with 'y' or 'n'")
             # We don't want to copy because we want to modify the existing file
             copy = False
+            create_empty_mask = False
     # If the file under derivatives does not exist, copy it from processed data
-    else:
+    elif not os.path.isfile(fname_label) and os.path.isfile(fname_seg):
         do_labeling = True
         copy = True
+        create_empty_mask = False
+    # If the file under derivatives and the file under processed data do not exist, create a new empty mask
+    else:
+        do_labeling = True
+        copy = False
+        create_empty_mask = True
 
-    return do_labeling, copy
+    return do_labeling, copy, create_empty_mask
 
 
 def generate_qc(fname, fname_label, task, fname_qc, subject, config_file):
@@ -462,23 +472,26 @@ def main():
                 os.makedirs(os.path.join(path_out_deriv, subject, ses, contrast), exist_ok=True)
                 if not args.qc_only:
                     # Check if file under derivatives already exists. If so, asks user if they want to modify it.
-                    do_labeling, copy = ask_if_modify(fname_label)
+                    do_labeling, copy, create_empty_mask = ask_if_modify(fname_label, fname_seg)
                     # Perform labeling (i.e., segmentation correction, labeling correction etc.) for the specific task
                     if do_labeling:
                         if args.denoise:
                             # Denoise the input file
                             fname = denoise_image(fname)
+                        # Copy file to derivatives folder
                         if copy:
-                            # Copy file to derivatives folder
                             shutil.copyfile(fname_seg, fname_label)
                             print(f'Copying: {fname_seg} to {fname_label}')
+                        # Create empty mask in derivatives folder
+                        elif create_empty_mask:
+                            utils.create_empty_mask(fname, fname_label)
                         if task in ['FILES_SEG', 'FILES_GMSEG']:
                             if not args.add_seg_only:
                                 correct_segmentation(fname, fname_other_contrast, fname_label, args.viewer, args.fsl_color)
                         elif task == 'FILES_LESION':
                             correct_segmentation(fname, fname_other_contrast, fname_label, args.viewer, args.fsl_color)
                         elif task == 'FILES_LABEL':
-                            correct_vertebral_labeling(fname, fname_label, args.label_list)
+                            correct_vertebral_labeling(fname, fname_label, args.label_disc_list)
                         elif task == 'FILES_PMJ':
                             correct_pmj_label(fname, fname_label)
                         else:
