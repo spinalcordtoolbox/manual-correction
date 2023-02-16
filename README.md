@@ -17,6 +17,10 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
+## Examples
+
+For examples, see [wiki](https://github.com/spinalcordtoolbox/manual-correction/wiki)
+
 ## Usage
 
 > **Note** All scripts currently assume BIDS-compliant data. For more information about the BIDS standard, please visit http://bids.neuroimaging.io.
