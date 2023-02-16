@@ -5,6 +5,24 @@
 #
 # For usage, type: python manual_correction.py -h
 #
+# Examples:
+#   * Correcting spinal cord segmentation across all subjects using the wildcard '*' (using FSLeyes as a viewer):
+#       python manual_correction.py -path-in <path_to_dataset> -config config.yml -path-out <output_path> -viewer fsleyes
+#       config.yml:
+#           """
+#           FILES_SEG:
+#               - sub-*_ses-M0_T2w.nii.gz
+#           """
+#
+#   * Correcting spinal cord segmentation across all subjects using the wildcard '*' (using FSLeyes as a viewer and
+#     assuming that the input images have been reoriented to RPI and resampled and thus contain the suffix '_RPI_r'):
+#       python manual_correction.py -path-in <path_to_dataset> -config config.yml -path-out <output_path> -viewer fsleyes -suffix-files-in _RPI_r
+#       config.yml:
+#           """
+#           FILES_SEG:
+#               - sub-*_ses-M0_T2w_RPI_r.nii.gz
+#           """
+#
 # Authors: Jan Valosek, Sandrine Bédard, Naga Karthik, Julien Cohen-Adad
 #
 
@@ -44,7 +62,8 @@ def get_parser():
         "'FILES_LABEL' lists images associated with vertebral labeling, "
         "and 'FILES_PMJ' lists images associated with pontomedullary junction labeling. "
         "You can validate your .yml file at this website: http://www.yamllint.com/."
-        "Note: if you want to iterate over all subjects, you can use the wildcard '*' (e.g. sub-*_T1w.nii.gz)"
+        "Note: if you want to iterate over all subjects, you can use the wildcard '*' (Examples: sub-*_T1w.nii.gz, "
+        "sub-*_ses-M0_T2w.nii.gz, sub-*_ses-M0_T2w_RPI_r.nii.gz, etc.)"
         "Below is an example .yml file:\n"
         + dedent(
             """
@@ -94,9 +113,11 @@ def get_parser():
     parser.add_argument(
         '-suffix-files-in',
         help=
-        "R|Suffix of the input files. For example: '_RPI_r'."
-        "Note: this flag is useful in cases when the input files have been processed and thus contains a specific "
-        "suffix.",
+        "R|Suffix of the input files."
+        "This flag is useful in cases when the input files have been processed and thus contain a specific suffix."
+        "For example, if the input image listed under '-config' contains the suffix '_RPI_r' "
+        "(e.g., sub-001_T1w_RPI_r.nii.gz), but the label file does not contain this suffix "
+        "(e.g., sub-001_T1w_seg.nii.gz), then you would need to provide the suffix '_RPI_r' to this flag.",
         default=''
     )
     parser.add_argument(
