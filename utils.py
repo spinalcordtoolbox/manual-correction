@@ -254,11 +254,11 @@ def check_software_installed(list_software=['sct']):
 def create_empty_mask(fname, fname_label):
     """
     Create empty mask from reference image
-    :param fname: path to reference image
-    :param fname_label: path to output mask under derivatives
+    :param fname: absolute path to reference image
+    :param fname_label: absolute path to output mask under derivatives
     """
     img = nib.load(fname)
     data = np.zeros(img.shape)
-    img_mask = nib.Nifti1Image(data, img.affine, img.header)
+    img_mask = nib.Nifti1Image(data, affine=img.affine, header=img.header)
     nib.save(img_mask, fname_label)
-    print("Empty mask created: {}".format(fname_label))
+    print("Empty mask created at: {}".format(fname_label))
