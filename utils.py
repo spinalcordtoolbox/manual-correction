@@ -204,7 +204,8 @@ def check_files_exist(dict_files, path_data):
     """
     missing_files = []
     for task, files in dict_files.items():
-        if files is not None:
+        # Do no check if key is empty or if regex is used
+        if files is not None and '*' in files:
             for file in files:
                 subject, ses, filename, contrast = fetch_subject_and_session(file)
                 fname = os.path.join(path_data, subject, ses, contrast, filename)

@@ -46,6 +46,8 @@ def get_parser():
         "'FILES_LABEL' lists images associated with vertebral labeling, "
         "and 'FILES_PMJ' lists images associated with pontomedullary junction labeling. "
         "You can validate your .yml file at this website: http://www.yamllint.com/."
+        "Note: if you want to iterate over all subjects, you can use the wildcard '*' (Examples: sub-*_T1w.nii.gz, "
+        "sub-*_ses-M0_T2w.nii.gz, sub-*_ses-M0_T2w_RPI_r.nii.gz, etc.)"
         "Below is an example .yml file:\n"
         + dedent(
             """
@@ -95,9 +97,11 @@ def get_parser():
     parser.add_argument(
         '-suffix-files-in',
         help=
-        "R|Suffix of the input files. For example: '_RPI_r'."
-        "Note: this flag is useful in cases when the input files have been processed and thus contains a specific "
-        "suffix.",
+        "R|Suffix of the input files."
+        "This flag is useful in cases when the input files have been processed and thus contain a specific suffix."
+        "For example, if the input image listed under '-config' contains the suffix '_RPI_r' "
+        "(e.g., sub-001_T1w_RPI_r.nii.gz), but the label file does not contain this suffix "
+        "(e.g., sub-001_T1w_seg.nii.gz), then you would need to provide the suffix '_RPI_r' to this flag.",
         default=''
     )
     parser.add_argument(
@@ -445,6 +449,10 @@ def main():
                     file_list.remove(file)
             files = file_list  # Rename to use those files instead of the ones to exclude
         if files is not None:
+            # Handle regex (i.e., iterate over all subjects)
+            if '*' in files[0] and len(files) == 1:
+                subject, ses, filename, contrast = utils.fetch_subject_and_session(files[0])
+                files = sorted(glob.glob(os.path.join(utils.get_full_path(args.path_in), subject, ses, contrast, filename)))
             for file in files:
                 # build file names
                 subject, ses, filename, contrast = utils.fetch_subject_and_session(file)
