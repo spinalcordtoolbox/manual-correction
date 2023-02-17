@@ -5,24 +5,6 @@
 #
 # For usage, type: python manual_correction.py -h
 #
-# Examples:
-#   * Correcting spinal cord segmentation across all subjects using the wildcard '*' (using FSLeyes as a viewer):
-#       python manual_correction.py -path-in <path_to_dataset> -config config.yml -path-out <output_path> -viewer fsleyes
-#       config.yml:
-#           """
-#           FILES_SEG:
-#               - sub-*_ses-M0_T2w.nii.gz
-#           """
-#
-#   * Correcting spinal cord segmentation across all subjects using the wildcard '*' (using FSLeyes as a viewer and
-#     assuming that the input images have been reoriented to RPI and resampled and thus contain the suffix '_RPI_r'):
-#       python manual_correction.py -path-in <path_to_dataset> -config config.yml -path-out <output_path> -viewer fsleyes -suffix-files-in _RPI_r
-#       config.yml:
-#           """
-#           FILES_SEG:
-#               - sub-*_ses-M0_T2w_RPI_r.nii.gz
-#           """
-#
 # Authors: Jan Valosek, Sandrine Bédard, Naga Karthik, Julien Cohen-Adad
 #
 
