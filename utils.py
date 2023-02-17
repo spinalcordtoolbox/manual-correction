@@ -261,4 +261,4 @@ def create_empty_mask(fname, fname_label):
     data = np.zeros(img.shape)
     img_mask = nib.Nifti1Image(data, affine=img.affine, header=img.header)
     nib.save(img_mask, fname_label)
-    print("Empty mask created at: {}".format(fname_label))
+    print("No label file found, creating an empty mask: {}".format(fname_label))
