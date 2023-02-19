@@ -233,10 +233,10 @@ def correct_segmentation(fname, fname_seg_out, fname_other_contrast, viewer, vie
         # Note: command line differs for macOs/Linux and Windows
         if shutil.which('itksnap') is not None:  # Check if command 'itksnap' exists
             # macOS and Linux
-            os.system('itksnap -g {} -s {}'.format(fname, fname_seg_out))
+            os.system(f'itksnap -g {fname} -s {fname_seg_out}')
         elif shutil.which('ITK-SNAP') is not None:  # Check if command 'ITK-SNAP' exists
             # Windows
-            os.system('ITK-SNAP -g {} -s {}'.format(fname, fname_seg_out))
+            os.system(f'ITK-SNAP -g {fname} -s {fname_seg_out}')
         else:
             viewer_not_found(viewer)
     # launch FSLeyes
@@ -252,12 +252,13 @@ def correct_segmentation(fname, fname_seg_out, fname_other_contrast, viewer, vie
             print("In FSLeyes, click on 'Edit mode', correct the segmentation, and then save it with the same name "
                   "(overwrite).")
             if fname_other_contrast:
-                os.system('fsleyes -S {} -dr {} {} {} {} -cm {}'.format(fname, min_dr, max_dr, fname_other_contrast, fname_seg_out, viewer_color))
+                os.system(f'fsleyes -S {fname} -dr {min_dr} {max_dr} {fname_other_contrast} {fname_seg_out} -cm '
+                          f'{viewer_color}')
                 # -S, --skipfslcheck    Skip $FSLDIR check/warning
                 # -dr, --displayRange   Set display range (min max) for the specified overlay
                 # -cm, --cmap           Set colour map for the specified overlay
             else:
-                os.system('fsleyes -S {} -dr {} {} {} -cm {}'.format(fname, min_dr, max_dr, fname_seg_out, viewer_color))
+                os.system(f'fsleyes -S {fname} -dr {min_dr} {max_dr} {fname_seg_out} -cm {viewer_color}')
         else:
             viewer_not_found(viewer)
     # launch 3D Slicer
@@ -290,9 +291,9 @@ def correct_vertebral_labeling(fname, fname_label, label_list, viewer='sct_label
     if shutil.which(viewer) is not None:  # Check if command 'sct_label_utils' exists
         message = "Click at the posterior tip of the disc(s). Then click 'Save and Quit'."
         if os.path.exists(fname_label):
-            os.system('sct_label_utils -i {} -create-viewer {} -o {} -ilabel {} -msg "{}"'.format(fname, label_list, fname_label, fname_label, message))
+            os.system(f'sct_label_utils -i {fname} -create-viewer {label_list} -o {fname_label} -ilabel {fname_label} -msg "{message}"')
         else:
-            os.system('sct_label_utils -i {} -create-viewer {} -o {} -msg "{}"'.format(fname, label_list, fname_label, message))
+            os.system(f'sct_label_utils -i {fname} -create-viewer {label_list} -o {fname_label} -msg "{message}"')
     else:
         viewer_not_found(viewer)
 
@@ -306,7 +307,7 @@ def correct_pmj_label(fname, fname_label, viewer='sct_label_utils'):
     """
     if shutil.which(viewer) is not None:  # Check if command 'sct_label_utils' exists
         message = "Click at the posterior tip of the pontomedullary junction (PMJ). Then click 'Save and Quit'."
-        os.system('sct_label_utils -i {} -create-viewer 50 -o {} -msg "{}"'.format(fname, fname_label, message))
+        os.system(f'sct_label_utils -i {fname} -create-viewer 50 -o {fname_label} -msg "{message}"')
     else:
         viewer_not_found(viewer)
 
