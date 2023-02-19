@@ -196,6 +196,23 @@ def get_parser():
     return parser
 
 
+class ParamFSLeyes:
+    """
+    Default parameters for FSLeyes viewer.
+    """
+    def __init__(self, cm='red', dr='0,70', second_orthoview=False):
+        """
+        :param cm: Colormap (cm) to be used for loading the label file in FSLeyes (default: red).
+        :param dr: Display range (dr) in % to be used for loading the input file in FSLeyes (default: 0,70).
+        :param second_orthoview: Open a second orthoview in FSLeyes (i.e., open two orthoviews next to each other).
+        """
+        self.cm = cm
+        self.dr = dr
+        self.min_dr = '0'
+        self.max_dr = '1000'
+        self.second_orthoview = second_orthoview
+
+
 # TODO: add also sct_get_centerline
 def get_function_for_qc(task):
     """
@@ -215,7 +232,7 @@ def get_function_for_qc(task):
         raise ValueError("This task is not recognized: {}".format(task))
 
 
-def correct_segmentation(fname, fname_seg_out, fname_other_contrast, viewer, viewer_color, viewer_dr):
+def correct_segmentation(fname, fname_seg_out, fname_other_contrast, viewer, param_fsleyes):
     """
     Open viewer (ITK-SNAP, FSLeyes, or 3D Slicer) with fname and fname_seg_out.
     :param fname:
@@ -223,8 +240,7 @@ def correct_segmentation(fname, fname_seg_out, fname_other_contrast, viewer, vie
     flag). Only valid for FSLeyes (default: None).
     :param fname_seg_out:
     :param viewer:
-    :param viewer_color: color to be used for the label. Only valid for on FSLeyes (default: red).
-    :param viewer_dr: display range to be used for the input image. Only valid for on FSLeyes (default: 0, 70).
+    :param param_fsleyes: parameters for FSLeyes viewer.
     :return:
     """
     # launch ITK-SNAP
@@ -245,20 +261,21 @@ def correct_segmentation(fname, fname_seg_out, fname_other_contrast, viewer, vie
             # Get min and max intensity
             min_intensity, max_intensity = utils.get_image_intensities(fname)
             # Set min intensity
-            min_dr = str((max_intensity * int(viewer_dr.split(',')[0]))/100)
+            param_fsleyes.min_dr = str((max_intensity * int(param_fsleyes.dr.split(',')[0]))/100)
             # Decrease max intensity
-            max_dr = str((max_intensity * int(viewer_dr.split(',')[1]))/100)
+            param_fsleyes.max_dr = str((max_intensity * int(param_fsleyes.dr.split(',')[1]))/100)
 
             print("In FSLeyes, click on 'Edit mode', correct the segmentation, and then save it with the same name "
                   "(overwrite).")
             if fname_other_contrast:
-                os.system(f'fsleyes -S {fname} -dr {min_dr} {max_dr} {fname_other_contrast} {fname_seg_out} -cm '
-                          f'{viewer_color}')
+                os.system(f'fsleyes -S {fname} -dr {param_fsleyes.min_dr} {param_fsleyes.max_dr} '
+                          f'{fname_other_contrast} {fname_seg_out} -cm {param_fsleyes.cm}')
                 # -S, --skipfslcheck    Skip $FSLDIR check/warning
                 # -dr, --displayRange   Set display range (min max) for the specified overlay
                 # -cm, --cmap           Set colour map for the specified overlay
             else:
-                os.system(f'fsleyes -S {fname} -dr {min_dr} {max_dr} {fname_seg_out} -cm {viewer_color}')
+                os.system(f'fsleyes -S {fname} -dr {param_fsleyes.min_dr} {param_fsleyes.max_dr} {fname_seg_out} -cm '
+                          f'{param_fsleyes.cm}')
         else:
             viewer_not_found(viewer)
     # launch 3D Slicer
@@ -441,6 +458,9 @@ def main():
     # check that output folder exists and has write permission
     path_out_deriv = utils.check_output_folder(path_out, args.path_derivatives)
 
+    # Fetch parameters for FSLeyes
+    param_fsleyes = ParamFSLeyes(cm=args.fsleyes_cm, dr=args.fsleyes_dr, second_orthoview=args.fsleyes_second_orthoview)
+
     # Get name of expert rater (skip if -qc-only is true)
     if not args.qc_only:
         name_rater = input("Enter your name (Firstname Lastname). It will be used to generate a json sidecar with each "
@@ -512,9 +532,9 @@ def main():
                             utils.create_empty_mask(fname, fname_label)
                         if task in ['FILES_SEG', 'FILES_GMSEG']:
                             if not args.add_seg_only:
-                                correct_segmentation(fname, fname_label, fname_other_contrast, args.viewer, args.fsleyes_cm, args.fsleyes_dr)
+                                correct_segmentation(fname, fname_label, fname_other_contrast, args.viewer, param_fsleyes)
                         elif task == 'FILES_LESION':
-                            correct_segmentation(fname, fname_label, fname_other_contrast, args.viewer, args.fsleyes_cm, args.fsleyes_dr)
+                            correct_segmentation(fname, fname_label, fname_other_contrast, args.viewer, param_fsleyes)
                         elif task == 'FILES_LABEL':
                             correct_vertebral_labeling(fname, fname_label, args.label_disc_list)
                         elif task == 'FILES_PMJ':
