@@ -16,8 +16,8 @@ import subprocess
 import shutil
 import yaml
 
-import nibabel as nib
 import numpy as np
+import nibabel as nib
 
 
 # BIDS utility tool
@@ -204,7 +204,8 @@ def check_files_exist(dict_files, path_data):
     """
     missing_files = []
     for task, files in dict_files.items():
-        if files is not None:
+        # Do no check if key is empty or if regex is used
+        if files is not None and '*' in files:
             for file in files:
                 subject, ses, filename, contrast = fetch_subject_and_session(file)
                 fname = os.path.join(path_data, subject, ses, contrast, filename)
@@ -266,3 +267,16 @@ def get_image_intensities(fname_image):
     max_intensity = np.max(image.get_fdata())
 
     return min_intensity, max_intensity
+
+
+def create_empty_mask(fname, fname_label):
+    """
+    Create empty mask from reference image
+    :param fname: absolute path to reference image
+    :param fname_label: absolute path to output mask under derivatives
+    """
+    img = nib.load(fname)
+    data = np.zeros(img.shape)
+    img_mask = nib.Nifti1Image(data, affine=img.affine, header=img.header)
+    nib.save(img_mask, fname_label)
+    print("No label file found, creating an empty mask: {}".format(fname_label))

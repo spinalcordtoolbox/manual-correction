@@ -7,8 +7,8 @@
 # Authors: Jan Valosek, Sandrine Bédard, Julien Cohen-Adad
 #
 
-
 import os
+import glob
 import sys
 import shutil
 import tempfile
@@ -40,6 +40,7 @@ def get_parser():
         ",'FILES_LABEL' lists images associated with vertebral labeling "
         "and 'FILES_PMJ' lists images associated with pontomedullary junction labeling"
         "You can validate your .yml file at this website: http://www.yamllint.com/."
+        "Note: if you want to iterate over all subjects, you can use the wildcard '*' (e.g. sub-*_T1w.nii.gz)"
         "Below is an example .yml file:\n"
         + dedent(
             """
@@ -100,6 +101,13 @@ def get_parser():
         default='_pmj'
     )
     parser.add_argument(
+        '-other-contrast',
+        help="Include additional images (contrasts). This flag is useful if you want to use an additional contrast "
+             "than provided by the .yml file for manual corrections. Only valid for '-viewer fsleyes'. Example: 'PSIR',"
+             " 'STIR', 'acq-sag_T1w' etc.",
+        type=str,
+    )
+    parser.add_argument(
         '-v', '--verbose',
         help="Full verbose (for debugging)",
         action='store_true'
@@ -150,6 +158,10 @@ def main():
     # Loop across files and copy them in the appropriate directory
     # Note: in case the file is listed twice, we just overwrite it in the destination dir.
     for task, files in dict_yml.items():
+        # Handle regex (i.e., iterate over all subjects)
+        if '*' in files[0] and len(files) == 1:
+            subject, ses, filename, contrast = utils.fetch_subject_and_session(files[0])
+            files = sorted(glob.glob(os.path.join(utils.get_full_path(args.path_in), subject, ses, contrast, filename)))
         for file in files:
             if task in suffix_dict.keys():
                 suffix_label = suffix_dict[task]
@@ -159,10 +171,16 @@ def main():
             # Construct absolute path to the input file
             # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w.nii.gz'
             fname = os.path.join(utils.get_full_path(args.path_in), subject, ses, contrast, filename)
+            # Construct absolute path to the other contrast file/contrast
+            if args.load_other_contrast:
+                fname_other_contrast = os.path.join(utils.get_full_path(args.path_in), subject, ses, contrast,
+                                                    subject + '_' + ses + '_' + args.load_other_contrast + '.nii.gz')
             # Construct absolute path to the temp folder
             path_out = os.path.join(path_tmp, subject, ses, contrast)
             # Copy image
             copy_file(fname, path_out)
+            if args.load_other_contrast:
+                copy_file(fname_other_contrast, path_out)
             # Copy label if exists
             if suffix_label is not None:
                 # Construct absolute path to the input label (segmentation, labeling etc.) file
