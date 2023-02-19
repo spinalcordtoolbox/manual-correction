@@ -148,14 +148,14 @@ def get_parser():
     )
     parser.add_argument(
         '-fsleyes-cm',
-        help="Colormap (cm) to be used for loading the label file on FSLeyes (default: red). `fsleyes -h` gives all "
+        help="Colormap (cm) to be used for loading the label file in FSLeyes (default: red). `fsleyes -h` gives all "
              "the available color options. If using a combination of colors, specify them with '-', e.g. 'red-yellow'.",
         type=str,
         default='red'
     )
     parser.add_argument(
         '-fsleyes-dr',
-        help="Display range (dr) in % to be used for loading the input file on FSLeyes (default: 0,70). Note: Use "
+        help="Display range (dr) in % to be used for loading the input file in FSLeyes (default: 0,70). Note: Use "
              "comma to separate values, e.g., 0,70.",
         type=str,
         default='0,70'
@@ -236,9 +236,9 @@ def correct_segmentation(fname, fname_seg_out, fname_other_contrast, viewer, par
     """
     Open viewer (ITK-SNAP, FSLeyes, or 3D Slicer) with fname and fname_seg_out.
     :param fname:
+    :param fname_seg_out: path to the derivative label file
     :param fname_other_contrast: additional contrast to load in the viewer (specified by the '-load-other-contrast'
     flag). Only valid for FSLeyes (default: None).
-    :param fname_seg_out:
     :param viewer:
     :param param_fsleyes: parameters for FSLeyes viewer.
     :return:
