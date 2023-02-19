@@ -173,6 +173,7 @@ def get_parser():
              "PSIR image, specify T2w filename using '-config' flag and within this flag provides only PSIR. Another "
              "examples: 'PSIR', 'STIR', 'acq-sag_T1w' etc.",
         type=str,
+        default=None
     )
     parser.add_argument(
         '-qc-only',
@@ -214,12 +215,12 @@ def get_function_for_qc(task):
         raise ValueError("This task is not recognized: {}".format(task))
 
 
-def correct_segmentation(fname, fname_other_contrast, fname_seg_out, viewer, viewer_color, viewer_dr):
+def correct_segmentation(fname, fname_seg_out, fname_other_contrast, viewer, viewer_color, viewer_dr):
     """
     Open viewer (ITK-SNAP, FSLeyes, or 3D Slicer) with fname and fname_seg_out.
     :param fname:
-    :param fname_other_contrast: other contrast to load in the viewer (specified by the '-load-other-contrast' flag).
-    Only valid for FSLeyes.
+    :param fname_other_contrast: additional contrast to load in the viewer (specified by the '-load-other-contrast'
+    flag). Only valid for FSLeyes (default: None).
     :param fname_seg_out:
     :param viewer:
     :param viewer_color: color to be used for the label. Only valid for on FSLeyes (default: red).
@@ -481,6 +482,8 @@ def main():
                 if args.load_other_contrast:
                     fname_other_contrast = os.path.join(utils.get_full_path(args.path_in), subject, ses, contrast,
                                                         subject + '_' + ses + '_' + args.load_other_contrast + '.nii.gz')
+                else:
+                    fname_other_contrast = None
                 # Construct absolute path to the input label (segmentation, labeling etc.) file
                 # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w_seg.nii.gz'
                 fname_seg = utils.add_suffix(fname, suffix_dict[task])
