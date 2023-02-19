@@ -11,6 +11,8 @@
 #
 
 import argparse
+import tempfile
+
 import coloredlogs
 import glob
 import json
@@ -161,6 +163,11 @@ def get_parser():
         default='0,70'
     )
     parser.add_argument(
+        '-fsleyes-second-orthoview',
+        help="Open a second orthoview in FSLeyes (i.e., open two orthoviews next to each other).",
+        action='store_true'
+    )
+    parser.add_argument(
         '-denoise',
         help="Denoise the input image using 'sct_maths -denoise p=1,b=2'.",
         action='store_true'
@@ -211,6 +218,44 @@ class ParamFSLeyes:
         self.min_dr = '0'
         self.max_dr = '1000'
         self.second_orthoview = second_orthoview
+
+
+def create_fsleyes_script(fname, fname_seg_out, fname_other_contrast=None, param_fsleyes=ParamFSLeyes()):
+    """
+    Create a custom Python script to interact with the FSLeyes API.
+    Note: the second orthoview cannot be opened from the CLI, instead, FSLeyes API via a custom Python script must
+    be used. For details, see: https://www.jiscmail.ac.uk/cgi-bin/wa-jisc.exe?A2=FSL;ab356891.2301
+    :param fname: path of the input image.
+    :param fname_seg_out: path to the derivative label file
+    :param fname_other_contrast: path of the other contrast to be loaded in FSLeyes.
+    :param param_fsleyes:
+    :return:
+    """
+    python_script = [
+        "import os",
+        "",
+        "image = Image(op.expandvars('" + fname + "'))",
+        "label = Image(op.expandvars('" + fname_seg_out + "'))",
+        "overlayList.append(image)",
+        "overlayList.append(label)",
+        "displayCtx.getOpts(overlayList[0]).displayRange = (" + param_fsleyes.min_dr + ", " + param_fsleyes.max_dr + ")",
+        "displayCtx.getOpts(overlayList[1]).cmap = '" + param_fsleyes.cm + "'",
+        "if os.path.isfile('" + str(fname_other_contrast) + "'):",
+        "    other_contrast = Image(op.expandvars('" + str(fname_other_contrast) + "'))",
+        "    overlayList.append(other_contrast)",
+        "ortho_left = frame.addViewPanel(OrthoPanel)",
+        "ortho_right = frame.addViewPanel(OrthoPanel)",
+        "ortho_left.defaultLayout()",
+        "ortho_right.defaultLayout()",
+        ""
+    ]
+
+    # Create a temporary script
+    fname_script = os.path.join(tempfile.mkdtemp(), 'custom_fsleyes_script.py')
+    with open(fname_script, 'w') as f:
+        f.write('\n'.join(python_script))
+
+    return fname_script
 
 
 # TODO: add also sct_get_centerline
@@ -273,6 +318,10 @@ def correct_segmentation(fname, fname_seg_out, fname_other_contrast, viewer, par
                 # -S, --skipfslcheck    Skip $FSLDIR check/warning
                 # -dr, --displayRange   Set display range (min max) for the specified overlay
                 # -cm, --cmap           Set colour map for the specified overlay
+            # Open a second orthoview (i.e., open two orthoviews next to each other)
+            elif param_fsleyes.second_orthoview:
+                fname_script = create_fsleyes_script(fname, fname_seg_out, fname_other_contrast, param_fsleyes)
+                os.system(f'fsleyes -r {fname_script}')
             else:
                 os.system(f'fsleyes -S {fname} -dr {param_fsleyes.min_dr} {param_fsleyes.max_dr} {fname_seg_out} -cm '
                           f'{param_fsleyes.cm}')
