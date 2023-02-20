@@ -207,16 +207,18 @@ class ParamFSLeyes:
     """
     Default parameters for FSLeyes viewer.
     """
-    def __init__(self, cm='red', dr='0,70', second_orthoview=False):
+    def __init__(self, cm='red', dr='0,70', min_dr='0', max_dr='1000', second_orthoview=False):
         """
         :param cm: Colormap (cm) to be used for loading the label file in FSLeyes (default: red).
         :param dr: Display range (dr) in % to be used for loading the input file in FSLeyes (default: 0,70).
+        :param min_dr: Minimum pixel intensity value for the display range (dr) to be used for loading the input file in FSLeyes.
+        :param max_dr: Maximum pixel intensity value for the display range (dr) to be used for loading the input file in FSLeyes.
         :param second_orthoview: Open a second orthoview in FSLeyes (i.e., open two orthoviews next to each other).
         """
         self.cm = cm
         self.dr = dr
-        self.min_dr = '0'
-        self.max_dr = '1000'
+        self.min_dr = min_dr
+        self.max_dr = max_dr
         self.second_orthoview = second_orthoview
 
 
