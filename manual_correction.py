@@ -301,6 +301,10 @@ def correct_segmentation(fname, fname_seg_out, fname_other_contrast, viewer, par
 
             print("In FSLeyes, click on 'Edit mode', correct the segmentation, and then save it with the same name "
                   "(overwrite).")
+            # FSLeyes arguments explanation:
+            # -S, --skipfslcheck    Skip $FSLDIR check/warning
+            # -dr, --displayRange   Set display range (min max) for the specified overlay
+            # -cm, --cmap           Set colour map for the specified overlay
             if fname_other_contrast:
                 # Open a second orthoview (i.e., open two orthoviews next to each other)
                 if param_fsleyes.second_orthoview:
