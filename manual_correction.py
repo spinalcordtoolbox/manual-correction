@@ -178,7 +178,7 @@ def get_parser():
              "provided by the .yml file. Only valid for '-viewer fsleyes'. The filenames of the additional contrast "
              "are derived from the filename provided by '-config'. For instance, if you want to open T2w overlaid by "
              "PSIR image, specify T2w filename using '-config' flag and within this flag provides only PSIR. Another "
-             "examples: 'PSIR', 'STIR', 'acq-sag_T1w' etc.",
+             "examples: 'PSIR', 'STIR', 'acq-sag_T1w', 'T2star' etc.",
         type=str,
         default=None
     )
@@ -551,8 +551,14 @@ def main():
                 fname = os.path.join(utils.get_full_path(args.path_in), subject, ses, contrast, filename)
                 # Construct absolute path to the other contrast file
                 if args.load_other_contrast:
+                    # Do not include session in the filename
+                    if ses == '':
+                        other_contrast_filename = subject + '_' + args.load_other_contrast + '.nii.gz'
+                    # Include session in the filename
+                    else:
+                        other_contrast_filename = subject + '_' + ses + '_' + args.load_other_contrast + '.nii.gz'
                     fname_other_contrast = os.path.join(utils.get_full_path(args.path_in), subject, ses, contrast,
-                                                        subject + '_' + ses + '_' + args.load_other_contrast + '.nii.gz')
+                                                        other_contrast_filename)
                 else:
                     fname_other_contrast = None
                 # Construct absolute path to the input label (segmentation, labeling etc.) file
