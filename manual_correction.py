@@ -78,7 +78,8 @@ def get_parser():
         '-path-out',
         metavar="<folder>",
         help=
-        "R|Path to the output folder where the corrected labels will be saved. Example: ~/<your_dataset>/"
+        "R|Path to the output folder where the corrected labels will be saved. "
+        "Default: './' (current directory). "
         "Note: The path provided within this flag will be combined with the path provided within the "
         "'-path-derivatives' flag. ",
         default='./'
@@ -87,11 +88,11 @@ def get_parser():
         '-path-derivatives',
         metavar="<folder>",
         help=
-        "R|Path to the 'derivatives' BIDS-complaint folder where the corrected labels will be saved. "
-        "Default: derivatives/labels"
-        "Note: if the provided folder (e.g., 'derivatives/labels') does not already exist, it will be created."
-        "Note: if segmentation or labels files already exist and you would like to correct them, provide path to them "
-        "within this flag.",
+        "R|Path to the BIDS-compliant 'derivatives' folder where the corrected labels will be saved. "
+        "Default: 'derivatives/labels'. "
+        "Note: if the provided folder (e.g., 'derivatives/labels') does not already exist, it will be created. "
+        "Note: if the segmentation or label files already exist and you would like to correct them, provide path to "
+        "them within this flag.",
         default=os.path.join('derivatives', 'labels')
     )
     parser.add_argument(
