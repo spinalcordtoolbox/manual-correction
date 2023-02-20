@@ -220,7 +220,7 @@ class ParamFSLeyes:
         self.second_orthoview = second_orthoview
 
 
-def create_fsleyes_script(fname, fname_seg_out, fname_other_contrast=None, param_fsleyes=ParamFSLeyes()):
+def create_fsleyes_script():
     """
     Create a custom Python script to interact with the FSLeyes API.
     Note: the second orthoview cannot be opened from the CLI, instead, FSLeyes API via a custom Python script must
@@ -232,17 +232,6 @@ def create_fsleyes_script(fname, fname_seg_out, fname_other_contrast=None, param
     :return:
     """
     python_script = [
-        "import os",
-        "",
-        "image = Image(op.expandvars('" + fname + "'))",
-        "label = Image(op.expandvars('" + fname_seg_out + "'))",
-        "overlayList.append(image)",
-        "overlayList.append(label)",
-        "displayCtx.getOpts(overlayList[0]).displayRange = (" + param_fsleyes.min_dr + ", " + param_fsleyes.max_dr + ")",
-        "displayCtx.getOpts(overlayList[1]).cmap = '" + param_fsleyes.cm + "'",
-        "if os.path.isfile('" + str(fname_other_contrast) + "'):",
-        "    other_contrast = Image(op.expandvars('" + str(fname_other_contrast) + "'))",
-        "    overlayList.append(other_contrast)",
         "ortho_left = frame.addViewPanel(OrthoPanel)",
         "ortho_right = frame.addViewPanel(OrthoPanel)",
         "ortho_left.defaultLayout()",
@@ -313,15 +302,21 @@ def correct_segmentation(fname, fname_seg_out, fname_other_contrast, viewer, par
             print("In FSLeyes, click on 'Edit mode', correct the segmentation, and then save it with the same name "
                   "(overwrite).")
             if fname_other_contrast:
-                os.system(f'fsleyes -S {fname} -dr {param_fsleyes.min_dr} {param_fsleyes.max_dr} '
-                          f'{fname_other_contrast} {fname_seg_out} -cm {param_fsleyes.cm}')
-                # -S, --skipfslcheck    Skip $FSLDIR check/warning
-                # -dr, --displayRange   Set display range (min max) for the specified overlay
-                # -cm, --cmap           Set colour map for the specified overlay
-            # Open a second orthoview (i.e., open two orthoviews next to each other)
+                # Open a second orthoview (i.e., open two orthoviews next to each other)
+                if param_fsleyes.second_orthoview:
+                    fname_script = create_fsleyes_script()
+                    os.system(f'fsleyes -S -r {fname_script} {fname} -dr {param_fsleyes.min_dr} {param_fsleyes.max_dr} '
+                              f'{fname_other_contrast} {fname_seg_out} -cm {param_fsleyes.cm}')
+                # No second orthoview
+                else:
+                    os.system(f'fsleyes -S {fname} -dr {param_fsleyes.min_dr} {param_fsleyes.max_dr} '
+                              f'{fname_other_contrast} {fname_seg_out} -cm {param_fsleyes.cm}')
+            # Open a second orthoview without second contrast
             elif param_fsleyes.second_orthoview:
-                fname_script = create_fsleyes_script(fname, fname_seg_out, fname_other_contrast, param_fsleyes)
-                os.system(f'fsleyes -r {fname_script}')
+                fname_script = create_fsleyes_script()
+                os.system(f'fsleyes -S -r {fname_script} {fname} -dr {param_fsleyes.min_dr} {param_fsleyes.max_dr} '
+                          f'{fname_seg_out} -cm {param_fsleyes.cm}')
+            # No second contrast, no second orthoview
             else:
                 os.system(f'fsleyes -S {fname} -dr {param_fsleyes.min_dr} {param_fsleyes.max_dr} {fname_seg_out} -cm '
                           f'{param_fsleyes.cm}')
