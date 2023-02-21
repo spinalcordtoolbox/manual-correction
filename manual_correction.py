@@ -3,9 +3,14 @@
 # Script to perform manual correction of spinal cord segmentation, gray matter segmentation, vertebral labeling, and
 # pontomedullary junction labeling.
 #
-# For usage, type: python manual_correction.py -h
+# For full help, please run:  python manual_correction.py -h
 #
-# For examples, see: https://github.com/spinalcordtoolbox/manual-correction/wiki
+# Example:
+#       python manual_correction.py
+#       -path-in ~/<your_dataset>/data_processed
+#       -config config.yml
+#
+# For all examples, see: https://github.com/spinalcordtoolbox/manual-correction/wiki
 #
 # Authors: Jan Valosek, Sandrine Bédard, Naga Karthik, Julien Cohen-Adad
 #

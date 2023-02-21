@@ -2,7 +2,12 @@
 #
 # Script to package data for manual correction.
 #
-# For usage, type: python package_for_correction.py -h
+# For full help, please run: python package_for_correction.py -h`
+#
+# Example:
+#       python package_for_correction.py
+#       -path-in ~/<your_dataset>/data_processed
+#       -config config.yml
 #
 # Authors: Jan Valosek, Sandrine Bédard, Julien Cohen-Adad
 #
