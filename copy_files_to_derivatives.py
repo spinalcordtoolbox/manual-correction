@@ -52,13 +52,13 @@ def main():
 
     # Check if path_in exists
     if os.path.isdir(args.path_in):
-        path_in = os.path.join(os.path.abspath(args.path_in), 'labels')
+        path_in = os.path.abspath(args.path_in)
     else:
         raise NotADirectoryError(f'{args.path_in} does not exist.')
 
     # Check if path_out exists
     if os.path.isdir(args.path_out):
-        path_out = os.path.join(os.path.abspath(args.path_out), 'labels')
+        path_out = os.path.abspath(args.path_out)
     else:
         raise NotADirectoryError(f'{args.path_out} does not exist.')
 
