@@ -143,9 +143,13 @@ def get_parser():
     )
     parser.add_argument(
         '-viewer',
-        help="Viewer used for manual correction. Available options: 'itksnap' (default), 'fsleyes', 'slicer'.",
+        help="Viewer used for manual correction. Available options: 'fsleyes' (default), 'itksnap', 'slicer'. "
+             "For details about viewers, visit their websites: "
+             "FSLeyes (https://open.win.ox.ac.uk/pages/fsl/fsleyes/fsleyes/userdoc/#) "
+             "ITK-SNAP (http://www.itksnap.org/pmwiki/pmwiki.php) "
+             "3D Slicer (https://www.slicer.org)",
         choices=['fsleyes', 'itksnap', 'slicer'],
-        default='itksnap'
+        default='fsleyes'
     )
     parser.add_argument(
         '-fsl-color',
