@@ -501,6 +501,7 @@ def main():
                         # Create empty mask in derivatives folder
                         elif create_empty_mask:
                             utils.create_empty_mask(fname, fname_label)
+
                         if task in ['FILES_SEG', 'FILES_GMSEG']:
                             if not args.add_seg_only:
                                 correct_segmentation(fname, fname_other_contrast, fname_label, args.viewer, args.fsl_color)
