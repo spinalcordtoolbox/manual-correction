@@ -176,6 +176,7 @@ def get_parser():
              "PSIR image, specify T2w filename using '-config' flag and within this flag provides only PSIR. Another "
              "examples: 'PSIR', 'STIR', 'acq-sag_T1w' etc.",
         type=str,
+        default=None
     )
     parser.add_argument(
         '-qc-only',
@@ -473,6 +474,8 @@ def main():
                 if args.load_other_contrast:
                     fname_other_contrast = os.path.join(utils.get_full_path(args.path_in), subject, ses, contrast,
                                                         subject + '_' + ses + '_' + args.load_other_contrast + '.nii.gz')
+                else:
+                    fname_other_contrast = None
                 # Construct absolute path to the input label (segmentation, labeling etc.) file
                 # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w_seg.nii.gz'
                 fname_seg = utils.add_suffix(fname, suffix_dict[task])
