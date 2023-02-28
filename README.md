@@ -62,4 +62,4 @@ For full help, please run: `python copy_files_to_derivatives.py -h`.
 
 ## Examples
 
-For examples, see [wiki](https://github.com/spinalcordtoolbox/manual-correction/wiki)
+See [wiki](https://github.com/spinalcordtoolbox/manual-correction/wiki)
