@@ -111,6 +111,7 @@ def get_parser():
              "than provided by the .yml file for manual corrections. Only valid for '-viewer fsleyes'. Example: 'PSIR',"
              " 'STIR', 'acq-sag_T1w' etc.",
         type=str,
+        default=None
     )
     parser.add_argument(
         '-v', '--verbose',
@@ -180,6 +181,8 @@ def main():
             if args.load_other_contrast:
                 fname_other_contrast = os.path.join(utils.get_full_path(args.path_in), subject, ses, contrast,
                                                     subject + '_' + ses + '_' + args.load_other_contrast + '.nii.gz')
+            else:
+                fname_other_contrast = None
             # Construct absolute path to the temp folder
             path_out = os.path.join(path_tmp, subject, ses, contrast)
             # Copy image
