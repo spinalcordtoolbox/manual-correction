@@ -547,6 +547,15 @@ def main():
     # Fetch parameters for FSLeyes
     param_fsleyes = ParamFSLeyes(cm=args.fsleyes_cm, dr=args.fsleyes_dr, second_orthoview=args.fsleyes_second_orthoview)
 
+    # Get list of segmentations files for all subjects in -path-in (if -add-seg-only)
+    if args.add_seg_only:
+        path_list = glob.glob(args.path_in + "/**/*" + args.suffix_files_seg + ".nii.gz", recursive=True)
+        # Get only filenames without suffix _seg  to match files in -config .yml list
+        file_list = [utils.remove_suffix(os.path.split(path)[-1], args.suffix_files_seg) for path in path_list]
+        # Check if file_list is empty
+        if not file_list:
+            sys.exit("ERROR: No segmentation file found in {}.".format(args.path_in))
+
     # Get name of expert rater (skip if -qc-only is true)
     if not args.qc_only:
         name_rater = input("Enter your name (Firstname Lastname). It will be used to generate a json sidecar with each "
