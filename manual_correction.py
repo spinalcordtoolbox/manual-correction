@@ -657,7 +657,8 @@ def main():
                         else:
                             # create json sidecar with the name of the expert rater
                             if args.add_seg_only:
-                                create_json(fname_label, name_rater, modified)
+                                # We are passing modified=True because we are adding a new segmentation
+                                create_json(fname_label, name_rater, modified=True)
                             else:
                                 modified = check_if_modified(time_one, time_two)
                                 create_json(fname_label, name_rater, modified)
