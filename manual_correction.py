@@ -194,14 +194,14 @@ def get_parser():
     )
     parser.add_argument(
         '-qc-only',
-        help="Only output QC report based on the manually-corrected files already present in the derivatives folder. "
+        help="Only output QC report based on the manually-corrected files already present in the 'derivatives' folder. "
              "Skip the copy of the source files, and the opening of the manual correction pop-up windows.",
         action='store_true'
     )
     parser.add_argument(
         '-add-seg-only',
-        help="Only copy the source files (segmentation) that aren't in -config list to the derivatives/ folder. "
-             "Use this flag to add manually QC-ed automatic segmentations to the derivatives folder.",
+        help="Only copy the source files (segmentation) that aren't in -config list to the 'derivatives' folder. "
+             "Use this flag to add manually QC-ed automatic segmentations to the 'derivatives' folder.",
         action='store_true'
     )
     parser.add_argument(
