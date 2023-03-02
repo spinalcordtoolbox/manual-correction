@@ -656,10 +656,13 @@ def main():
                             # NOTE: QC for lesion segmentation does not exist or not implemented yet
                         else:
                             # create json sidecar with the name of the expert rater
-                            modified = check_if_modified(time_one, time_two)
-                            create_json(fname_label, name_rater, modified)
-                            # Generate QC report
-                            generate_qc(fname, fname_label, task, fname_qc, subject, args.config)
+                            if args.add_seg_only:
+                                create_json(fname_label, name_rater, modified)
+                            else:
+                                modified = check_if_modified(time_one, time_two)
+                                create_json(fname_label, name_rater, modified)
+                                # Generate QC report
+                                generate_qc(fname, fname_label, task, fname_qc, subject, args.config)
 
                 # Generate QC report only
                 if args.qc_only:
