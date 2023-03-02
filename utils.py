@@ -252,6 +252,23 @@ def check_software_installed(list_software=['sct']):
     return install_ok
 
 
+def get_image_intensities(fname_image):
+    """
+    Get min and max intensities for input nifti image
+    :param fname_image: str: input nifti image
+    :return: min_intensity: float64: minimum intensity of input image
+    :return: max_intensity: float64: maximum intensity of input image
+    """
+    # Load nii image
+    image = nib.load(fname_image)
+    # Get min intensity
+    min_intensity = np.min(image.get_fdata())
+    # Get max intensity
+    max_intensity = np.max(image.get_fdata())
+
+    return min_intensity, max_intensity
+
+
 def create_empty_mask(fname, fname_label):
     """
     Create empty mask from reference image
