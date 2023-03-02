@@ -16,6 +16,7 @@
 #
 
 import argparse
+import datetime
 import coloredlogs
 import glob
 import json
@@ -303,19 +304,45 @@ def correct_pmj_label(fname, fname_label, viewer='sct_label_utils'):
         viewer_not_found(viewer)
 
 
-def create_json(fname_nifti, name_rater):
+def get_modification_time(fname):
+    """
+    Get the modification time of a file.
+    :param fname: file name
+    :return:
+    """
+    return datetime.datetime.fromtimestamp(os.path.getmtime(fname))
+
+
+def check_if_modified(time_one, time_two):
+    """
+    Check if the file was modified by the user. Return True if the file was modified, False otherwise.
+    :param time_one: modification time of the file before viewing
+    :param time_two: modification time of the file after viewing
+    :return:
+    """
+    if time_one != time_two:
+        print("The label file was modified.")
+        return True
+    else:
+        print("The label file was not modified.")
+        return False
+
+
+def create_json(fname_nifti, name_rater, modified):
     """
     Create json sidecar with meta information
     :param fname_nifti: str: File name of the nifti image to associate with the json sidecar
     :param name_rater: str: Name of the expert rater
+    :param modified: bool: True if the file was modified by the user
     :return:
     """
-    metadata = {'Author': name_rater, 'Date': time.strftime('%Y-%m-%d %H:%M:%S')}
-    fname_json = fname_nifti.rstrip('.nii').rstrip('.nii.gz') + '.json'
-    with open(fname_json, 'w') as outfile:
-        json.dump(metadata, outfile, indent=4)
-        # Add last newline
-        outfile.write("\n")
+    if modified:
+        metadata = {'Author': name_rater, 'Date': time.strftime('%Y-%m-%d %H:%M:%S')}
+        fname_json = fname_nifti.rstrip('.nii').rstrip('.nii.gz') + '.json'
+        with open(fname_json, 'w') as outfile:
+            json.dump(metadata, outfile, indent=4)
+            # Add last newline
+            outfile.write("\n")
 
 
 def ask_if_modify(fname_label, fname_seg):
@@ -504,13 +531,21 @@ def main():
 
                         if task in ['FILES_SEG', 'FILES_GMSEG']:
                             if not args.add_seg_only:
+                                time_one = get_modification_time(fname_label)
                                 correct_segmentation(fname, fname_other_contrast, fname_label, args.viewer, args.fsl_color)
+                                time_two = get_modification_time(fname_label)
                         elif task == 'FILES_LESION':
+                            time_one = get_modification_time(fname_label)
                             correct_segmentation(fname, fname_other_contrast, fname_label, args.viewer, args.fsl_color)
+                            time_two = get_modification_time(fname_label)
                         elif task == 'FILES_LABEL':
+                            time_one = get_modification_time(fname_label)
                             correct_vertebral_labeling(fname, fname_label, args.label_disc_list)
+                            time_two = get_modification_time(fname_label)
                         elif task == 'FILES_PMJ':
+                            time_one = get_modification_time(fname_label)
                             correct_pmj_label(fname, fname_label)
+                            time_two = get_modification_time(fname_label)
                         else:
                             sys.exit('Task not recognized from yml file: {}'.format(task))
                         if args.denoise:
@@ -519,11 +554,13 @@ def main():
 
                         if task == 'FILES_LESION':
                             # create json sidecar with the name of the expert rater
-                            create_json(fname_label, name_rater)
+                            modified = check_if_modified(time_one, time_two)
+                            create_json(fname_label, name_rater, modified)
                             # NOTE: QC for lesion segmentation does not exist or not implemented yet
                         else:
                             # create json sidecar with the name of the expert rater
-                            create_json(fname_label, name_rater)
+                            modified = check_if_modified(time_one, time_two)
+                            create_json(fname_label, name_rater, modified)
                             # Generate QC report
                             generate_qc(fname, fname_label, task, fname_qc, subject, args.config)
 
