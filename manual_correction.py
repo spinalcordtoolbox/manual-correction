@@ -564,12 +564,6 @@ def main():
     # Build QC report folder name
     fname_qc = os.path.join(path_out, 'qc_corr_' + time.strftime('%Y%m%d%H%M%S'))
 
-    # Get list of segmentations files for all subjects in -path-in (if -add-seg-only)
-    if args.add_seg_only:
-        path_list = glob.glob(args.path_in + "/**/*" + args.suffix_files_seg + ".nii.gz", recursive=True)
-        # Get only filenames without suffix _seg  to match files in -config .yml list
-        file_list = [utils.remove_suffix(os.path.split(path)[-1], args.suffix_files_seg) for path in path_list]
-
     # TODO: address "none" issue if no file present under a key
     # Perform manual corrections
     for task, files in dict_yml.items():
