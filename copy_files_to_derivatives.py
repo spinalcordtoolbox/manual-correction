@@ -3,6 +3,13 @@
 # Copy manually corrected labels (segmentations, vertebral labeling, etc.) from the preprocessed dataset to the
 # git-annex BIDS dataset's derivatives folder
 #
+# For full help, please run: python copy_files_to_derivatives.py -h
+#
+# Example:
+#       python copy_files_to_derivatives.py
+#       -path-in ~/<your_dataset>/derivatives/labels
+#       -path-out ~/<output_dataset>/derivatives/labels
+#
 # Authors: Jan Valosek
 #
 
@@ -19,8 +26,7 @@ def get_parser():
     """
 
     parser = argparse.ArgumentParser(
-        description='Copy manually corrected files (segmentations, vertebral labeling, etc.) from the source '
-                    'preprocessed dataset to the git-annex BIDS derivatives folder',
+        description='Copy manually corrected labels (segmentations, disc labels, etc.) to the BIDS derivatives folder.',
         formatter_class=utils.SmartFormatter,
         prog=os.path.basename(__file__).strip('.py')
     )
@@ -29,16 +35,16 @@ def get_parser():
         metavar="<folder>",
         required=True,
         type=str,
-        help='Path to the folder with manually corrected files (usually derivatives). The script assumes that labels '
-             'folder is located in the provided folder.'
+        help='Path to the BIDS-compliant folder with manually corrected labels. Example: '
+             '~/<your_dataset>/derivatives/labels'
     )
     parser.add_argument(
         '-path-out',
         metavar="<folder>",
         required=True,
         type=str,
-        help='Path to the BIDS dataset where manually corrected files will be copied. Include also derivatives folder '
-             'in the path. Files will be copied to the derivatives/label folder.'
+        help='Path to the BIDS-compliant folder where manually corrected files will be copied. Example: '
+             '~/<output_dataset>/derivatives/labels'
     )
 
     return parser
@@ -52,13 +58,13 @@ def main():
 
     # Check if path_in exists
     if os.path.isdir(args.path_in):
-        path_in = os.path.join(os.path.abspath(args.path_in), 'labels')
+        path_in = os.path.abspath(args.path_in)
     else:
         raise NotADirectoryError(f'{args.path_in} does not exist.')
 
     # Check if path_out exists
     if os.path.isdir(args.path_out):
-        path_out = os.path.join(os.path.abspath(args.path_out), 'labels')
+        path_out = os.path.abspath(args.path_out)
     else:
         raise NotADirectoryError(f'{args.path_out} does not exist.')
 

@@ -2,7 +2,12 @@
 #
 # Script to package data for manual correction.
 #
-# For usage, type: python package_for_correction.py -h
+# For full help, please run: python package_for_correction.py -h`
+#
+# Example:
+#       python package_for_correction.py
+#       -path-in ~/<your_dataset>/data_processed
+#       -config config.yml
 #
 # Authors: Jan Valosek, Sandrine Bédard, Julien Cohen-Adad
 #
@@ -106,6 +111,7 @@ def get_parser():
              "than provided by the .yml file for manual corrections. Only valid for '-viewer fsleyes'. Example: 'PSIR',"
              " 'STIR', 'acq-sag_T1w' etc.",
         type=str,
+        default=None
     )
     parser.add_argument(
         '-v', '--verbose',
@@ -172,14 +178,16 @@ def main():
             # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w.nii.gz'
             fname = os.path.join(utils.get_full_path(args.path_in), subject, ses, contrast, filename)
             # Construct absolute path to the other contrast file/contrast
-            if args.load_other_contrast:
+            if args.other_contrast:
                 fname_other_contrast = os.path.join(utils.get_full_path(args.path_in), subject, ses, contrast,
-                                                    subject + '_' + ses + '_' + args.load_other_contrast + '.nii.gz')
+                                                    subject + '_' + ses + '_' + args.other_contrast + '.nii.gz')
+            else:
+                fname_other_contrast = None
             # Construct absolute path to the temp folder
             path_out = os.path.join(path_tmp, subject, ses, contrast)
             # Copy image
             copy_file(fname, path_out)
-            if args.load_other_contrast:
+            if args.other_contrast:
                 copy_file(fname_other_contrast, path_out)
             # Copy label if exists
             if suffix_label is not None:

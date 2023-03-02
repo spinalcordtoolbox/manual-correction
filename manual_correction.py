@@ -3,16 +3,21 @@
 # Script to perform manual correction of spinal cord segmentation, gray matter segmentation, vertebral labeling, and
 # pontomedullary junction labeling.
 #
-# For usage, type: python manual_correction.py -h
+# For full help, please run:  python manual_correction.py -h
 #
-# For examples, see: https://github.com/spinalcordtoolbox/manual-correction/wiki
+# Example:
+#       python manual_correction.py
+#       -path-in ~/<your_dataset>/data_processed
+#       -config config.yml
+#
+# For all examples, see: https://github.com/spinalcordtoolbox/manual-correction/wiki
 #
 # Authors: Jan Valosek, Sandrine Bédard, Naga Karthik, Julien Cohen-Adad
 #
 
 import argparse
 import tempfile
-
+import datetime
 import coloredlogs
 import glob
 import json
@@ -80,7 +85,8 @@ def get_parser():
         '-path-out',
         metavar="<folder>",
         help=
-        "R|Path to the output folder where the corrected labels will be saved. Example: ~/<your_dataset>/"
+        "R|Path to the output folder where the corrected labels will be saved. "
+        "Default: './' (current directory). "
         "Note: The path provided within this flag will be combined with the path provided within the "
         "'-path-derivatives' flag. ",
         default='./'
@@ -89,11 +95,11 @@ def get_parser():
         '-path-derivatives',
         metavar="<folder>",
         help=
-        "R|Path to the 'derivatives' BIDS-complaint folder where the corrected labels will be saved. "
-        "Default: derivatives/labels"
-        "Note: if the provided folder (e.g., 'derivatives/labels') does not already exist, it will be created."
-        "Note: if segmentation or labels files already exist and you would like to correct them, provide path to them "
-        "within this flag.",
+        "R|Path to the BIDS-compliant 'derivatives' folder where the corrected labels will be saved. "
+        "Default: 'derivatives/labels'. "
+        "Note: if the provided folder (e.g., 'derivatives/labels') does not already exist, it will be created. "
+        "Note: if the segmentation or label files already exist and you would like to correct them, provide path to "
+        "them within this flag.",
         default=os.path.join('derivatives', 'labels')
     )
     parser.add_argument(
@@ -144,9 +150,13 @@ def get_parser():
     )
     parser.add_argument(
         '-viewer',
-        help="Viewer used for manual correction. Available options: 'itksnap' (default), 'fsleyes', 'slicer'.",
+        help="Viewer used for manual correction. Available options: 'fsleyes' (default), 'itksnap', 'slicer'. "
+             "For details about viewers, visit their websites: "
+             "FSLeyes (https://open.win.ox.ac.uk/pages/fsl/fsleyes/fsleyes/userdoc/#) "
+             "ITK-SNAP (http://www.itksnap.org/pmwiki/pmwiki.php) "
+             "3D Slicer (https://www.slicer.org)",
         choices=['fsleyes', 'itksnap', 'slicer'],
-        default='itksnap'
+        default='fsleyes'
     )
     parser.add_argument(
         '-fsleyes-cm',
@@ -379,19 +389,45 @@ def correct_pmj_label(fname, fname_label, viewer='sct_label_utils'):
         viewer_not_found(viewer)
 
 
-def create_json(fname_nifti, name_rater):
+def get_modification_time(fname):
+    """
+    Get the modification time of a file.
+    :param fname: file name
+    :return:
+    """
+    return datetime.datetime.fromtimestamp(os.path.getmtime(fname))
+
+
+def check_if_modified(time_one, time_two):
+    """
+    Check if the file was modified by the user. Return True if the file was modified, False otherwise.
+    :param time_one: modification time of the file before viewing
+    :param time_two: modification time of the file after viewing
+    :return:
+    """
+    if time_one != time_two:
+        print("The label file was modified.")
+        return True
+    else:
+        print("The label file was not modified.")
+        return False
+
+
+def create_json(fname_nifti, name_rater, modified):
     """
     Create json sidecar with meta information
     :param fname_nifti: str: File name of the nifti image to associate with the json sidecar
     :param name_rater: str: Name of the expert rater
+    :param modified: bool: True if the file was modified by the user
     :return:
     """
-    metadata = {'Author': name_rater, 'Date': time.strftime('%Y-%m-%d %H:%M:%S')}
-    fname_json = fname_nifti.rstrip('.nii').rstrip('.nii.gz') + '.json'
-    with open(fname_json, 'w') as outfile:
-        json.dump(metadata, outfile, indent=4)
-        # Add last newline
-        outfile.write("\n")
+    if modified:
+        metadata = {'Author': name_rater, 'Date': time.strftime('%Y-%m-%d %H:%M:%S')}
+        fname_json = fname_nifti.rstrip('.nii').rstrip('.nii.gz') + '.json'
+        with open(fname_json, 'w') as outfile:
+            json.dump(metadata, outfile, indent=4)
+            # Add last newline
+            outfile.write("\n")
 
 
 def ask_if_modify(fname_label, fname_seg):
@@ -586,15 +622,24 @@ def main():
                         # Create empty mask in derivatives folder
                         elif create_empty_mask:
                             utils.create_empty_mask(fname, fname_label)
+
                         if task in ['FILES_SEG', 'FILES_GMSEG']:
                             if not args.add_seg_only:
-                                correct_segmentation(fname, fname_label, fname_other_contrast, args.viewer, param_fsleyes)
+                                time_one = get_modification_time(fname_label)
+                                correct_segmentation(fname, fname_other_contrast, fname_label, args.viewer, param_fsleyes)
+                                time_two = get_modification_time(fname_label)
                         elif task == 'FILES_LESION':
-                            correct_segmentation(fname, fname_label, fname_other_contrast, args.viewer, param_fsleyes)
+                            time_one = get_modification_time(fname_label)
+                            correct_segmentation(fname, fname_other_contrast, fname_label, args.viewer, param_fsleyes)
+                            time_two = get_modification_time(fname_label)
                         elif task == 'FILES_LABEL':
+                            time_one = get_modification_time(fname_label)
                             correct_vertebral_labeling(fname, fname_label, args.label_disc_list)
+                            time_two = get_modification_time(fname_label)
                         elif task == 'FILES_PMJ':
+                            time_one = get_modification_time(fname_label)
                             correct_pmj_label(fname, fname_label)
+                            time_two = get_modification_time(fname_label)
                         else:
                             sys.exit('Task not recognized from yml file: {}'.format(task))
                         if args.denoise:
@@ -603,11 +648,13 @@ def main():
 
                         if task == 'FILES_LESION':
                             # create json sidecar with the name of the expert rater
-                            create_json(fname_label, name_rater)
+                            modified = check_if_modified(time_one, time_two)
+                            create_json(fname_label, name_rater, modified)
                             # NOTE: QC for lesion segmentation does not exist or not implemented yet
                         else:
                             # create json sidecar with the name of the expert rater
-                            create_json(fname_label, name_rater)
+                            modified = check_if_modified(time_one, time_two)
+                            create_json(fname_label, name_rater, modified)
                             # Generate QC report
                             generate_qc(fname, fname_label, task, fname_qc, subject, args.config)
 
