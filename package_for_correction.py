@@ -169,8 +169,8 @@ def main():
             subject, ses, filename, contrast = utils.fetch_subject_and_session(files[0])
             files = sorted(glob.glob(os.path.join(utils.get_full_path(args.path_in), subject, ses, contrast, filename)))
         for file in files:
-            if task in suffix_dict.keys():
-                suffix_label = suffix_dict[task]
+            if task in SUFFIX_DICT.keys():
+                suffix_label = SUFFIX_DICT[task]
             else:
                 sys.exit('Task not recognized from yml file: {}'.format(task))
             subject, ses, filename, contrast = utils.fetch_subject_and_session(file)
@@ -193,7 +193,7 @@ def main():
             if suffix_label is not None:
                 # Construct absolute path to the input label (segmentation, labeling etc.) file
                 # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w_seg.nii.gz'
-                fname_seg = utils.add_suffix(fname, suffix_dict[task])
+                fname_seg = utils.add_suffix(fname, SUFFIX_DICT[task])
                 copy_file(fname_seg, path_out)
 
     # Package to zip file
