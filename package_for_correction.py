@@ -22,6 +22,14 @@ import argparse
 import coloredlogs
 import utils
 
+global SUFFIX_DICT
+SUFFIX_DICT = {
+        'FILES_SEG': args.suffix_files_seg,         # e.g., _seg or _label-SC_mask
+        'FILES_GMSEG': args.suffix_files_gmseg,     # e.g., _gmseg or _label-GM_mask
+        'FILES_LESION': args.suffix_files_lesion,   # e.g., _lesion
+        'FILES_LABEL': args.suffix_files_label,     # e.g., _labels or _labels-disc
+        'FILES_PMJ': args.suffix_files_pmj          # e.g., _pmj or _label-pmj
+    }
 
 def get_parser():
     """
@@ -148,15 +156,7 @@ def main():
     dict_yml = utils.curate_dict_yml(dict_yml)
 
     # Check for missing files before starting the whole process
-    utils.check_files_exist(dict_yml, utils.get_full_path(args.path_in))
-
-    suffix_dict = {
-        'FILES_SEG': args.suffix_files_seg,         # e.g., _seg or _label-SC_mask
-        'FILES_GMSEG': args.suffix_files_gmseg,     # e.g., _gmseg or _label-GM_mask
-        'FILES_LESION': args.suffix_files_lesion,   # e.g., _lesion
-        'FILES_LABEL': args.suffix_files_label,     # e.g., _labels or _labels-disc
-        'FILES_PMJ': args.suffix_files_pmj          # e.g., _pmj or _label-pmj
-    }
+    utils.check_files_exist(dict_yml, utils.get_full_path(args.path_in), SUFFIX_DICT)
 
     # Create temp folder
     path_tmp = tempfile.mkdtemp()
