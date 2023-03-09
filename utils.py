@@ -195,25 +195,36 @@ def get_full_path(path):
     return os.path.abspath(os.path.expanduser(path))
 
 
-def check_files_exist(dict_files, path_data):
+def check_files_exist(dict_files, path_data, suffix_dict):
     """
     Check if all files listed in the input dictionary exist
     :param dict_files:
     :param path_data: folder where BIDS dataset is located
+    :param suffix_dict: dictionary with label file suffixes
     :return:
     """
     missing_files = []
+    missing_files_labels = []
     for task, files in dict_files.items():
         # Do no check if key is empty or if regex is used
-        if files is not None and '*' in files:
+        if files is not None and '*' not in files:
             for file in files:
                 subject, ses, filename, contrast = fetch_subject_and_session(file)
                 fname = os.path.join(path_data, subject, ses, contrast, filename)
                 if not os.path.exists(fname):
                     missing_files.append(fname)
+                # Construct absolute path to the input label (segmentation, labeling etc.) file
+                # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w_seg.nii.gz'
+                fname_label = add_suffix(fname, suffix_dict[task])
+                if not os.path.exists(fname_label):
+                    missing_files_labels.append(fname_label)
     if missing_files:
-        logging.error("The following files are missing: \n{}. \nPlease check that the files listed "
-                        "in the yaml file and the input path are correct.".format(missing_files))
+        logging.error("The following files are missing: \n{}. \nPlease check that the files listed in the yaml file "
+                      "and the input path are correct.".format(missing_files))
+    if missing_files_labels:
+        logging.error("The following label files are missing: \n{}. \nPlease check that the used suffix '{}' is "
+                      "correct. If not, you can provide custom suffix using '-suffix-files-' flags.".format(
+                        missing_files_labels, suffix_dict[task]))
 
 
 def check_output_folder(path_bids, folder_derivatives):
