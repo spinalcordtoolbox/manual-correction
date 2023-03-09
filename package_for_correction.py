@@ -22,15 +22,6 @@ import argparse
 import coloredlogs
 import utils
 
-global SUFFIX_DICT
-SUFFIX_DICT = {
-        'FILES_SEG': args.suffix_files_seg,         # e.g., _seg or _label-SC_mask
-        'FILES_GMSEG': args.suffix_files_gmseg,     # e.g., _gmseg or _label-GM_mask
-        'FILES_LESION': args.suffix_files_lesion,   # e.g., _lesion
-        'FILES_LABEL': args.suffix_files_label,     # e.g., _labels or _labels-disc
-        'FILES_PMJ': args.suffix_files_pmj          # e.g., _pmj or _label-pmj
-    }
-
 def get_parser():
     """
     parser function
@@ -154,23 +145,37 @@ def main():
 
     # Curate dict_yml to only have filenames instead of absolute path
     dict_yml = utils.curate_dict_yml(dict_yml)
+    
+    suffix_dict = {
+        'FILES_SEG': args.suffix_files_seg,         # e.g., _seg or _label-SC_mask
+        'FILES_GMSEG': args.suffix_files_gmseg,     # e.g., _gmseg or _label-GM_mask
+        'FILES_LESION': args.suffix_files_lesion,   # e.g., _lesion
+        'FILES_LABEL': args.suffix_files_label,     # e.g., _labels or _labels-disc
+        'FILES_PMJ': args.suffix_files_pmj          # e.g., _pmj or _label-pmj
+    }
 
     # Check for missing files before starting the whole process
-    utils.check_files_exist(dict_yml, utils.get_full_path(args.path_in), SUFFIX_DICT)
+    missing_files, missing_files_labels = utils.check_files_exist(dict_yml, utils.get_full_path(args.path_in), suffix_dict)
 
+    # Keep only existing files with existing lables before starting the loop
+    dict_yml = utils.keep_existing_files(dict_yml, missing_files, missing_files_labels, utils.get_full_path(args.path_in), suffix_dict)
+    
     # Create temp folder
     path_tmp = tempfile.mkdtemp()
 
     # Loop across files and copy them in the appropriate directory
     # Note: in case the file is listed twice, we just overwrite it in the destination dir.
     for task, files in dict_yml.items():
+        # If files empty break process
+        if not files:
+            sys.exit('No file to copy')
         # Handle regex (i.e., iterate over all subjects)
         if '*' in files[0] and len(files) == 1:
             subject, ses, filename, contrast = utils.fetch_subject_and_session(files[0])
             files = sorted(glob.glob(os.path.join(utils.get_full_path(args.path_in), subject, ses, contrast, filename)))
         for file in files:
-            if task in SUFFIX_DICT.keys():
-                suffix_label = SUFFIX_DICT[task]
+            if task in suffix_dict.keys():
+                suffix_label = suffix_dict[task]
             else:
                 sys.exit('Task not recognized from yml file: {}'.format(task))
             subject, ses, filename, contrast = utils.fetch_subject_and_session(file)
@@ -193,7 +198,7 @@ def main():
             if suffix_label is not None:
                 # Construct absolute path to the input label (segmentation, labeling etc.) file
                 # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w_seg.nii.gz'
-                fname_seg = utils.add_suffix(fname, SUFFIX_DICT[task])
+                fname_seg = utils.add_suffix(fname, suffix_dict[task])
                 copy_file(fname_seg, path_out)
 
     # Package to zip file
