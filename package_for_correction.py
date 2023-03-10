@@ -156,8 +156,7 @@ def main():
     }
 
     # Check for missing files before starting the whole process
-    if not args.add_seg_only:
-        utils.check_files_exist(dict_yml, utils.get_full_path(args.path_in), suffix_dict)
+    utils.check_files_exist(dict_yml, utils.get_full_path(args.path_in), suffix_dict)
 
     # Create temp folder
     path_tmp = tempfile.mkdtemp()
@@ -187,15 +186,18 @@ def main():
             # Construct absolute path to the temp folder
             path_out = os.path.join(path_tmp, subject, ses, contrast)
             # Copy image
-            copy_file(fname, path_out)
+            if os.path.exists(fname):
+                copy_file(fname, path_out)
             if args.other_contrast:
-                copy_file(fname_other_contrast, path_out)
+                if os.path.exists(fname_other_contrast):
+                    copy_file(fname_other_contrast, path_out)
             # Copy label if exists
             if suffix_label is not None:
                 # Construct absolute path to the input label (segmentation, labeling etc.) file
                 # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w_seg.nii.gz'
                 fname_seg = utils.add_suffix(fname, suffix_dict[task])
-                copy_file(fname_seg, path_out)
+                if os.path.exists(fname_seg):
+                    copy_file(fname_seg, path_out)
 
     # Package to zip file
     print("Creating archive...")
