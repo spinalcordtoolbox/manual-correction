@@ -114,27 +114,27 @@ def get_parser():
     )
     parser.add_argument(
         '-suffix-files-seg',
-        help="FILES-SEG suffix. Available options: '_seg' (default), '_label-SC_mask'.",
+        help="FILES-SEG suffix. Examples: '_seg' (default), '_label-SC_mask'.",
         default='_seg'
     )
     parser.add_argument(
         '-suffix-files-gmseg',
-        help="FILES-GMSEG suffix. Available options: '_gmseg' (default), '_label-GM_mask'.",
+        help="FILES-GMSEG suffix. Examples: '_gmseg' (default), '_label-GM_mask'.",
         default='_gmseg'
     )
     parser.add_argument(
         '-suffix-files-lesion',
-        help="FILES-LESION suffix. Available options: '_lesion' (default).",
+        help="FILES-LESION suffix. Examples: '_lesion' (default).",
         default='_lesion'
     )
     parser.add_argument(
         '-suffix-files-label',
-        help="FILES-LABEL suffix. Available options: '_labels' (default), '_labels-disc'.",
+        help="FILES-LABEL suffix. Examples: '_labels' (default), '_labels-disc'.",
         default='_labels'
     )
     parser.add_argument(
         '-suffix-files-pmj',
-        help="FILES-PMJ suffix. Available options: '_pmj' (default), '_label-pmj'.",
+        help="FILES-PMJ suffix. Examples: '_pmj' (default), '_label-pmj'.",
         default='_pmj'
     )
     parser.add_argument(
