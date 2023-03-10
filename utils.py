@@ -225,7 +225,33 @@ def check_files_exist(dict_files, path_data, suffix_dict):
         logging.error("The following label files are missing: \n{}. \nPlease check that the used suffix '{}' is "
                       "correct. If not, you can provide custom suffix using '-suffix-files-' flags.".format(
                         missing_files_labels, suffix_dict[task]))
+        
 
+def keep_existing_files(dict_files, missing_files, missing_files_labels, path_data, suffix_dict):
+    """
+    Keep only existing files with existing labels in the input dictionary
+    :param dict_files:
+    :param missing_files: list of missing files in dict_files
+    :param missing_files_labels: list of missing labels in dict_files
+    :param path_data: folder where BIDS dataset is located
+    :param suffix_dict: dictionary with label file suffixes
+    :return missing_files and missing_files_labels
+    """
+    out_dict = {}
+    existing_file = []
+    for task, files in dict_files.items():
+        # Do no check if key is empty or if regex is used
+        if files is not None and '*' not in files:
+            for file in files:
+                subject, ses, filename, contrast = fetch_subject_and_session(file)
+                fname = os.path.join(path_data, subject, ses, contrast, filename)
+                fname_label = add_suffix(fname, suffix_dict[task])
+                if fname not in missing_files:
+                    if fname_label not in missing_files_labels:
+                        existing_file.append(file)
+        out_dict[task] = existing_file
+    return out_dict
+               
 
 def check_output_folder(path_bids, folder_derivatives):
     """
