@@ -219,12 +219,12 @@ def check_files_exist(dict_files, path_data, suffix_dict):
                 if not os.path.exists(fname_label):
                     missing_files_labels.append(fname_label)
     if missing_files:
-        logging.error("The following files are missing: \n{}. \nPlease check that the files listed in the yaml file "
-                      "and the input path are correct.".format(missing_files))
+        logging.error("The following files are missing: \n{}".format(missing_files))
+        logging.warning("\nPlease check that the files listed in the yaml file and the input path are correct.\n")
     if missing_files_labels:
-        logging.error("The following label files are missing: \n{}. \nPlease check that the used suffix '{}' is "
-                      "correct. If not, you can provide custom suffix using '-suffix-files-' flags.".format(
-                        missing_files_labels, suffix_dict[task]))
+        logging.error("The following label files are missing: \n{}".format(missing_files_labels))
+        logging.warning("\nPlease check that the used suffix '{}' is correct. "
+                        "If not, you can provide custom suffix using '-suffix-files-' flags.\n".format(suffix_dict[task]))
 
 
 def check_output_folder(path_bids, folder_derivatives):
