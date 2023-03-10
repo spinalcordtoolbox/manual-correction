@@ -155,11 +155,8 @@ def main():
     }
 
     # Check for missing files before starting the whole process
-    missing_files, missing_files_labels = utils.check_files_exist(dict_yml, utils.get_full_path(args.path_in), suffix_dict)
+    utils.check_files_exist(dict_yml, utils.get_full_path(args.path_in), suffix_dict)
 
-    # Keep only existing files with existing lables before starting the loop
-    dict_yml = utils.keep_existing_files(dict_yml, missing_files, missing_files_labels, utils.get_full_path(args.path_in), suffix_dict)
-    
     # Create temp folder
     path_tmp = tempfile.mkdtemp()
 
