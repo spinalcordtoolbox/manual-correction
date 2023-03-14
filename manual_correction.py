@@ -624,11 +624,11 @@ def main():
                         if task in ['FILES_SEG', 'FILES_GMSEG']:
                             if not args.add_seg_only:
                                 time_one = get_modification_time(fname_label)
-                                correct_segmentation(fname, fname_other_contrast, fname_label, args.viewer, param_fsleyes)
+                                correct_segmentation(fname, fname_label, fname_other_contrast, args.viewer, param_fsleyes)
                                 time_two = get_modification_time(fname_label)
                         elif task == 'FILES_LESION':
                             time_one = get_modification_time(fname_label)
-                            correct_segmentation(fname, fname_other_contrast, fname_label, args.viewer, param_fsleyes)
+                            correct_segmentation(fname, fname_label, fname_other_contrast, args.viewer, param_fsleyes)
                             time_two = get_modification_time(fname_label)
                         elif task == 'FILES_LABEL':
                             time_one = get_modification_time(fname_label)
