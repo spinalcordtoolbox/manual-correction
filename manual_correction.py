@@ -26,6 +26,8 @@ import sys
 import shutil
 from textwrap import dedent
 import time
+import tqdm
+
 import utils
 
 
@@ -577,7 +579,11 @@ def main():
             if '*' in files[0] and len(files) == 1:
                 subject, ses, filename, contrast = utils.fetch_subject_and_session(files[0])
                 files = sorted(glob.glob(os.path.join(utils.get_full_path(args.path_in), subject, ses, contrast, filename)))
-            for file in files:
+            # Loop across files
+            for file in tqdm.tqdm(files, desc="{}".format(task), unit="file"):
+                # Print empty line to not overlay with tqdm progress bar
+                time.sleep(0.1)
+                print("")
                 # build file names
                 subject, ses, filename, contrast = utils.fetch_subject_and_session(file)
                 # Construct absolute path to the input file

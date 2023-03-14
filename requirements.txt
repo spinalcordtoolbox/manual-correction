@@ -3,3 +3,4 @@ humanfriendly==10.0
 PyYAML==6.0
 numpy~=1.24.2
 nibabel~=5.0.1
+tqdm==4.65.0
