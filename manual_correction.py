@@ -432,8 +432,8 @@ def ask_if_modify(fname_label, fname_seg):
     Check if the label file under derivatives already exists. If so, asks user if they want to modify it.
     If the label file under derivatives does not exist, copy it from processed data.
     If the file under derivatives and the file under processed data do not exist, create a new empty mask.
-    :param fname_label: file under derivatives
-    :param fname_seg: file under processed data
+    :param fname_label: file under derivatives, exmaple: <PATH_DATA>/derivatives/labels/sub-001/anat/sub-001_T2w_seg-manual.nii.gz
+    :param fname_seg: file under processed data, example: <PATH_DATA>/data_processed/sub-001/anat/sub-001_T2w_seg.nii.gz
     :return:
     """
     # Check if file under derivatives already exists
