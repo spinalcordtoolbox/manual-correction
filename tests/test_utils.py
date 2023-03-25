@@ -60,6 +60,9 @@ def test_remove_suffix():
 
 
 def test_curate_dict_yml():
+    """
+    Test that the curate_dict_yml function returns the expected output dictionary
+    """
     input_dict = {'FILES_LABEL': ['/path/to/sub-001_acq-sag_T2w.nii.gz',
                                   '/path/to/sub-002_acq-sag_T2w.nii.gz',
                                   '/path/to/sub-003_acq-sag_T2w.nii.gz']}
@@ -70,6 +73,9 @@ def test_curate_dict_yml():
 
 
 def test_check_files_exist_all_files_exist(tmp_path, caplog):
+    """
+    Test that the check_files_exist function does not raise any warning when all files exist
+    """
     # create some test files
     path_data = tmp_path / "BIDS"
     os.makedirs(path_data / "sub-001" / "ses-01" / "anat", exist_ok=True)
@@ -92,11 +98,14 @@ def test_check_files_exist_all_files_exist(tmp_path, caplog):
     # run the function
     check_files_exist(dict_files, path_data, suffix_dict)
 
-    # check that no error warning was raised
+    # check that no error or warning was raised
     assert len(caplog.records) == 0
 
 
 def test_check_files_exist_missing_file(tmp_path, caplog):
+    """
+    Test that the check_files_exist function raises warnings when a file or label is missing
+    """
     # create some test files
     path_data = tmp_path / "BIDS"
     os.makedirs(path_data / "sub-001" / "ses-01" / "anat", exist_ok=True)
