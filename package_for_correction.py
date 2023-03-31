@@ -40,10 +40,13 @@ def get_parser():
         required=True,
         help=
         "R|Config yaml file listing images that require manual corrections for segmentation and vertebral "
-        "labeling. 'FILES_SEG' lists images associated with spinal cord segmentation "
-        ",'FILES_GMSEG' lists images associated with gray matter segmentation "
-        ",'FILES_LABEL' lists images associated with vertebral labeling "
-        "and 'FILES_PMJ' lists images associated with pontomedullary junction labeling"
+        "labeling. "
+        "'FILES_SEG' lists images associated with spinal cord segmentation "
+        "'FILES_GMSEG' lists images associated with gray matter segmentation, "
+        "'FILES_LESION' lists images associated with multiple sclerosis lesion segmentation, "
+        "'FILES_LABEL' lists images associated with vertebral labeling, "
+        "'FILES_PMJ' lists images associated with pontomedullary junction labeling, "
+        "and 'FILES_CENTERLINE' lists images associated with centerline. "
         "You can validate your .yml file at this website: http://www.yamllint.com/."
         "Note: if you want to iterate over all subjects, you can use the wildcard '*' (e.g. sub-*_T1w.nii.gz)"
         "Below is an example .yml file:\n"
@@ -59,6 +62,9 @@ def get_parser():
             - sub-001_T1w.nii.gz
             - sub-002_T1w.nii.gz
             FILES_PMJ:
+            - sub-001_T1w.nii.gz
+            - sub-002_T1w.nii.gz
+            FILES_CENTERLINE:
             - sub-001_T1w.nii.gz
             - sub-002_T1w.nii.gz\n
             """)
@@ -99,6 +105,11 @@ def get_parser():
         '-suffix-files-pmj',
         help="FILES-PMJ suffix. Examples: '_pmj' (default), '_label-pmj'.",
         default='_pmj'
+    )
+    parser.add_argument(
+        '-suffix-files-centerline',
+        help="FILES-CENTERLINE suffix. Examples: '_centerline' (default), '_label-centerline'.",
+        default='_centerline'
     )
     parser.add_argument(
         '-other-contrast',
@@ -143,11 +154,12 @@ def main():
     dict_yml = utils.curate_dict_yml(dict_yml)
 
     suffix_dict = {
-        'FILES_SEG': args.suffix_files_seg,         # e.g., _seg or _label-SC_mask
-        'FILES_GMSEG': args.suffix_files_gmseg,     # e.g., _gmseg or _label-GM_mask
-        'FILES_LESION': args.suffix_files_lesion,   # e.g., _lesion
-        'FILES_LABEL': args.suffix_files_label,     # e.g., _labels or _labels-disc
-        'FILES_PMJ': args.suffix_files_pmj          # e.g., _pmj or _label-pmj
+        'FILES_SEG': args.suffix_files_seg,                 # e.g., _seg or _label-SC_mask
+        'FILES_GMSEG': args.suffix_files_gmseg,             # e.g., _gmseg or _label-GM_mask
+        'FILES_LESION': args.suffix_files_lesion,           # e.g., _lesion
+        'FILES_LABEL': args.suffix_files_label,             # e.g., _labels or _labels-disc
+        'FILES_PMJ': args.suffix_files_pmj,                 # e.g., _pmj or _label-pmj
+        'FILES_CENTERLINE': args.suffix_files_centerline    # e.g., _centerline or _label-centerline
     }
 
     # Check for missing files before starting the whole process

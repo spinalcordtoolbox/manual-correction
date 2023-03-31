@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
-# Script to perform manual correction of spinal cord segmentation, gray matter segmentation, vertebral labeling, and
-# pontomedullary junction labeling.
+# Script to perform manual correction of spinal cord segmentation, gray matter segmentation, vertebral labeling,
+# pontomedullary junction labeling, and centerline.
 #
 # For full help, please run:  python manual_correction.py -h
 #
@@ -53,7 +53,8 @@ def get_parser():
         "'FILES_GMSEG' lists images associated with gray matter segmentation, "
         "'FILES_LESION' lists images associated with multiple sclerosis lesion segmentation, "
         "'FILES_LABEL' lists images associated with vertebral labeling, "
-        "and 'FILES_PMJ' lists images associated with pontomedullary junction labeling. "
+        "'FILES_PMJ' lists images associated with pontomedullary junction labeling, "
+        "and 'FILES_CENTERLINE' lists images associated with centerline. "
         "You can validate your .yml file at this website: http://www.yamllint.com/."
         "Note: if you want to iterate over all subjects, you can use the wildcard '*' (Examples: sub-*_T1w.nii.gz, "
         "sub-*_ses-M0_T2w.nii.gz, sub-*_ses-M0_T2w_RPI_r.nii.gz, etc.)"
@@ -73,6 +74,9 @@ def get_parser():
             - sub-001_T1w.nii.gz
             - sub-002_T1w.nii.gz
             FILES_PMJ:
+            - sub-001_T1w.nii.gz
+            - sub-002_T1w.nii.gz
+            FILES_CENTERLINE:
             - sub-001_T1w.nii.gz
             - sub-002_T1w.nii.gz\n
             """)
@@ -138,6 +142,11 @@ def get_parser():
         '-suffix-files-pmj',
         help="FILES-PMJ suffix. Examples: '_pmj' (default), '_label-pmj'.",
         default='_pmj'
+    )
+    parser.add_argument(
+        '-suffix-files-centerline',
+        help="FILES-CENTERLINE suffix. Examples: '_centerline' (default), '_label-centerline'.",
+        default='_centerline'
     )
     parser.add_argument(
         '-label-disc-list',
@@ -256,7 +265,6 @@ def create_fsleyes_script():
     return fname_script
 
 
-# TODO: add also sct_get_centerline
 def get_function_for_qc(task):
     """
     Get the function to use for QC based on the task.
@@ -271,6 +279,10 @@ def get_function_for_qc(task):
         return 'sct_label_utils'
     elif task == 'FILES_PMJ':
         return 'sct_detect_pmj'
+    elif task == 'FILES_CENTERLINE':
+        # Note: sct_get_centerline does not have proper QC -->  we are using workaround with sct_label_vertebrae
+        # Details: https://github.com/spinalcordtoolbox/spinalcordtoolbox/issues/4011#issuecomment-1403828459
+        return 'sct_label_vertebrae'
     else:
         raise ValueError("This task is not recognized: {}".format(task))
 
@@ -382,6 +394,17 @@ def correct_pmj_label(fname, fname_label, viewer='sct_label_utils'):
     if shutil.which(viewer) is not None:  # Check if command 'sct_label_utils' exists
         message = "Click at the posterior tip of the pontomedullary junction (PMJ). Then click 'Save and Quit'."
         os.system(f'sct_label_utils -i {fname} -create-viewer 50 -o {fname_label} -msg "{message}"')
+    else:
+        viewer_not_found(viewer)
+
+
+def correct_centerline(fname, fname_label, viewer='sct_label_utils'):
+    """
+    Open sct_label_utils to manually label centerline.
+    """
+    if shutil.which(viewer) is not None:  # Check if command 'sct_label_utils' exists
+        print("Select a few points to extract the centerline. Then click 'Save and Quit'.")
+        os.system(f'sct_get_centerline -i {fname} -method viewer -gap 30 -qc qc-manual -o {fname_label}')
     else:
         viewer_not_found(viewer)
 
@@ -526,11 +549,12 @@ def main():
     dict_yml = utils.curate_dict_yml(dict_yml)
 
     suffix_dict = {
-        'FILES_SEG': args.suffix_files_seg,         # e.g., _seg or _label-SC_mask
-        'FILES_GMSEG': args.suffix_files_gmseg,     # e.g., _gmseg or _label-GM_mask
-        'FILES_LESION': args.suffix_files_lesion,     # e.g., _lesion
-        'FILES_LABEL': args.suffix_files_label,     # e.g., _labels or _labels-disc
-        'FILES_PMJ': args.suffix_files_pmj          # e.g., _pmj or _label-pmj
+        'FILES_SEG': args.suffix_files_seg,                 # e.g., _seg or _label-SC_mask
+        'FILES_GMSEG': args.suffix_files_gmseg,             # e.g., _gmseg or _label-GM_mask
+        'FILES_LESION': args.suffix_files_lesion,           # e.g., _lesion
+        'FILES_LABEL': args.suffix_files_label,             # e.g., _labels or _labels-disc
+        'FILES_PMJ': args.suffix_files_pmj,                 # e.g., _pmj or _label-pmj
+        'FILES_CENTERLINE': args.suffix_files_centerline    # e.g., _centerline or _label-centerline
     }
 
     # Check for missing files before starting the whole process
@@ -643,6 +667,10 @@ def main():
                         elif task == 'FILES_PMJ':
                             time_one = get_modification_time(fname_label)
                             correct_pmj_label(fname, fname_label)
+                            time_two = get_modification_time(fname_label)
+                        elif task == 'FILES_CENTERLINE':
+                            time_one = get_modification_time(fname_label)
+                            correct_centerline(fname, fname_label)
                             time_two = get_modification_time(fname_label)
                         else:
                             sys.exit('Task not recognized from yml file: {}'.format(task))
