@@ -56,7 +56,7 @@ def get_parser():
         "and 'FILES_PMJ' lists images associated with pontomedullary junction labeling. "
         "You can validate your .yml file at this website: http://www.yamllint.com/."
         "Note: if you want to iterate over all subjects, you can use the wildcard '*' (Examples: sub-*_T1w.nii.gz, "
-        "sub-*_ses-M0_T2w.nii.gz, sub-*_ses-M0_T2w_RPI_r.nii.gz, etc.)"
+        "sub-*_ses-M0_T2w.nii.gz, sub-*_ses-M0_T2w_RPI_r.nii.gz, etc.).\n"
         "Below is an example .yml file:\n"
         + dedent(
             """
