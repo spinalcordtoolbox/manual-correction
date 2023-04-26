@@ -398,11 +398,11 @@ def correct_pmj_label(fname, fname_label, viewer='sct_label_utils'):
         viewer_not_found(viewer)
 
 
-def correct_centerline(fname, fname_label, viewer='sct_label_utils'):
+def correct_centerline(fname, fname_label, viewer='sct_get_centerline'):
     """
-    Open sct_label_utils to manually label centerline.
+    Open sct_get_centerline viewer to manually label spinal cord centerline.
     """
-    if shutil.which(viewer) is not None:  # Check if command 'sct_label_utils' exists
+    if shutil.which(viewer) is not None:  # Check if command 'sct_get_centerline' exists
         print("Select a few points to extract the centerline. Then click 'Save and Quit'.")
         os.system(f'sct_get_centerline -i {fname} -method viewer -gap 30 -qc qc-manual -o {fname_label}')
     else:
