@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
-# Script to perform manual correction of spinal cord segmentation, gray matter segmentation, vertebral labeling,
-# pontomedullary junction labeling, and centerline.
+# Script to perform manual correction of spinal cord segmentation, gray matter segmentation, MS and SCI lesion
+# segmentation, disc labels, ponto-medullary junction (PMJ) label, and centerline.
 #
 # For full help, please run:  python manual_correction.py -h
 #
@@ -36,9 +36,9 @@ def get_parser():
     parser function
     """
     parser = argparse.ArgumentParser(
-        description='Manual correction of spinal cord segmentation, gray matter segmentation, multiple sclerosis '
-                    'lesion segmentation, vertebral labeling, and pontomedullary junction labeling. '
-                    'Manually corrected files are saved under derivatives/ folder (according to BIDS standard).',
+        description='Manual correction of spinal cord segmentation, gray matter segmentation, MS and SCI lesion '
+                    'segmentation, disc labels, ponto-medullary junction (PMJ) label, and centerline. '
+                    'Manually corrected files will be saved under derivatives/ folder (according to BIDS standard).',
         formatter_class=utils.SmartFormatter,
         prog=os.path.basename(__file__).strip('.py')
     )
