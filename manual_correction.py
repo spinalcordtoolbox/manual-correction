@@ -699,11 +699,13 @@ def main():
                             # Remove the denoised file (we do not need it anymore)
                             remove_denoised_file(fname)
 
+                        # Generate QC report for all tasks except FILES_LESION
+                        # NOTE: QC for lesion segmentation does not exist or not implemented yet.
+                        # But be aware of this PR: https://github.com/spinalcordtoolbox/spinalcordtoolbox/pull/4102
                         if task == 'FILES_LESION':
                             # create json sidecar with the name of the expert rater
                             modified = check_if_modified(time_one, time_two)
                             create_json(fname_label, name_rater, modified)
-                            # NOTE: QC for lesion segmentation does not exist or not implemented yet
                         else:
                             # create json sidecar with the name of the expert rater
                             if args.add_seg_only:
