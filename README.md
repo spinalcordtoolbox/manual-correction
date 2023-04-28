@@ -5,6 +5,7 @@ This repository contains scripts for the manual correction of spinal cord labels
 - gray matter segmentation
 - lesion segmentation (e.g., MS or SCI lesions)
 - disc labels
+- compression labels
 - ponto-medullary junction (PMJ) label
 - centerline
 

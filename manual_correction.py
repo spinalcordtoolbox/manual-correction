@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
 # Script to perform manual correction of spinal cord segmentation, gray matter segmentation, MS and SCI lesion
-# segmentation, disc labels, ponto-medullary junction (PMJ) label, and centerline.
+# segmentation, disc labels, compression labels, ponto-medullary junction (PMJ) label, and centerline.
 #
 # For full help, please run:  python manual_correction.py -h
 #
@@ -37,7 +37,8 @@ def get_parser():
     """
     parser = argparse.ArgumentParser(
         description='Manual correction of spinal cord segmentation, gray matter segmentation, MS and SCI lesion '
-                    'segmentation, disc labels, ponto-medullary junction (PMJ) label, and centerline. '
+                    'segmentation, disc labels, compression labels, ponto-medullary junction (PMJ) label, and '
+                    'centerline. '
                     'Manually corrected files will be saved under derivatives/ folder (according to BIDS standard).',
         formatter_class=utils.SmartFormatter,
         prog=os.path.basename(__file__).strip('.py')
@@ -53,6 +54,7 @@ def get_parser():
         "'FILES_GMSEG' lists images associated with gray matter segmentation, "
         "'FILES_LESION' lists images associated with multiple sclerosis lesion segmentation, "
         "'FILES_LABEL' lists images associated with vertebral labeling, "
+        "'FILES_COMPRESSION' lists images associated with compression labeling, "
         "'FILES_PMJ' lists images associated with pontomedullary junction labeling, "
         "and 'FILES_CENTERLINE' lists images associated with centerline. "
         "You can validate your .yml file at this website: http://www.yamllint.com/."
@@ -71,6 +73,9 @@ def get_parser():
             - sub-001_T1w.nii.gz
             - sub-002_T2w.nii.gz
             FILES_LABEL:
+            - sub-001_T1w.nii.gz
+            - sub-002_T1w.nii.gz
+            FILES_COMPRESSION:
             - sub-001_T1w.nii.gz
             - sub-002_T1w.nii.gz
             FILES_PMJ:
@@ -137,6 +142,11 @@ def get_parser():
         '-suffix-files-label',
         help="FILES-LABEL suffix. Examples: '_labels' (default), '_labels-disc'.",
         default='_labels'
+    )
+    parser.add_argument(
+        '-suffix-files-compression',
+        help="FILES-COMPRESSION suffix. Examples: '_compression' (default), '_label-compression'.",
+        default='_label-compression'
     )
     parser.add_argument(
         '-suffix-files-pmj',
@@ -276,6 +286,9 @@ def get_function_for_qc(task):
     elif task == "FILES_GMSEG":
         return "sct_deepseg_gm"
     elif task == 'FILES_LABEL':
+        return 'sct_label_utils'
+    elif task == 'FILES_COMPRESSION':
+        # Note: compression labels do not have proper QC -->  we are using workaround with sct_label_utils
         return 'sct_label_utils'
     elif task == 'FILES_PMJ':
         return 'sct_detect_pmj'
@@ -553,6 +566,7 @@ def main():
         'FILES_GMSEG': args.suffix_files_gmseg,             # e.g., _gmseg or _label-GM_mask
         'FILES_LESION': args.suffix_files_lesion,           # e.g., _lesion
         'FILES_LABEL': args.suffix_files_label,             # e.g., _labels or _labels-disc
+        'FILES_COMPRESSION': args.suffix_files_compression,  # e.g., _label-compression
         'FILES_PMJ': args.suffix_files_pmj,                 # e.g., _pmj or _label-pmj
         'FILES_CENTERLINE': args.suffix_files_centerline    # e.g., _centerline or _label-centerline
     }
@@ -664,6 +678,13 @@ def main():
                             time_one = get_modification_time(fname_label)
                             correct_vertebral_labeling(fname, fname_label, args.label_disc_list)
                             time_two = get_modification_time(fname_label)
+                        elif task == 'FILES_COMPRESSION':
+                            time_one = get_modification_time(fname_label)
+                            # Note: be aware of possibility to create compression labels also using
+                            # 'sct_label_utils -create-viewer'
+                            # Context: https://github.com/spinalcordtoolbox/spinalcordtoolbox/issues/3984
+                            correct_segmentation(fname, fname_label, fname_other_contrast, 'fsleyes', param_fsleyes)
+                            time_two = get_modification_time(fname_label)
                         elif task == 'FILES_PMJ':
                             time_one = get_modification_time(fname_label)
                             correct_pmj_label(fname, fname_label)
@@ -678,11 +699,13 @@ def main():
                             # Remove the denoised file (we do not need it anymore)
                             remove_denoised_file(fname)
 
+                        # Generate QC report for all tasks except FILES_LESION
+                        # NOTE: QC for lesion segmentation does not exist or not implemented yet.
+                        # But be aware of this PR: https://github.com/spinalcordtoolbox/spinalcordtoolbox/pull/4102
                         if task == 'FILES_LESION':
                             # create json sidecar with the name of the expert rater
                             modified = check_if_modified(time_one, time_two)
                             create_json(fname_label, name_rater, modified)
-                            # NOTE: QC for lesion segmentation does not exist or not implemented yet
                         else:
                             # create json sidecar with the name of the expert rater
                             if args.add_seg_only:
