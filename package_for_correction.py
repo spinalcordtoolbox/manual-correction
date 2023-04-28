@@ -45,6 +45,7 @@ def get_parser():
         "'FILES_GMSEG' lists images associated with gray matter segmentation, "
         "'FILES_LESION' lists images associated with multiple sclerosis lesion segmentation, "
         "'FILES_LABEL' lists images associated with vertebral labeling, "
+        "'FILES_COMPRESSION' lists images associated with compression labeling, "
         "'FILES_PMJ' lists images associated with pontomedullary junction labeling, "
         "and 'FILES_CENTERLINE' lists images associated with centerline. "
         "You can validate your .yml file at this website: http://www.yamllint.com/."
@@ -59,6 +60,9 @@ def get_parser():
             - sub-001_T1w.nii.gz
             - sub-002_T2w.nii.gz
             FILES_LABEL:
+            - sub-001_T1w.nii.gz
+            - sub-002_T1w.nii.gz
+            FILES_COMPRESSION:
             - sub-001_T1w.nii.gz
             - sub-002_T1w.nii.gz
             FILES_PMJ:
@@ -100,6 +104,11 @@ def get_parser():
         '-suffix-files-label',
         help="FILES-LABEL suffix. Examples: '_labels' (default), '_labels-disc'.",
         default='_labels'
+    )
+    parser.add_argument(
+        '-suffix-files-compression',
+        help="FILES-COMPRESSION suffix. Examples: '_compression' (default), '_label-compression'.",
+        default='_label-compression'
     )
     parser.add_argument(
         '-suffix-files-pmj',
@@ -158,6 +167,7 @@ def main():
         'FILES_GMSEG': args.suffix_files_gmseg,             # e.g., _gmseg or _label-GM_mask
         'FILES_LESION': args.suffix_files_lesion,           # e.g., _lesion
         'FILES_LABEL': args.suffix_files_label,             # e.g., _labels or _labels-disc
+        'FILES_COMPRESSION': args.suffix_files_compression,  # e.g., _label-compression
         'FILES_PMJ': args.suffix_files_pmj,                 # e.g., _pmj or _label-pmj
         'FILES_CENTERLINE': args.suffix_files_centerline    # e.g., _centerline or _label-centerline
     }
