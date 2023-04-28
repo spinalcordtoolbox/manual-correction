@@ -58,6 +58,9 @@ def get_parser():
             FILES_GMSEG:
             - sub-001_T1w.nii.gz
             - sub-002_T2w.nii.gz
+            FILES_LESION:
+            - sub-001_T1w.nii.gz
+            - sub-002_T2w.nii.gz
             FILES_LABEL:
             - sub-001_T1w.nii.gz
             - sub-002_T1w.nii.gz
