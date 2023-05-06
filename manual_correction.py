@@ -90,7 +90,7 @@ def get_parser():
         '-path-in',
         metavar="<folder>",
         required=True,
-        help='Path to the processed data. Example: ~/<your_dataset>/data_processed',
+        help='Path to the processed data. Example: ~/<your_dataset>/data_processed or ~/<your_dataset>/data_to_correct',
     )
     parser.add_argument(
         '-path-out',
