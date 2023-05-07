@@ -216,8 +216,9 @@ def get_parser():
     )
     parser.add_argument(
         '-add-seg-only',
-        help="Only copy the source files (segmentation) that aren't in -config list to the 'derivatives' folder. "
-             "Use this flag to add manually QC-ed automatic segmentations to the 'derivatives' folder.",
+        help="Only copy the source files (segmentation) that aren't in -config list to the final dataset specified by "
+             "'-path-out' flag. Use this flag to add automatically generated and manually QC-ed segmentations to the "
+             "final dataset.",
         action='store_true'
     )
     parser.add_argument(
