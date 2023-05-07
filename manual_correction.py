@@ -613,7 +613,7 @@ def main():
                 if file in file_list:
                     file_list.remove(file)
             files = file_list  # Rename to use those files instead of the ones to exclude
-        if files is not None:
+        if len(files) > 0:
             # Handle regex (i.e., iterate over all subjects)
             if '*' in files[0] and len(files) == 1:
                 subject, ses, filename, contrast = utils.fetch_subject_and_session(files[0])
@@ -723,6 +723,8 @@ def main():
                     # Note: QC for lesion segmentation is not implemented yet
                     if task != "FILES_LESION":
                         generate_qc(fname, fname_label, task, fname_qc, subject, args.config)
+        else:
+            sys.exit("ERROR: The list of files is empty.")
 
 
 if __name__ == '__main__':
