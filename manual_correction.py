@@ -617,7 +617,9 @@ def main():
             # Handle regex (i.e., iterate over all subjects)
             if '*' in files[0] and len(files) == 1:
                 subject, ses, filename, contrast = utils.fetch_subject_and_session(files[0])
-                files = sorted(glob.glob(os.path.join(utils.get_full_path(args.path_in), subject, ses, contrast, filename)))
+                # Get list of files recursively
+                files = sorted(glob.glob(os.path.join(utils.get_full_path(args.path_in), '**', filename),
+                                         recursive=True))
             # Loop across files
             for file in tqdm.tqdm(files, desc="{}".format(task), unit="file"):
                 # Print empty line to not overlay with tqdm progress bar
