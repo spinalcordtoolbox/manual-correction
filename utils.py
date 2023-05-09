@@ -195,12 +195,13 @@ def get_full_path(path):
     return os.path.abspath(os.path.expanduser(path))
 
 
-def check_files_exist(dict_files, path_data, suffix_dict):
+def check_files_exist(dict_files, path_data, suffix_dict, path_derivatives=None):
     """
     Check if all files listed in the input dictionary exist
     :param dict_files:
     :param path_data: folder where BIDS dataset is located
     :param suffix_dict: dictionary with label file suffixes
+    :param path_derivatives: folder where derivatives are located
     :return:
     """
     missing_files = []
@@ -216,8 +217,20 @@ def check_files_exist(dict_files, path_data, suffix_dict):
                 # Construct absolute path to the input label (segmentation, labeling etc.) file
                 # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w_seg.nii.gz'
                 fname_label = add_suffix(fname, suffix_dict[task])
-                if not os.path.exists(fname_label):
-                    missing_files_labels.append(fname_label)
+                # If path_derivatives exists, check also labels under the derivatives folder
+                # Note: we are doing this because if labels exist under derivatives, we do not want raise warnings
+                if path_derivatives is not None:
+                    # Construct absolute path to the label under derivatives folder
+                    fname_label_derivatives = os.path.join(path_derivatives, subject, ses, contrast,
+                                                           add_suffix(filename, suffix_dict[task] + '-manual'))
+                    # Check if there is no label (i.e., no file under path_data and no label under path_derivatives)
+                    # If no label is in either directory, add the file to the list of missing files.
+                    if not os.path.exists(fname_label) and not os.path.exists(fname_label_derivatives):
+                        missing_files_labels.append(fname_label)
+                # No derivatives folder
+                else:
+                    if not os.path.exists(fname_label):
+                        missing_files_labels.append(fname_label)
     if missing_files:
         logging.warning("The following files are missing: \n{}".format(missing_files))
         logging.warning("\nPlease check that the files listed in the yaml file and the input path are correct.\n")

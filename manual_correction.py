@@ -572,13 +572,13 @@ def main():
         'FILES_CENTERLINE': args.suffix_files_centerline    # e.g., _centerline or _label-centerline
     }
 
-    # Check for missing files before starting the whole process
-    if not args.add_seg_only:
-        utils.check_files_exist(dict_yml, utils.get_full_path(args.path_in), suffix_dict)
-
     path_out = utils.get_full_path(args.path_out)
     # check that output folder exists and has write permission
     path_out_deriv = utils.check_output_folder(path_out, args.path_derivatives)
+
+    # Check for missing files before starting the whole process
+    if not args.add_seg_only:
+        utils.check_files_exist(dict_yml, utils.get_full_path(args.path_in), suffix_dict, path_out_deriv)
 
     # Fetch parameters for FSLeyes
     param_fsleyes = ParamFSLeyes(cm=args.fsleyes_cm, dr=args.fsleyes_dr, second_orthoview=args.fsleyes_second_orthoview)
