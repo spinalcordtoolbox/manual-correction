@@ -84,8 +84,11 @@ def main():
         print(f'Copying: {path_file_in} to {path_file_out}')
         path_file_json_in = path_file_in.replace('nii.gz', 'json')
         path_file_json_out = path_file_out.replace('nii.gz', 'json')
-        shutil.copy(path_file_json_in, path_file_json_out)
-        print(f'Copying: {path_file_json_in} to {path_file_json_out}')
+        if os.path.isfile(path_file_json_in):
+            shutil.copy(path_file_json_in, path_file_json_out)
+            print(f'Copying: {path_file_json_in} to {path_file_json_out}')
+        else:
+            print(f'Warning: {path_file_json_in} does not exist.')
 
 
 if __name__ == '__main__':
