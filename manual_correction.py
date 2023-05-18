@@ -87,31 +87,27 @@ def get_parser():
             """)
     )
     parser.add_argument(
-        '-path-in',
+        '-path-img',
         metavar="<folder>",
         required=True,
-        help='Path to the processed data. Example: ~/<your_dataset>/data_processed or ~/<your_dataset>/data_to_correct',
+        help='Path to the folder where niftii images are stored. Example: ~/<your_dataset>/data_processed',
+    )
+    parser.add_argument(
+        '-path-label',
+        metavar="<folder>",
+        help=
+        "Path to the folder where labels are stored. Example: ~/<your_dataset>/data_processed/derivatives/labels"
+        "Default: -path-img will be used",
+        default=parser.parse_args().path_img
     )
     parser.add_argument(
         '-path-out',
         metavar="<folder>",
         help=
-        "R|Path to the output folder where the corrected labels will be saved. "
-        "Default: './' (current directory). "
-        "Note: The path provided within this flag will be combined with the path provided within the "
-        "'-path-derivatives' flag. ",
-        default='./'
-    )
-    parser.add_argument(
-        '-path-derivatives',
-        metavar="<folder>",
-        help=
-        "R|Path to the BIDS-compliant 'derivatives' folder where the corrected labels will be saved. "
-        "Default: 'derivatives/labels'. "
-        "Note: if the provided folder (e.g., 'derivatives/labels') does not already exist, it will be created. "
-        "Note: if the segmentation or label files already exist and you would like to correct them, provide path to "
-        "them within this flag.",
-        default=os.path.join('derivatives', 'labels')
+        "Path to the folder where corrected labels will be stored. Example: ~/<your_dataset>/data_processed/derivatives/labels"
+        "Default: '-path-img + derivatives/labels' will be used"
+        "If specified path does not exist, label path will be created",
+        default=os.path.join(parser.parse_args().path_img, "derivatives/labels")
     )
     parser.add_argument(
         '-suffix-files-in',
@@ -464,21 +460,21 @@ def create_json(fname_nifti, name_rater, modified):
             outfile.write("\n")
 
 
-def ask_if_modify(fname_label, fname_seg):
+def ask_if_modify(fname_out, fname_label):
     """
-    Check if the label file under derivatives already exists. If so, asks user if they want to modify it.
-    If the label file under derivatives does not exist, copy it from processed data.
-    If the file under derivatives and the file under processed data do not exist, create a new empty mask.
-    :param fname_label: file under derivatives, exmaple: <PATH_DATA>/derivatives/labels/sub-001/anat/sub-001_T2w_seg-manual.nii.gz
-    :param fname_seg: file under processed data, example: <PATH_DATA>/data_processed/sub-001/anat/sub-001_T2w_seg.nii.gz
+    Check if the output file already exists. If so, asks user if they want to modify it.
+    If the output file does not exist, copy it from label folder.
+    If the output file and the label file do not exist, create a new empty mask.
+    :param fname_out: manually corrected output file, example: <PATH_DATA>/derivatives/labels/sub-001/anat/sub-001_T2w_seg-manual.nii.gz
+    :param fname_label: input label which will be modified, example: <PATH_DATA>/data_processed/sub-001/anat/sub-001_T2w_seg.nii.gz
     :return:
     """
-    # Check if file under derivatives already exists
-    if os.path.isfile(fname_label):
+    # Check if th output file already exists
+    if os.path.isfile(fname_out):
         answer = None
         while answer not in ("y", "n"):
             answer = input("WARNING! The file {} already exists. "
-                           "Would you like to modify it? [y/n] ".format(fname_label))
+                           "Would you like to modify it? [y/n] ".format(fname_out))
             if answer == "y":
                 do_labeling = True
             elif answer == "n":
@@ -488,12 +484,12 @@ def ask_if_modify(fname_label, fname_seg):
             # We don't want to copy because we want to modify the existing file
             copy = False
             create_empty_mask = False
-    # If the file under derivatives does not exist, copy it from processed data
-    elif not os.path.isfile(fname_label) and os.path.isfile(fname_seg):
+    # If the output file does not exist, copy it from label folder
+    elif not os.path.isfile(fname_out) and os.path.isfile(fname_label):
         do_labeling = True
         copy = True
         create_empty_mask = False
-    # If the file under derivatives and the file under processed data do not exist, create a new empty mask
+    # If the output file and the input label file data do not exist, create a new empty mask
     else:
         do_labeling = True
         copy = False
@@ -571,26 +567,28 @@ def main():
         'FILES_PMJ': args.suffix_files_pmj,                 # e.g., _pmj or _label-pmj
         'FILES_CENTERLINE': args.suffix_files_centerline    # e.g., _centerline or _label-centerline
     }
-
+    path_img = utils.get_full_path(args.path_img)
+    path_label = utils.get_full_path(args.path_label)
     path_out = utils.get_full_path(args.path_out)
-    # check that output folder exists and has write permission
-    path_out_deriv = utils.check_output_folder(path_out, args.path_derivatives)
+    
+    # check that output folder exists or create it
+    utils.check_output_folder(path_out)
 
     # Check for missing files before starting the whole process
     if not args.add_seg_only:
-        utils.check_files_exist(dict_yml, utils.get_full_path(args.path_in), suffix_dict, path_out_deriv)
+        utils.check_files_exist(dict_yml, path_img, path_label, suffix_dict)
 
     # Fetch parameters for FSLeyes
     param_fsleyes = ParamFSLeyes(cm=args.fsleyes_cm, dr=args.fsleyes_dr, second_orthoview=args.fsleyes_second_orthoview)
 
-    # Get list of segmentations files for all subjects in -path-in (if -add-seg-only)
+    # Get list of segmentations files for all subjects in -path-label (if -add-seg-only)
     if args.add_seg_only:
-        path_list = glob.glob(args.path_in + "/**/*" + args.suffix_files_seg + ".nii.gz", recursive=True)
+        path_list = glob.glob(args.path_label + "/**/*" + args.suffix_files_seg + ".nii.gz", recursive=True)
         # Get only filenames without suffix _seg  to match files in -config .yml list
         file_list = [utils.remove_suffix(os.path.split(path)[-1], args.suffix_files_seg) for path in path_list]
         # Check if file_list is empty
         if not file_list:
-            sys.exit("ERROR: No segmentation file found in {}.".format(args.path_in))
+            sys.exit("ERROR: No segmentation file found in {}.".format(args.path_label))
 
     # Get name of expert rater (skip if -qc-only is true)
     if not args.qc_only:
@@ -598,7 +596,7 @@ def main():
                            "corrected file: ")
 
     # Build QC report folder name
-    fname_qc = os.path.join(path_out, 'qc_corr_' + time.strftime('%Y%m%d%H%M%S'))
+    fname_qc = os.path.join(path_img, 'qc_corr_' + time.strftime('%Y%m%d%H%M%S'))
 
     # TODO: address "none" issue if no file present under a key
     # Perform manual corrections
@@ -608,7 +606,7 @@ def main():
         if args.add_seg_only and task == 'FILES_SEG':
             # Remove the files in the -config list
             for file in files:
-                # Remove the file suffix (e.g., '_RPI_r') to match the list of files in -path-in
+                # Remove the file suffix (e.g., '_RPI_r') to match the list of files in -path-img
                 file = utils.remove_suffix(file, args.suffix_files_in)
                 if file in file_list:
                     file_list.remove(file)
@@ -618,7 +616,7 @@ def main():
             if '*' in files[0] and len(files) == 1:
                 subject, ses, filename, contrast = utils.fetch_subject_and_session(files[0])
                 # Get list of files recursively
-                files = sorted(glob.glob(os.path.join(utils.get_full_path(args.path_in), '**', filename),
+                files = sorted(glob.glob(os.path.join(path_img, '**', filename),
                                          recursive=True))
             # Loop across files
             for file in tqdm.tqdm(files, desc="{}".format(task), unit="file"):
@@ -629,7 +627,7 @@ def main():
                 subject, ses, filename, contrast = utils.fetch_subject_and_session(file)
                 # Construct absolute path to the input file
                 # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w.nii.gz'
-                fname = os.path.join(utils.get_full_path(args.path_in), subject, ses, contrast, filename)
+                fname = os.path.join(path_img, subject, ses, contrast, filename)
                 # Construct absolute path to the other contrast file
                 if args.load_other_contrast:
                     # Do not include session in the filename
@@ -638,23 +636,27 @@ def main():
                     # Include session in the filename
                     else:
                         other_contrast_filename = subject + '_' + ses + '_' + args.load_other_contrast + '.nii.gz'
-                    fname_other_contrast = os.path.join(utils.get_full_path(args.path_in), subject, ses, contrast,
-                                                        other_contrast_filename)
+                    fname_other_contrast = os.path.join(path_img, subject, ses, contrast, other_contrast_filename)
                 else:
                     fname_other_contrast = None
                 # Construct absolute path to the input label (segmentation, labeling etc.) file
                 # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w_seg.nii.gz'
-                fname_seg = utils.add_suffix(fname, suffix_dict[task])
-                # Construct absolute path to the derivative file (i.e., path where manually corrected file will be saved)
-                # For example: '/Users/user/dataset/derivatives/labels/sub-001/anat/sub-001_T2w_seg-manual.nii.gz'
-                fname_label = os.path.join(path_out_deriv, subject, ses, contrast,
-                                           utils.add_suffix(utils.remove_suffix(filename, args.suffix_files_in),
-                                                            suffix_dict[task] + '-manual'))
+                fname_label = utils.add_suffix(os.path.join(path_label, subject, ses, contrast, filename), suffix_dict[task])
+                
+                # Construct absolute path to the output file (i.e., path where manually corrected file will be saved)
+                # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w_seg-manual.nii.gz'
+                # The suffix '-manual' is also added if not already present
+                temp_fname_out = utils.add_suffix(os.path.join(path_out, subject, ses, contrast, filename), suffix_dict[task])
+                if '-manual' in temp_fname_out:
+                    fname_out = temp_fname_out
+                else:
+                    fname_out = utils.add_suffix(temp_fname_out, '-manual')
+                
                 # Create output folders under derivative if they do not exist
-                os.makedirs(os.path.join(path_out_deriv, subject, ses, contrast), exist_ok=True)
+                os.makedirs(os.path.join(path_out, subject, ses, contrast), exist_ok=True)
                 if not args.qc_only:
-                    # Check if file under derivatives already exists. If so, asks user if they want to modify it.
-                    do_labeling, copy, create_empty_mask = ask_if_modify(fname_label, fname_seg)
+                    # Check if the output file already exists. If so, asks user if they want to modify it.
+                    do_labeling, copy, create_empty_mask = ask_if_modify(fname_out=fname_out, fname_label=fname_label)
                     # Perform labeling (i.e., segmentation correction, labeling correction etc.) for the specific task
                     if do_labeling:
                         if args.denoise:
@@ -662,40 +664,40 @@ def main():
                             fname = denoise_image(fname)
                         # Copy file to derivatives folder
                         if copy:
-                            shutil.copyfile(fname_seg, fname_label)
-                            print(f'Copying: {fname_seg} to {fname_label}')
+                            shutil.copyfile(fname_label, fname_out)
+                            print(f'Copying: {fname_label} to {fname_out}')
                         # Create empty mask in derivatives folder
                         elif create_empty_mask:
-                            utils.create_empty_mask(fname, fname_label)
+                            utils.create_empty_mask(fname, fname_out)
 
                         if task in ['FILES_SEG', 'FILES_GMSEG']:
                             if not args.add_seg_only:
-                                time_one = get_modification_time(fname_label)
-                                correct_segmentation(fname, fname_label, fname_other_contrast, args.viewer, param_fsleyes)
-                                time_two = get_modification_time(fname_label)
+                                time_one = get_modification_time(fname_out)
+                                correct_segmentation(fname, fname_out, fname_other_contrast, args.viewer, param_fsleyes)
+                                time_two = get_modification_time(fname_out)
                         elif task == 'FILES_LESION':
-                            time_one = get_modification_time(fname_label)
-                            correct_segmentation(fname, fname_label, fname_other_contrast, args.viewer, param_fsleyes)
-                            time_two = get_modification_time(fname_label)
+                            time_one = get_modification_time(fname_out)
+                            correct_segmentation(fname, fname_out, fname_other_contrast, args.viewer, param_fsleyes)
+                            time_two = get_modification_time(fname_out)
                         elif task == 'FILES_LABEL':
-                            time_one = get_modification_time(fname_label)
-                            correct_vertebral_labeling(fname, fname_label, args.label_disc_list)
-                            time_two = get_modification_time(fname_label)
+                            time_one = get_modification_time(fname_out)
+                            correct_vertebral_labeling(fname, fname_out, args.label_disc_list)
+                            time_two = get_modification_time(fname_out)
                         elif task == 'FILES_COMPRESSION':
-                            time_one = get_modification_time(fname_label)
+                            time_one = get_modification_time(fname_out)
                             # Note: be aware of possibility to create compression labels also using
                             # 'sct_label_utils -create-viewer'
                             # Context: https://github.com/spinalcordtoolbox/spinalcordtoolbox/issues/3984
-                            correct_segmentation(fname, fname_label, fname_other_contrast, 'fsleyes', param_fsleyes)
-                            time_two = get_modification_time(fname_label)
+                            correct_segmentation(fname, fname_out, fname_other_contrast, 'fsleyes', param_fsleyes)
+                            time_two = get_modification_time(fname_out)
                         elif task == 'FILES_PMJ':
-                            time_one = get_modification_time(fname_label)
-                            correct_pmj_label(fname, fname_label)
-                            time_two = get_modification_time(fname_label)
+                            time_one = get_modification_time(fname_out)
+                            correct_pmj_label(fname, fname_out)
+                            time_two = get_modification_time(fname_out)
                         elif task == 'FILES_CENTERLINE':
-                            time_one = get_modification_time(fname_label)
-                            correct_centerline(fname, fname_label)
-                            time_two = get_modification_time(fname_label)
+                            time_one = get_modification_time(fname_out)
+                            correct_centerline(fname, fname_out)
+                            time_two = get_modification_time(fname_out)
                         else:
                             sys.exit('Task not recognized from yml file: {}'.format(task))
                         if args.denoise:
@@ -708,23 +710,23 @@ def main():
                         if task == 'FILES_LESION':
                             # create json sidecar with the name of the expert rater
                             modified = check_if_modified(time_one, time_two)
-                            create_json(fname_label, name_rater, modified)
+                            create_json(fname_out, name_rater, modified)
                         else:
                             # create json sidecar with the name of the expert rater
                             if args.add_seg_only:
                                 # We are passing modified=True because we are adding a new segmentation
-                                create_json(fname_label, name_rater, modified=True)
+                                create_json(fname_out, name_rater, modified=True)
                             else:
                                 modified = check_if_modified(time_one, time_two)
-                                create_json(fname_label, name_rater, modified)
+                                create_json(fname_out, name_rater, modified)
                                 # Generate QC report
-                                generate_qc(fname, fname_label, task, fname_qc, subject, args.config)
+                                generate_qc(fname, fname_out, task, fname_qc, subject, args.config)
 
                 # Generate QC report only
                 if args.qc_only:
                     # Note: QC for lesion segmentation is not implemented yet
                     if task != "FILES_LESION":
-                        generate_qc(fname, fname_label, task, fname_qc, subject, args.config)
+                        generate_qc(fname, fname_out, task, fname_qc, subject, args.config)
         else:
             sys.exit("ERROR: The list of files is empty.")
 

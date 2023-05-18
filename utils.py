@@ -195,7 +195,7 @@ def get_full_path(path):
     return os.path.abspath(os.path.expanduser(path))
 
 
-def check_files_exist(dict_files, path_data, suffix_dict, path_derivatives=None):
+def check_files_exist(dict_files, path_img, path_label, suffix_dict):
     """
     Check if all files listed in the input dictionary exist
     :param dict_files:
@@ -211,26 +211,14 @@ def check_files_exist(dict_files, path_data, suffix_dict, path_derivatives=None)
         if files is not None and '*' not in files:
             for file in files:
                 subject, ses, filename, contrast = fetch_subject_and_session(file)
-                fname = os.path.join(path_data, subject, ses, contrast, filename)
+                fname = os.path.join(path_img, subject, ses, contrast, filename)
                 if not os.path.exists(fname):
                     missing_files.append(fname)
                 # Construct absolute path to the input label (segmentation, labeling etc.) file
                 # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w_seg.nii.gz'
-                fname_label = add_suffix(fname, suffix_dict[task])
-                # If path_derivatives exists, check also labels under the derivatives folder
-                # Note: we are doing this because if labels exist under derivatives, we do not want raise warnings
-                if path_derivatives is not None:
-                    # Construct absolute path to the label under derivatives folder
-                    fname_label_derivatives = os.path.join(path_derivatives, subject, ses, contrast,
-                                                           add_suffix(filename, suffix_dict[task] + '-manual'))
-                    # Check if there is no label (i.e., no file under path_data and no label under path_derivatives)
-                    # If no label is in either directory, add the file to the list of missing files.
-                    if not os.path.exists(fname_label) and not os.path.exists(fname_label_derivatives):
-                        missing_files_labels.append(fname_label)
-                # No derivatives folder
-                else:
-                    if not os.path.exists(fname_label):
-                        missing_files_labels.append(fname_label)
+                fname_label = add_suffix(os.path.join(path_label, subject, ses, contrast, filename), suffix_dict[task])
+                if not os.path.exists(fname_label):
+                    missing_files_labels.append(fname_label)
     if missing_files:
         logging.warning("The following files are missing: \n{}".format(missing_files))
         logging.warning("\nPlease check that the files listed in the yaml file and the input path are correct.\n")
@@ -241,19 +229,16 @@ def check_files_exist(dict_files, path_data, suffix_dict, path_derivatives=None)
                         "If you are creating label(s) from scratch, ignore this message.\n".format(suffix_dict[task]))
 
 
-def check_output_folder(path_bids, folder_derivatives):
+def check_output_folder(path_bids):
     """
-    Make sure path exists, has writing permissions, and create derivatives folder if it does not exist.
+    Check if output folder path exists else create it
     :param path_bids:
-    :return: folder_derivatives:
     """
     if path_bids is None:
         logging.error("-path-out should be provided.")
     if not os.path.exists(path_bids):
-        logging.error("Output path does not exist: {}".format(path_bids))
-    path_bids_derivatives = os.path.join(path_bids, folder_derivatives)
-    os.makedirs(path_bids_derivatives, exist_ok=True)
-    return path_bids_derivatives
+        logging.warning("Creating new folder: {}".format(path_bids))
+        os.makedirs(path_bids, exist_ok=True)
 
 
 def check_software_installed(list_software=['sct']):
