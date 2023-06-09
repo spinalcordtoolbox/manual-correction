@@ -12,7 +12,7 @@
 #
 # For all examples, see: https://github.com/spinalcordtoolbox/manual-correction/wiki
 #
-# Authors: Jan Valosek, Sandrine Bédard, Naga Karthik, Julien Cohen-Adad
+# Authors: Jan Valosek, Sandrine Bédard, Naga Karthik, Nathan Molinier, Julien Cohen-Adad
 #
 
 import argparse
@@ -97,17 +97,17 @@ def get_parser():
         metavar="<folder>",
         help=
         "Path to the folder where labels are stored. Example: ~/<your_dataset>/data_processed/derivatives/labels"
-        "Default: -path-img will be used",
-        default=parser.parse_args().path_img
+        "\nDefault: -path-img will be used",
+        default=''
     )
     parser.add_argument(
         '-path-out',
         metavar="<folder>",
         help=
         "Path to the folder where corrected labels will be stored. Example: ~/<your_dataset>/data_processed/derivatives/labels"
-        "Default: '-path-img + derivatives/labels' will be used"
-        "If specified path does not exist, label path will be created",
-        default=os.path.join(parser.parse_args().path_img, "derivatives/labels")
+        "\nDefault: '-path-img + derivatives/labels' will be used. "
+        "If specified path does not exist, out path will be created",
+        default=''
     )
     parser.add_argument(
         '-suffix-files-in',
@@ -137,7 +137,7 @@ def get_parser():
     parser.add_argument(
         '-suffix-files-label',
         help="FILES-LABEL suffix. Examples: '_labels' (default), '_labels-disc'.",
-        default='_labels'
+        default='_labels-disc'
     )
     parser.add_argument(
         '-suffix-files-compression',
@@ -568,8 +568,16 @@ def main():
         'FILES_CENTERLINE': args.suffix_files_centerline    # e.g., _centerline or _label-centerline
     }
     path_img = utils.get_full_path(args.path_img)
-    path_label = utils.get_full_path(args.path_label)
-    path_out = utils.get_full_path(args.path_out)
+    
+    if args.path_label == '':
+        path_label = path_img
+    else:
+        path_label = utils.get_full_path(args.path_label)
+    
+    if args.path_out == '':
+        path_out = os.path.join(args.path_img, "derivatives/labels")
+    else:
+        path_out = utils.get_full_path(args.path_out)
     
     # check that output folder exists or create it
     utils.check_output_folder(path_out)
@@ -641,7 +649,18 @@ def main():
                     fname_other_contrast = None
                 # Construct absolute path to the input label (segmentation, labeling etc.) file
                 # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w_seg.nii.gz'
-                fname_label = utils.add_suffix(os.path.join(path_label, subject, ses, contrast, filename), suffix_dict[task])
+                temp_fname_label = utils.add_suffix(os.path.join(path_label, subject, ses, contrast, filename), suffix_dict[task])
+                # Check if label exists else add or remove '-manual' to check all the combinations.
+                # The final path still may not exist leading to the creation of a new out file.
+                # The idea is to make the code robust regarding non consistent datasets were both
+                # modified and non modified are present.
+                if os.path.exists(temp_fname_label):
+                    fname_label = temp_fname_label
+                else:
+                    if '-manual' in temp_fname_label:
+                        fname_label = "".join(temp_fname_label.split('-manual')) # Remove manual
+                    else:
+                        fname_label = utils.add_suffix(temp_fname_label, '-manual') # Add manual
                 
                 # Construct absolute path to the output file (i.e., path where manually corrected file will be saved)
                 # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w_seg-manual.nii.gz'
