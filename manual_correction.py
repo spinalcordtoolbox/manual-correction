@@ -105,7 +105,7 @@ def get_parser():
         metavar="<folder>",
         help=
         "Path to the folder where corrected labels will be stored. Example: ~/<your_dataset>/data_processed/derivatives/labels"
-        "\nDefault: '-path-img + derivatives/labels' will be used. "
+        "\nIf not specified: '-path-img + derivatives/labels' will be used. "
         "If specified path does not exist, out path will be created",
         default=''
     )
