@@ -125,7 +125,7 @@ def get_parser():
     )
     parser.add_argument(
         '-suffix-files-seg',
-        help="FILES-SEG suffix. Examples: '_seg' (default), '_label-SC_mask'.",
+        help="FILES-SEG suffix. Examples: '_seg' (default), '_seg-manual', '_label-SC_mask'.",
         default='_seg'
     )
     parser.add_argument(
