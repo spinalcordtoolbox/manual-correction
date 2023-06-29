@@ -58,7 +58,7 @@ def get_parser():
         "'FILES_PMJ' lists images associated with pontomedullary junction labeling, "
         "and 'FILES_CENTERLINE' lists images associated with centerline. "
         "You can validate your .yml file at this website: http://www.yamllint.com/."
-        "Note: if you want to iterate over all subjects, you can use the wildcard '*' (Examples: sub-*_T1w.nii.gz, "
+        "\nNote: if you want to iterate over all subjects, you can use the wildcard '*' (Examples: sub-*_T1w.nii.gz, "
         "sub-*_ses-M0_T2w.nii.gz, sub-*_ses-M0_T2w_RPI_r.nii.gz, etc.).\n"
         "Below is an example .yml file:\n"
         + dedent(
@@ -98,7 +98,7 @@ def get_parser():
         help=
         "R|Path to the output folder where the corrected labels will be saved. "
         "Default: './' (current directory). "
-        "Note: The path provided within this flag will be combined with the path provided within the "
+        "\nNote: The path provided within this flag will be combined with the path provided within the "
         "'-path-derivatives' flag. ",
         default='./'
     )
@@ -108,8 +108,8 @@ def get_parser():
         help=
         "R|Path to the BIDS-compliant 'derivatives' folder where the corrected labels will be saved. "
         "Default: 'derivatives/labels'. "
-        "Note: if the provided folder (e.g., 'derivatives/labels') does not already exist, it will be created. "
-        "Note: if the segmentation or label files already exist and you would like to correct them, provide path to "
+        "\nNote: if the provided folder (e.g., 'derivatives/labels') does not already exist, it will be created. "
+        "\nNote: if the segmentation or label files already exist and you would like to correct them, provide path to "
         "them within this flag.",
         default=os.path.join('derivatives', 'labels')
     )
@@ -117,7 +117,7 @@ def get_parser():
         '-suffix-files-in',
         help=
         "R|Suffix of the input files."
-        "This flag is useful in cases when the input files have been processed and thus contain a specific suffix."
+        "This flag is useful in cases when the input files have been processed and thus contain a specific suffix. "
         "For example, if the input image listed under '-config' contains the suffix '_RPI_r' "
         "(e.g., sub-001_T1w_RPI_r.nii.gz), but the label file does not contain this suffix "
         "(e.g., sub-001_T1w_seg.nii.gz), then you would need to provide the suffix '_RPI_r' to this flag.",
@@ -184,7 +184,7 @@ def get_parser():
     parser.add_argument(
         '-fsleyes-dr',
         help="Display range (dr) in percentages to be used for loading the input file in FSLeyes (default: 0,70). "
-             "Note: Use comma to separate values, e.g., 0,70.",
+             "\nNote: Use comma to separate values, e.g., 0,70.",
         type=str,
         default='0,70'
     )
