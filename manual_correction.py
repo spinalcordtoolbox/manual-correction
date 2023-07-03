@@ -97,8 +97,8 @@ def get_parser():
         '-path-label',
         metavar="<folder>",
         help=
-        "Path to the folder where labels are stored. Example: ~/<your_dataset>/data_processed/derivatives/labels"
-        "\nDefault: -path-img will be used",
+        "R|Full path to the folder with labels (BIDS-compliant). Examples: '~/<your_dataset>/derivatives/labels' or '~/<your_dataset>/derivatives/labels_softseg'"
+        "If not provided,  '-path-img' will be used assuming that the labels are located in the same directory as images.",
         default=''
     )
     parser.add_argument(
