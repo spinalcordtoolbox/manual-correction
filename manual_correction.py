@@ -90,7 +90,8 @@ def get_parser():
         '-path-img',
         metavar="<folder>",
         required=True,
-        help='Path to the folder where niftii images are stored. Example: ~/<your_dataset>/data_processed',
+        help=
+        "R|Full path to the folder with images (BIDS-compliant).",
     )
     parser.add_argument(
         '-path-label',
