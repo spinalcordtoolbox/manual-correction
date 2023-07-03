@@ -461,7 +461,7 @@ def create_json(fname_nifti, name_rater, modified):
             outfile.write("\n")
 
 
-def ask_if_modify(fname_out, fname_label):
+def ask_if_modify(fname_out, fname_label, do_labeling_always=False):
     """
     Check if the output file already exists. If so, asks user if they want to modify it.
     If the output file does not exist, copy it from label folder.
@@ -473,18 +473,24 @@ def ask_if_modify(fname_out, fname_label):
     # Check if th output file already exists
     if os.path.isfile(fname_out):
         answer = None
-        while answer not in ("y", "n"):
-            answer = input("WARNING! The file {} already exists. "
-                           "Would you like to modify it? [y/n] ".format(fname_out))
-            if answer == "y":
-                do_labeling = True
-            elif answer == "n":
-                do_labeling = False
-            else:
-                print("Please answer with 'y' or 'n'")
-            # We don't want to copy because we want to modify the existing file
-            copy = False
-            create_empty_mask = False
+        if not do_labeling_always:
+            while answer not in ("y", "n", "Y"):
+                answer = input("WARNING! The file {} already exists. "
+                            "Would you like to modify it? [y/n/Y] ".format(fname_out))
+                if answer == "y":
+                    do_labeling = True
+                elif answer == "n":
+                    do_labeling = False
+                elif answer == "Y":
+                    do_labeling_always = True
+                    do_labeling = True
+                else:
+                    print("Please answer with 'y', 'n' or 'Y' for always True")
+        else:
+            do_labeling = True
+        # We don't want to copy because we want to modify the existing file
+        copy = False
+        create_empty_mask = False
     # If the output file does not exist, copy it from label folder
     elif not os.path.isfile(fname_out) and os.path.isfile(fname_label):
         do_labeling = True
@@ -496,7 +502,7 @@ def ask_if_modify(fname_out, fname_label):
         copy = False
         create_empty_mask = True
 
-    return do_labeling, copy, create_empty_mask
+    return do_labeling, copy, create_empty_mask, do_labeling_always
 
 
 def generate_qc(fname, fname_label, task, fname_qc, subject, config_file):
@@ -606,6 +612,9 @@ def main():
 
     # Build QC report folder name
     fname_qc = os.path.join(path_img, 'qc_corr_' + time.strftime('%Y%m%d%H%M%S'))
+    
+    # Set overwrite variable to False
+    do_labeling_always = False
 
     # TODO: address "none" issue if no file present under a key
     # Perform manual corrections
@@ -676,7 +685,7 @@ def main():
                 os.makedirs(os.path.join(path_out, subject, ses, contrast), exist_ok=True)
                 if not args.qc_only:
                     # Check if the output file already exists. If so, asks user if they want to modify it.
-                    do_labeling, copy, create_empty_mask = ask_if_modify(fname_out=fname_out, fname_label=fname_label)
+                    do_labeling, copy, create_empty_mask, do_labeling_always = ask_if_modify(fname_out=fname_out, fname_label=fname_label, do_labeling_always=do_labeling_always)
                     # Perform labeling (i.e., segmentation correction, labeling correction etc.) for the specific task
                     if do_labeling:
                         if args.denoise:
