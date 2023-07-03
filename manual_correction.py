@@ -105,9 +105,9 @@ def get_parser():
         '-path-out',
         metavar="<folder>",
         help=
-        "Path to the folder where corrected labels will be stored. Example: ~/<your_dataset>/data_processed/derivatives/labels"
-        "\nIf not specified: '-path-img + derivatives/labels' will be used. "
-        "If specified path does not exist, out path will be created",
+        "R| Full path to the folder where corrected labels will be stored. Example: '~/<your_dataset>/derivatives/labels'"
+        "If not provided, '-path-img' + 'derivatives/labels' will be used."
+        "Note: If the specified path does not exist, it will be created.",
         default=''
     )
     parser.add_argument(
