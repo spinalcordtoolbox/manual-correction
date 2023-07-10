@@ -97,16 +97,16 @@ def get_parser():
         '-path-label',
         metavar="<folder>",
         help=
-        "R|Full path to the folder with labels (BIDS-compliant). Examples: '~/<your_dataset>/derivatives/labels' or '~/<your_dataset>/derivatives/labels_softseg'"
-        "If not provided, '-path-img' will be used assuming that the labels are located in the same directory as images.",
+        "R|Full path to the folder with labels (BIDS-compliant). Examples: '~/<your_dataset>/derivatives/labels' or '~/<your_dataset>/derivatives/labels_softseg' "
+        "If not provided, '-path-img' + 'derivatives/labels' will be used. ",
         default=''
     )
     parser.add_argument(
         '-path-out',
         metavar="<folder>",
         help=
-        "R| Full path to the folder where corrected labels will be stored. Example: '~/<your_dataset>/derivatives/labels'"
-        "If not provided, '-path-img' + 'derivatives/labels' will be used."
+        "R| Full path to the folder where corrected labels will be stored. Example: '~/<your_dataset>/derivatives/labels' "
+        "If not provided, '-path-img' + 'derivatives/labels' will be used. "
         "Note: If the specified path does not exist, it will be created.",
         default=''
     )
@@ -470,7 +470,7 @@ def ask_if_modify(fname_out, fname_label):
     :param fname_label: input label which will be modified, example: <PATH_DATA>/data_processed/sub-001/anat/sub-001_T2w_seg.nii.gz
     :return:
     """
-    # Check if th output file already exists
+    # Check if the output file already exists
     if os.path.isfile(fname_out):
         answer = None
         while answer not in ("y", "n"):
@@ -571,7 +571,7 @@ def main():
     path_img = utils.get_full_path(args.path_img)
     
     if args.path_label == '':
-        path_label = path_img
+        path_label = os.path.join(args.path_img, "derivatives/labels")
     else:
         path_label = utils.get_full_path(args.path_label)
     
@@ -672,7 +672,7 @@ def main():
                 else:
                     fname_out = utils.add_suffix(temp_fname_out, '-manual')
                 
-                # Create output folders under derivative if they do not exist
+                # Create subject folder in output if they do not exist
                 os.makedirs(os.path.join(path_out, subject, ses, contrast), exist_ok=True)
                 if not args.qc_only:
                     # Check if the output file already exists. If so, asks user if they want to modify it.
