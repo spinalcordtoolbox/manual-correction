@@ -217,8 +217,7 @@ def check_files_exist(dict_files, path_img, path_label, suffix_dict):
                 # Construct absolute path to the input label (segmentation, labeling etc.) file
                 # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w_seg.nii.gz'
                 fname_label = add_suffix(os.path.join(path_label, subject, ses, contrast, filename), suffix_dict[task])
-                fname_label_manual = add_suffix(fname_label, '-manual')
-                if not os.path.exists(fname_label) and not os.path.exists(fname_label_manual):
+                if not os.path.exists(fname_label):
                     missing_files_labels.append(fname_label)
     if missing_files:
         logging.warning("The following files are missing: \n{}".format(missing_files))

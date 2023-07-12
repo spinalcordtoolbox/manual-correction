@@ -650,27 +650,18 @@ def main():
                     fname_other_contrast = None
                 # Construct absolute path to the input label (segmentation, labeling etc.) file
                 # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w_seg.nii.gz'
-                temp_fname_label = utils.add_suffix(os.path.join(path_label, subject, ses, contrast, filename), suffix_dict[task])
-                # Check if label exists else add or remove '-manual' to check all the combinations.
-                # The final path still may not exist leading to the creation of a new out file.
-                # The idea is to make the code robust regarding non consistent datasets were both
-                # modified and non modified are present.
-                if os.path.exists(temp_fname_label):
-                    fname_label = temp_fname_label
-                else:
-                    if '-manual' in temp_fname_label:
-                        fname_label = "".join(temp_fname_label.split('-manual')) # Remove manual
-                    else:
-                        fname_label = utils.add_suffix(temp_fname_label, '-manual') # Add manual
+                fname_label = utils.add_suffix(os.path.join(path_label, subject, ses, contrast, filename), suffix_dict[task])
                 
                 # Construct absolute path to the output file (i.e., path where manually corrected file will be saved)
-                # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w_seg-manual.nii.gz'
-                # The suffix '-manual' is also added if not already present
+                # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w_seg.nii.gz'
+                # The information regarding the modified data will be stored within the sidecar .json file
                 temp_fname_out = utils.add_suffix(os.path.join(path_out, subject, ses, contrast, filename), suffix_dict[task])
+                
+                # This condition is used to remove the suffix -manual from our current datasets (can be deleted later)
                 if '-manual' in temp_fname_out:
-                    fname_out = temp_fname_out
+                    fname_out = temp_fname_out.replace('-manual','')
                 else:
-                    fname_out = utils.add_suffix(temp_fname_out, '-manual')
+                    fname_out = temp_fname_out
                 
                 # Create subject folder in output if they do not exist
                 os.makedirs(os.path.join(path_out, subject, ses, contrast), exist_ok=True)
