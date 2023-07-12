@@ -158,8 +158,8 @@ def get_parser():
     parser.add_argument(
         '-label-disc-list',
         help="Comma-separated list containing individual values and/or intervals for disc labeling. Example: '1:4,6,8' "
-             "or 1:20 (default)",
-        default='1:20'
+             "or 1:25 (default)",
+        default='1:25'
     )
     parser.add_argument(
         '-viewer',
