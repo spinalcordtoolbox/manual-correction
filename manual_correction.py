@@ -446,8 +446,8 @@ def check_if_modified(time_one, time_two):
 
 def create_json(fname_nifti, name_rater, modified):
     """
-    Create json sidecar with meta information
-    :param fname_nifti: str: File name of the nifti image to associate with the json sidecar
+    Create/update JSON sidecar with meta information
+    :param fname_nifti: str: File name of the nifti image to associate with the JSON sidecar
     :param name_rater: str: Name of the expert rater
     :param modified: bool: True if the file was modified by the user
     :return:
@@ -455,10 +455,11 @@ def create_json(fname_nifti, name_rater, modified):
     if modified:
         metadata = {'Author': name_rater, 'Date': time.strftime('%Y-%m-%d %H:%M:%S')}
         fname_json = fname_nifti.rstrip('.nii').rstrip('.nii.gz') + '.json'
-        with open(fname_json, 'a') as outfile: # information regarding raters will be added to the file
+        with open(fname_json, 'a') as outfile:  # 'a' - information regarding raters will be appended to the JSON file
             json.dump(metadata, outfile, indent=4)
             # Add last newline
             outfile.write("\n")
+        print("JSON sidecar created/updated: {}".format(fname_json))
 
 
 def ask_if_modify(fname_out, fname_label):
