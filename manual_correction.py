@@ -455,7 +455,7 @@ def create_json(fname_nifti, name_rater, modified):
     if modified:
         metadata = {'Author': name_rater, 'Date': time.strftime('%Y-%m-%d %H:%M:%S')}
         fname_json = fname_nifti.rstrip('.nii').rstrip('.nii.gz') + '.json'
-        with open(fname_json, 'w') as outfile:
+        with open(fname_json, 'a') as outfile: # information regarding raters will be added to the file
             json.dump(metadata, outfile, indent=4)
             # Add last newline
             outfile.write("\n")
