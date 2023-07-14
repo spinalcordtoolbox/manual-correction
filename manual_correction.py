@@ -58,7 +58,7 @@ def get_parser():
         "'FILES_PMJ' lists images associated with pontomedullary junction labeling, "
         "and 'FILES_CENTERLINE' lists images associated with centerline. "
         "You can validate your .yml file at this website: http://www.yamllint.com/."
-        "Note: if you want to iterate over all subjects, you can use the wildcard '*' (Examples: sub-*_T1w.nii.gz, "
+        "\nNote: if you want to iterate over all subjects, you can use the wildcard '*' (Examples: sub-*_T1w.nii.gz, "
         "sub-*_ses-M0_T2w.nii.gz, sub-*_ses-M0_T2w_RPI_r.nii.gz, etc.).\n"
         "Below is an example .yml file:\n"
         + dedent(
@@ -97,16 +97,18 @@ def get_parser():
         '-path-label',
         metavar="<folder>",
         help=
-        "R|Full path to the folder with labels (BIDS-compliant). Examples: '~/<your_dataset>/derivatives/labels' or '~/<your_dataset>/derivatives/labels_softseg'"
-        "If not provided, '-path-img' will be used assuming that the labels are located in the same directory as images.",
+        "R|Full path to the folder with labels (BIDS-compliant). Examples: '~/<your_dataset>/derivatives/labels' or "
+        "'~/<your_dataset>/derivatives/labels_softseg' "
+        "If not provided, '-path-img' + 'derivatives/labels' will be used. ",
         default=''
     )
     parser.add_argument(
         '-path-out',
         metavar="<folder>",
         help=
-        "R| Full path to the folder where corrected labels will be stored. Example: '~/<your_dataset>/derivatives/labels'"
-        "If not provided, '-path-img' + 'derivatives/labels' will be used."
+        "R| Full path to the folder where corrected labels will be stored. "
+        "Example: '~/<your_dataset>/derivatives/labels' "
+        "If not provided, '-path-img' + 'derivatives/labels' will be used. "
         "Note: If the specified path does not exist, it will be created.",
         default=''
     )
@@ -114,7 +116,7 @@ def get_parser():
         '-suffix-files-in',
         help=
         "R|Suffix of the input files."
-        "This flag is useful in cases when the input files have been processed and thus contain a specific suffix."
+        "This flag is useful in cases when the input files have been processed and thus contain a specific suffix. "
         "For example, if the input image listed under '-config' contains the suffix '_RPI_r' "
         "(e.g., sub-001_T1w_RPI_r.nii.gz), but the label file does not contain this suffix "
         "(e.g., sub-001_T1w_seg.nii.gz), then you would need to provide the suffix '_RPI_r' to this flag.",
@@ -122,7 +124,7 @@ def get_parser():
     )
     parser.add_argument(
         '-suffix-files-seg',
-        help="FILES-SEG suffix. Examples: '_seg' (default), '_label-SC_mask'.",
+        help="FILES-SEG suffix. Examples: '_seg' (default), '_seg-manual', '_label-SC_mask'.",
         default='_seg'
     )
     parser.add_argument(
@@ -158,8 +160,8 @@ def get_parser():
     parser.add_argument(
         '-label-disc-list',
         help="Comma-separated list containing individual values and/or intervals for disc labeling. Example: '1:4,6,8' "
-             "or 1:20 (default)",
-        default='1:20'
+             "or 1:25 (default)",
+        default='1:25'
     )
     parser.add_argument(
         '-viewer',
@@ -181,7 +183,7 @@ def get_parser():
     parser.add_argument(
         '-fsleyes-dr',
         help="Display range (dr) in percentages to be used for loading the input file in FSLeyes (default: 0,70). "
-             "Note: Use comma to separate values, e.g., 0,70.",
+             "\nNote: Use comma to separate values, e.g., 0,70.",
         type=str,
         default='0,70'
     )
@@ -444,21 +446,35 @@ def check_if_modified(time_one, time_two):
         return False
 
 
-def create_json(fname_nifti, name_rater, modified):
+def update_json(fname_nifti, name_rater, modified):
     """
-    Create json sidecar with meta information
-    :param fname_nifti: str: File name of the nifti image to associate with the json sidecar
+    Create/update JSON sidecar with meta information
+    :param fname_nifti: str: File name of the nifti image to associate with the JSON sidecar
     :param name_rater: str: Name of the expert rater
     :param modified: bool: True if the file was modified by the user
     :return:
     """
+    fname_json = fname_nifti.replace('.gz', '').replace('.nii', '.json')
     if modified:
-        metadata = {'Author': name_rater, 'Date': time.strftime('%Y-%m-%d %H:%M:%S')}
-        fname_json = fname_nifti.rstrip('.nii').rstrip('.nii.gz') + '.json'
-        with open(fname_json, 'w') as outfile:
-            json.dump(metadata, outfile, indent=4)
+        if os.path.exists(fname_json):
+            # Read already existing json file
+            with open(fname_json, "r") as outfile: # r to read
+                json_dict = json.load(outfile)
+            
+            # Special check to fix all of our current json files (Might be deleted later)
+            if not 'GeneratedBy' in json_dict.keys():
+                json_dict = {'GeneratedBy':[json_dict]}
+        else:
+            # Init new json dict
+            json_dict = {'GeneratedBy':[]}
+        
+        # Add new author with time and date
+        json_dict['GeneratedBy'].append({'Author': name_rater, 'Date': time.strftime('%Y-%m-%d %H:%M:%S')})
+        with open(fname_json, 'w') as outfile: # w to overwrite the file
+            json.dump(json_dict, outfile, indent=4)
             # Add last newline
             outfile.write("\n")
+        print("JSON sidecar was updated: {}".format(fname_json))
 
 
 def ask_if_modify(fname_out, fname_label, do_labeling_always=False):
@@ -491,6 +507,7 @@ def ask_if_modify(fname_out, fname_label, do_labeling_always=False):
         # We don't want to copy because we want to modify the existing file
         copy = False
         create_empty_mask = False
+
     # If the output file does not exist, copy it from label folder
     elif not os.path.isfile(fname_out) and os.path.isfile(fname_label):
         do_labeling = True
@@ -577,7 +594,7 @@ def main():
     path_img = utils.get_full_path(args.path_img)
     
     if args.path_label == '':
-        path_label = path_img
+        path_label = os.path.join(args.path_img, "derivatives/labels")
     else:
         path_label = utils.get_full_path(args.path_label)
     
@@ -659,33 +676,18 @@ def main():
                     fname_other_contrast = None
                 # Construct absolute path to the input label (segmentation, labeling etc.) file
                 # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w_seg.nii.gz'
-                temp_fname_label = utils.add_suffix(os.path.join(path_label, subject, ses, contrast, filename), suffix_dict[task])
-                # Check if label exists else add or remove '-manual' to check all the combinations.
-                # The final path still may not exist leading to the creation of a new out file.
-                # The idea is to make the code robust regarding non consistent datasets were both
-                # modified and non modified are present.
-                if os.path.exists(temp_fname_label):
-                    fname_label = temp_fname_label
-                else:
-                    if '-manual' in temp_fname_label:
-                        fname_label = "".join(temp_fname_label.split('-manual')) # Remove manual
-                    else:
-                        fname_label = utils.add_suffix(temp_fname_label, '-manual') # Add manual
+                fname_label = utils.add_suffix(os.path.join(path_label, subject, ses, contrast, filename), suffix_dict[task])
                 
                 # Construct absolute path to the output file (i.e., path where manually corrected file will be saved)
-                # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w_seg-manual.nii.gz'
-                # The suffix '-manual' is also added if not already present
-                temp_fname_out = utils.add_suffix(os.path.join(path_out, subject, ses, contrast, filename), suffix_dict[task])
-                if '-manual' in temp_fname_out:
-                    fname_out = temp_fname_out
-                else:
-                    fname_out = utils.add_suffix(temp_fname_out, '-manual')
+                # For example: '/Users/user/dataset/derivatives/labels/sub-001/anat/sub-001_T2w_seg.nii.gz'
+                # The information regarding the modified data will be stored within the sidecar .json file
+                fname_out = utils.add_suffix(os.path.join(path_out, subject, ses, contrast, filename), suffix_dict[task])
                 
-                # Create output folders under derivative if they do not exist
+                # Create subject folder in output if they do not exist
                 os.makedirs(os.path.join(path_out, subject, ses, contrast), exist_ok=True)
                 if not args.qc_only:
                     # Check if the output file already exists. If so, asks user if they want to modify it.
-                    do_labeling, copy, create_empty_mask, do_labeling_always = ask_if_modify(fname_out=fname_out, fname_label=fname_label, do_labeling_always=do_labeling_always)
+                    do_labeling, copy, create_empty_mask, do_labeling_always = ask_if_modify(fname_out=fname_out, fname_label=fname_label)
                     # Perform labeling (i.e., segmentation correction, labeling correction etc.) for the specific task
                     if do_labeling:
                         if args.denoise:
@@ -739,15 +741,15 @@ def main():
                         if task == 'FILES_LESION':
                             # create json sidecar with the name of the expert rater
                             modified = check_if_modified(time_one, time_two)
-                            create_json(fname_out, name_rater, modified)
+                            update_json(fname_out, name_rater, modified)
                         else:
                             # create json sidecar with the name of the expert rater
                             if args.add_seg_only:
                                 # We are passing modified=True because we are adding a new segmentation
-                                create_json(fname_out, name_rater, modified=True)
+                                update_json(fname_out, name_rater, modified=True)
                             else:
                                 modified = check_if_modified(time_one, time_two)
-                                create_json(fname_out, name_rater, modified)
+                                update_json(fname_out, name_rater, modified)
                                 # Generate QC report
                                 generate_qc(fname, fname_out, task, fname_qc, subject, args.config)
 

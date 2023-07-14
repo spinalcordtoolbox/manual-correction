@@ -41,7 +41,7 @@ For full help, please run: `python package_for_correction.py -h`.
 This script loops across subjects listed in the YML file and opens a viewer to correct the labels (segmentations, disc labels, etc.). 
 
 ```bash
-python manual_correction.py -path-in <INPUT_PATH> -config <CONFIG_FILE>
+python manual_correction.py -path-img <INPUT_PATH> -config <CONFIG_FILE>
 ```
 
 - `INPUT_PATH`: Path to the BIDS-compliant folder with data to be corrected.
