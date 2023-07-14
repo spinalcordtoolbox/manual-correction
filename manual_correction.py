@@ -97,7 +97,8 @@ def get_parser():
         '-path-label',
         metavar="<folder>",
         help=
-        "R|Full path to the folder with labels (BIDS-compliant). Examples: '~/<your_dataset>/derivatives/labels' or '~/<your_dataset>/derivatives/labels_softseg' "
+        "R|Full path to the folder with labels (BIDS-compliant). Examples: '~/<your_dataset>/derivatives/labels' or "
+        "'~/<your_dataset>/derivatives/labels_softseg' "
         "If not provided, '-path-img' + 'derivatives/labels' will be used. ",
         default=''
     )
@@ -105,7 +106,8 @@ def get_parser():
         '-path-out',
         metavar="<folder>",
         help=
-        "R| Full path to the folder where corrected labels will be stored. Example: '~/<your_dataset>/derivatives/labels' "
+        "R| Full path to the folder where corrected labels will be stored. "
+        "Example: '~/<your_dataset>/derivatives/labels' "
         "If not provided, '-path-img' + 'derivatives/labels' will be used. "
         "Note: If the specified path does not exist, it will be created.",
         default=''
@@ -667,7 +669,7 @@ def main():
                 fname_label = utils.add_suffix(os.path.join(path_label, subject, ses, contrast, filename), suffix_dict[task])
                 
                 # Construct absolute path to the output file (i.e., path where manually corrected file will be saved)
-                # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w_seg.nii.gz'
+                # For example: '/Users/user/dataset/derivatives/labels/sub-001/anat/sub-001_T2w_seg.nii.gz'
                 # The information regarding the modified data will be stored within the sidecar .json file
                 fname_out = utils.add_suffix(os.path.join(path_out, subject, ses, contrast, filename), suffix_dict[task])
                 
