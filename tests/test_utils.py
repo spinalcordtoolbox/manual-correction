@@ -96,7 +96,7 @@ def test_check_files_exist_all_files_exist(tmp_path, caplog):
     }
 
     # run the function
-    check_files_exist(dict_files, path_data, suffix_dict)
+    check_files_exist(dict_files, path_img=path_data, path_label=path_data, suffix_dict=suffix_dict)
 
     # check that no error or warning was raised
     assert len(caplog.records) == 0
@@ -122,7 +122,7 @@ def test_check_files_exist_missing_file(tmp_path, caplog):
     }
 
     # run the function
-    check_files_exist(dict_files, path_data, suffix_dict)
+    check_files_exist(dict_files, path_img=path_data, path_label=path_data, suffix_dict=suffix_dict)
 
     # Assert that an error or warning message was logged for the missing files
     assert any('The following files are missing' in rec.message for rec in caplog.records)
