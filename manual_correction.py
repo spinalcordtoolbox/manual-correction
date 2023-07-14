@@ -444,7 +444,7 @@ def check_if_modified(time_one, time_two):
         return False
 
 
-def create_json(fname_nifti, name_rater, modified):
+def update_json(fname_nifti, name_rater, modified):
     """
     Create/update JSON sidecar with meta information
     :param fname_nifti: str: File name of the nifti image to associate with the JSON sidecar
@@ -452,14 +452,27 @@ def create_json(fname_nifti, name_rater, modified):
     :param modified: bool: True if the file was modified by the user
     :return:
     """
+    fname_json = fname_nifti.replace('.gz', '').replace('.nii', '.json')
     if modified:
-        metadata = {'Author': name_rater, 'Date': time.strftime('%Y-%m-%d %H:%M:%S')}
-        fname_json = fname_nifti.rstrip('.nii').rstrip('.nii.gz') + '.json'
-        with open(fname_json, 'a') as outfile:  # 'a' - information regarding raters will be appended to the JSON file
-            json.dump(metadata, outfile, indent=4)
+        if os.path.exists(fname_json):
+            # Read already existing json file
+            with open(fname_json, "r") as outfile: # r to read
+                json_dict = json.load(outfile)
+            
+            # Special check to fix all of our current json files (Might be deleted later)
+            if not 'GeneratedBy' in json_dict.keys():
+                json_dict = {'GeneratedBy':[json_dict]}
+        else:
+            # Init new json dict
+            json_dict = {'GeneratedBy':[]}
+        
+        # Add new author with time and date
+        json_dict['GeneratedBy'].append({'Author': name_rater, 'Date': time.strftime('%Y-%m-%d %H:%M:%S')})
+        with open(fname_json, 'w') as outfile: # w to overwrite the file
+            json.dump(json_dict, outfile, indent=4)
             # Add last newline
             outfile.write("\n")
-        print("JSON sidecar created/updated: {}".format(fname_json))
+        print("JSON sidecar was updated: {}".format(fname_json))
 
 
 def ask_if_modify(fname_out, fname_label):
@@ -722,15 +735,15 @@ def main():
                         if task == 'FILES_LESION':
                             # create json sidecar with the name of the expert rater
                             modified = check_if_modified(time_one, time_two)
-                            create_json(fname_out, name_rater, modified)
+                            update_json(fname_out, name_rater, modified)
                         else:
                             # create json sidecar with the name of the expert rater
                             if args.add_seg_only:
                                 # We are passing modified=True because we are adding a new segmentation
-                                create_json(fname_out, name_rater, modified=True)
+                                update_json(fname_out, name_rater, modified=True)
                             else:
                                 modified = check_if_modified(time_one, time_two)
-                                create_json(fname_out, name_rater, modified)
+                                update_json(fname_out, name_rater, modified)
                                 # Generate QC report
                                 generate_qc(fname, fname_out, task, fname_qc, subject, args.config)
 
