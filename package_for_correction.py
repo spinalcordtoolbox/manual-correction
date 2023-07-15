@@ -39,7 +39,7 @@ def get_parser():
         metavar="<file>",
         required=True,
         help=
-        "R|Config yaml file listing images that require manual corrections for segmentation and vertebral "
+        "R|Config YAML file listing images that require manual corrections for segmentation and vertebral "
         "labeling. "
         "'FILES_SEG' lists images associated with spinal cord segmentation "
         "'FILES_GMSEG' lists images associated with gray matter segmentation, "
@@ -48,9 +48,9 @@ def get_parser():
         "'FILES_COMPRESSION' lists images associated with compression labeling, "
         "'FILES_PMJ' lists images associated with pontomedullary junction labeling, "
         "and 'FILES_CENTERLINE' lists images associated with centerline. "
-        "You can validate your .yml file at this website: http://www.yamllint.com/."
+        "You can validate your YAML file at this website: http://www.yamllint.com/."
         "Note: if you want to iterate over all subjects, you can use the wildcard '*' (e.g. sub-*_T1w.nii.gz)"
-        "Below is an example .yml file:\n"
+        "Below is an example YAML file:\n"
         + dedent(
             """
             FILES_SEG:
@@ -126,7 +126,7 @@ def get_parser():
     parser.add_argument(
         '-other-contrast',
         help="Include additional images (contrasts). This flag is useful if you want to use an additional contrast "
-             "than provided by the .yml file for manual corrections. Only valid for '-viewer fsleyes'. Example: 'PSIR',"
+             "than provided by the YAML file for manual corrections. Only valid for '-viewer fsleyes'. Example: 'PSIR',"
              " 'STIR', 'acq-sag_T1w' etc.",
         type=str,
         default=None
@@ -193,7 +193,7 @@ def main():
             if task in suffix_dict.keys():
                 suffix_label = suffix_dict[task]
             else:
-                sys.exit('Task not recognized from yml file: {}'.format(task))
+                sys.exit('Task not recognized from the YAML file: {}'.format(task))
             subject, ses, filename, contrast = utils.fetch_subject_and_session(file)
             # Construct absolute path to the input file
             # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w.nii.gz'
