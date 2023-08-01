@@ -48,7 +48,7 @@ def get_parser():
         metavar="<file>",
         required=True,
         help=
-        "R|Config yaml file listing images that require manual corrections for segmentation and vertebral "
+        "R|Config YAML file listing images that require manual corrections for segmentation and vertebral "
         "labeling. "
         "'FILES_SEG' lists images associated with spinal cord segmentation, "
         "'FILES_GMSEG' lists images associated with gray matter segmentation, "
@@ -57,10 +57,10 @@ def get_parser():
         "'FILES_COMPRESSION' lists images associated with compression labeling, "
         "'FILES_PMJ' lists images associated with pontomedullary junction labeling, "
         "and 'FILES_CENTERLINE' lists images associated with centerline. "
-        "You can validate your .yml file at this website: http://www.yamllint.com/."
+        "You can validate your YAML file at this website: http://www.yamllint.com/."
         "\nNote: if you want to iterate over all subjects, you can use the wildcard '*' (Examples: sub-*_T1w.nii.gz, "
         "sub-*_ses-M0_T2w.nii.gz, sub-*_ses-M0_T2w_RPI_r.nii.gz, etc.).\n"
-        "Below is an example .yml file:\n"
+        "Below is an example YAML file:\n"
         + dedent(
             """
             FILES_SEG:
@@ -200,7 +200,7 @@ def get_parser():
     parser.add_argument(
         '-load-other-contrast',
         help="Load additional image to the viewer. This flag is useful if you want to use an additional contrast than "
-             "provided by the .yml file. Only valid for '-viewer fsleyes'. The filenames of the additional contrast "
+             "provided by the YAML file. Only valid for '-viewer fsleyes'. The filenames of the additional contrast "
              "are derived from the filename provided by '-config'. For instance, if you want to open T2w overlaid by "
              "PSIR image, specify T2w filename using '-config' flag and within this flag provides only PSIR. Another "
              "examples: 'PSIR', 'STIR', 'acq-sag_T1w', 'T2star' etc.",
@@ -730,7 +730,7 @@ def main():
                             correct_centerline(fname, fname_out)
                             time_two = get_modification_time(fname_out)
                         else:
-                            sys.exit('Task not recognized from yml file: {}'.format(task))
+                            sys.exit('Task not recognized from the YAML file: {}'.format(task))
                         if args.denoise:
                             # Remove the denoised file (we do not need it anymore)
                             remove_denoised_file(fname)

@@ -7,7 +7,8 @@
 #######################################################################
 
 import os
-from utils import fetch_subject_and_session, add_suffix, remove_suffix, splitext, curate_dict_yml, check_files_exist
+from utils import fetch_subject_and_session, add_suffix, remove_suffix, splitext, curate_dict_yml, get_full_path, \
+    check_files_exist
 
 
 def test_fetch_subject_and_session():
@@ -70,6 +71,14 @@ def test_curate_dict_yml():
                                             'sub-002_acq-sag_T2w.nii.gz',
                                             'sub-003_acq-sag_T2w.nii.gz']}
     assert curate_dict_yml(input_dict) == expected_output_dict
+
+
+def test_get_full_path(tmp_path):
+    """
+    Test that the full path is returned. If ~ is passed, expand it to home directory.
+    """
+    assert get_full_path('~/MRI/BIDS') == os.path.expanduser('~/MRI/BIDS')
+    assert get_full_path('MRI/BIDS') == os.path.abspath('MRI/BIDS')
 
 
 def test_check_files_exist_all_files_exist(tmp_path, caplog):
