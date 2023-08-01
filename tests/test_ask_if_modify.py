@@ -39,6 +39,31 @@ def test_ask_if_modify_fname_label_exists_y(tmp_path, cleanup_files):
     assert do_labeling
     assert not copy
     assert not create_empty_mask
+    assert not do_labeling_always
+
+
+def test_ask_if_modify_fname_label_exists_Y(tmp_path, cleanup_files):
+    """
+    Test that the function ask_if_modify() returns the correct values when the label file exists and the user answers
+    "Y" (do labeling for all files)
+    """
+    # create some test files
+    path_data = os.path.join(tmp_path, "BIDS")
+    path_sub = os.path.join(path_data, "sub-001", "ses-01", "anat")
+    os.makedirs(path_sub, exist_ok=True)
+    fname_label = os.path.join(path_sub, "sub-001_ses-01_T1w_seg-manual.nii.gz")
+    fname_seg = os.path.join(path_sub, "sub-001_ses-01_T1w_seg.nii.gz")
+    open(fname_label, "w").close()
+
+    # Patch input() function to simulate user input
+    with patch('builtins.input', return_value='Y'):
+        do_labeling, copy, create_empty_mask, do_labeling_always = ask_if_modify(fname_label, fname_seg)
+
+    # Check that the function returned the correct values
+    assert do_labeling
+    assert not copy
+    assert not create_empty_mask
+    assert do_labeling_always
 
 
 def test_ask_if_modify_fname_label_exists_n(tmp_path, cleanup_files):
