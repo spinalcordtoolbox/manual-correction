@@ -33,7 +33,7 @@ def test_ask_if_modify_fname_label_exists_y(tmp_path, cleanup_files):
 
     # Patch input() function to simulate user input
     with patch('builtins.input', return_value='y'):
-        do_labeling, copy, create_empty_mask = ask_if_modify(fname_label, fname_seg)
+        do_labeling, copy, create_empty_mask, do_labeling_always = ask_if_modify(fname_label, fname_seg)
 
     # Check that the function returned the correct values
     assert do_labeling
@@ -55,12 +55,13 @@ def test_ask_if_modify_fname_label_exists_n(tmp_path, cleanup_files):
 
     # Patch input() function to simulate user input
     with patch('builtins.input', return_value='n'):
-        do_labeling, copy, create_empty_mask = ask_if_modify(fname_label, fname_seg)
+        do_labeling, copy, create_empty_mask, do_labeling_always = ask_if_modify(fname_label, fname_seg)
 
     # Check that the function returned the correct values
     assert not do_labeling
     assert not copy
     assert not create_empty_mask
+    assert not do_labeling_always
 
 
 def test_ask_if_modify_fname_label_not_exist(tmp_path, cleanup_files):
@@ -76,12 +77,13 @@ def test_ask_if_modify_fname_label_not_exist(tmp_path, cleanup_files):
     open(fname_seg, "w").close()
 
     # Call function with non-existing fname_label
-    do_labeling, copy, create_empty_mask = ask_if_modify(fname_label, fname_seg)
+    do_labeling, copy, create_empty_mask, do_labeling_always = ask_if_modify(fname_label, fname_seg)
 
     # Check that the function returned the correct values
     assert do_labeling
     assert copy
     assert not create_empty_mask
+    assert not do_labeling_always
 
 
 def test_create_empty_mask(tmp_path, cleanup_files):
@@ -99,9 +101,10 @@ def test_create_empty_mask(tmp_path, cleanup_files):
     fname_seg = os.path.join(path_sub, "sub-001_ses-01_T1w_seg.nii.gz")
 
     # Call function with non-existing fname_label and fname_seg
-    do_labeling, copy, create_empty_mask = ask_if_modify(fname_label, fname_seg)
+    do_labeling, copy, create_empty_mask, do_labeling_always = ask_if_modify(fname_label, fname_seg)
 
     # Check that the function returned the correct values
     assert do_labeling
     assert not copy
     assert create_empty_mask
+    assert not do_labeling_always
