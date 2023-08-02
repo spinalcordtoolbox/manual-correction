@@ -23,7 +23,9 @@ pip install -r requirements.txt
 
 ## Usage
 
-> **Note** All scripts currently assume BIDS-compliant data. For more information about the BIDS standard, please visit http://bids.neuroimaging.io.
+> **Important**
+> All scripts currently assume BIDS-compliant data. For more information about the BIDS standard, please visit http://bids.neuroimaging.io.
+
 
 ### `manual_correction.py`
 
