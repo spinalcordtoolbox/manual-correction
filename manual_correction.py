@@ -458,15 +458,15 @@ def update_json(fname_nifti, name_rater, modified):
     if modified:
         if os.path.exists(fname_json):
             # Read already existing json file
-            with open(fname_json, "r") as outfile: # r to read
+            with open(fname_json, "r") as outfile:  # r to read
                 json_dict = json.load(outfile)
             
             # Special check to fix all of our current json files (Might be deleted later)
             if 'GeneratedBy' not in json_dict.keys():
-                json_dict = {'GeneratedBy':[json_dict]}
+                json_dict = {'GeneratedBy': [json_dict]}
         else:
             # Init new json dict
-            json_dict = {'GeneratedBy':[]}
+            json_dict = {'GeneratedBy': []}
         
         # Add new author with time and date
         json_dict['GeneratedBy'].append({'Author': name_rater, 'Date': time.strftime('%Y-%m-%d %H:%M:%S')})
@@ -745,7 +745,8 @@ def main():
                         else:
                             # create json sidecar with the name of the expert rater
                             if args.add_seg_only:
-                                # We are passing modified=True because we are adding a new segmentation
+                                # We are passing modified=True because we are adding a new segmentation and we want
+                                # to create a JSON file
                                 update_json(fname_out, name_rater, modified=True)
                             else:
                                 modified = check_if_modified(time_one, time_two)
