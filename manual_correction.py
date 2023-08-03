@@ -462,7 +462,7 @@ def update_json(fname_nifti, name_rater, modified):
                 json_dict = json.load(outfile)
             
             # Special check to fix all of our current json files (Might be deleted later)
-            if not 'GeneratedBy' in json_dict.keys():
+            if 'GeneratedBy' not in json_dict.keys():
                 json_dict = {'GeneratedBy':[json_dict]}
         else:
             # Init new json dict
