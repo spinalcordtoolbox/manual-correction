@@ -687,7 +687,10 @@ def main():
                 os.makedirs(os.path.join(path_out, subject, ses, contrast), exist_ok=True)
                 if not args.qc_only:
                     # Check if the output file already exists. If so, asks user if they want to modify it.
-                    do_labeling, copy, create_empty_mask, do_labeling_always = ask_if_modify(fname_out=fname_out, fname_label=fname_label, do_labeling_always=do_labeling_always)
+                    do_labeling, copy, create_empty_mask, do_labeling_always = \
+                        ask_if_modify(fname_out=fname_out,
+                                      fname_label=fname_label,
+                                      do_labeling_always=do_labeling_always)
                     # Perform labeling (i.e., segmentation correction, labeling correction etc.) for the specific task
                     if do_labeling:
                         if args.denoise:
