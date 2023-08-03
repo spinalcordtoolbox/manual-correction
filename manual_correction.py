@@ -498,9 +498,10 @@ def ask_if_modify(fname_out, fname_label, do_labeling_always=False):
     if os.path.isfile(fname_out):
         answer = None
         if not do_labeling_always:
+            print(f'WARNING! The file {fname_out} already exists.')
             while answer not in ("y", "n", "Y"):
-                answer = input("WARNING! The file {} already exists. "
-                            "Would you like to modify it? [y/n/Y] ".format(fname_out))
+                answer = input(f'Would you like to modify it? (type "y" to modify, type "n" to skip, type "Y" to '
+                               f'modify all files): ')
                 if answer == "y":
                     do_labeling = True
                 elif answer == "n":
@@ -509,7 +510,7 @@ def ask_if_modify(fname_out, fname_label, do_labeling_always=False):
                     do_labeling_always = True
                     do_labeling = True
                 else:
-                    print("Please answer with 'y', 'n' or 'Y' for always True")
+                    print("Invalid input. Please enter [y/n/Y].")
         else:
             do_labeling = True
         # We don't want to copy because we want to modify the existing file
@@ -656,6 +657,7 @@ def main():
     if not args.qc_only:
         name_rater = input("Enter your name (Firstname Lastname). It will be used to generate a json sidecar with each "
                            "corrected file: ")
+        print('')
 
     # Build QC report folder name
     fname_qc = os.path.join(path_img, 'qc_corr_' + time.strftime('%Y%m%d%H%M%S'))
