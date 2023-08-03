@@ -214,6 +214,12 @@ def get_parser():
         action='store_true'
     )
     parser.add_argument(
+        '-qc-lesion-plane',
+        help="Plane of the lesion QC. Available options: sagittal (default), axial.",
+        choices=['sagittal', 'axial'],
+        default='sagittal'
+    )
+    parser.add_argument(
         '-add-seg-only',
         help="Only copy the source files (segmentation) that aren't in -config list to the final dataset specified by "
              "'-path-out' flag. Use this flag to add automatically generated and manually QC-ed segmentations to the "
@@ -296,6 +302,8 @@ def get_function_for_qc(task):
         # Note: sct_get_centerline does not have proper QC -->  we are using workaround with sct_label_vertebrae
         # Details: https://github.com/spinalcordtoolbox/spinalcordtoolbox/issues/4011#issuecomment-1403828459
         return 'sct_label_vertebrae'
+    elif task == 'FILES_LESION':
+        return 'sct_deepseg_lesion'
     else:
         raise ValueError("This task is not recognized: {}".format(task))
 
@@ -522,18 +530,40 @@ def ask_if_modify(fname_out, fname_label, do_labeling_always=False):
     return do_labeling, copy, create_empty_mask, do_labeling_always
 
 
-def generate_qc(fname, fname_label, task, fname_qc, subject, config_file):
+def generate_qc(fname, fname_label, task, fname_qc, subject, config_file, qc_lesion_plane, suffix_dict):
     """
     Generate QC report.
-    :param fname:
-    :param fname_seg:
-    :param fname_label:
-    :param fname_pmj:
-    :param qc_folder:
+    :param fname: background image
+    :param fname_label: segmentation mask to be overlaid on the background image
+    :param task: task name
+    :param fname_qc: QC folder name
+    :param subject: subject name
+    :param config_file: config file
+    :param qc_lesion_plane: plane of the lesion QC
+    :param suffix_dict: dictionary of suffixes
     :return:
     """
-    os.system('sct_qc -i {} -s {} -p {} -qc {} -qc-subject {}'.format(
-        fname, fname_label, get_function_for_qc(task), fname_qc, subject))
+    # Lesion QC needs also SC segmentation for cropping
+    if task == 'FILES_LESION':
+        # Construct SC segmentation file name
+        fname_seg = fname.replace(suffix_dict['FILES_LESION'], suffix_dict['FILES_SEG'])
+        # Check if SC segmentation file exists
+        if os.path.isfile(fname_seg):
+            print("SC segmentation file found: {}. Creating QC.".format(fname_seg))
+            # Lesion QC supports only binary segmentation --> binarize the lesion
+            fname_label_bin = utils.add_suffix(fname_label, '_bin')
+            os.system(f'sct_maths -i {fname_label} -bin 0 -o {fname_label_bin}')
+            # fname - background image; fname_seg - SC segmentation - used for cropping; fname_label - lesion
+            # segmentation
+            os.system(f'sct_qc -i {fname} -s {fname_seg} -d {fname_label_bin} -p {get_function_for_qc(task)} '
+                      f'-plane {qc_lesion_plane} -qc {fname_qc} -qc-subject {subject}')
+            # remove binarized lesion segmentation
+            os.remove(fname_label_bin)
+        else:
+            print("WARNING: SC segmentation file not found: {}. QC report will not be generated.".format(fname_seg))
+    else:
+        os.system(f'sct_qc -i {fname} -s {fname_label} -p {get_function_for_qc(task)} -qc {fname_qc} '
+                  f'-qc-subject {subject}')
     # Archive QC folder
     shutil.copy(utils.get_full_path(config_file), fname_qc)
     shutil.make_archive(fname_qc, 'zip', fname_qc)
@@ -738,30 +768,21 @@ def main():
                             # Remove the denoised file (we do not need it anymore)
                             remove_denoised_file(fname)
 
-                        # Generate QC report for all tasks except FILES_LESION
-                        # NOTE: QC for lesion segmentation does not exist or not implemented yet.
-                        # But be aware of this PR: https://github.com/spinalcordtoolbox/spinalcordtoolbox/pull/4102
-                        if task == 'FILES_LESION':
-                            # create json sidecar with the name of the expert rater
+                        # Add segmentation only (skip generating QC report)
+                        if args.add_seg_only:
+                            # We are passing modified=True because we are adding a new segmentation and we want
+                            # to create a JSON file
+                            update_json(fname_out, name_rater, modified=True)
+                        # Generate QC report
+                        else:
                             modified = check_if_modified(time_one, time_two)
                             update_json(fname_out, name_rater, modified)
-                        else:
-                            # create json sidecar with the name of the expert rater
-                            if args.add_seg_only:
-                                # We are passing modified=True because we are adding a new segmentation and we want
-                                # to create a JSON file
-                                update_json(fname_out, name_rater, modified=True)
-                            else:
-                                modified = check_if_modified(time_one, time_two)
-                                update_json(fname_out, name_rater, modified)
-                                # Generate QC report
-                                generate_qc(fname, fname_out, task, fname_qc, subject, args.config)
+                            # Generate QC report
+                            generate_qc(fname, fname_out, task, fname_qc, subject, args.config, args.qc_lesion_plane, suffix_dict)
 
                 # Generate QC report only
                 if args.qc_only:
-                    # Note: QC for lesion segmentation is not implemented yet
-                    if task != "FILES_LESION":
-                        generate_qc(fname, fname_out, task, fname_qc, subject, args.config)
+                    generate_qc(fname, fname_out, task, fname_qc, subject, args.config, args.qc_lesion_plane, suffix_dict)
         else:
             sys.exit("ERROR: The list of files is empty.")
 
