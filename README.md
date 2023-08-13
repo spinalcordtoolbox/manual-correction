@@ -1,6 +1,8 @@
 # Manual correction
 
-This repository contains scripts for the manual correction of spinal cord labels. Currently supported labels are: 
+This repository contains scripts for the manual correction of spinal cord labels. 
+
+Currently supported labels are: 
 - spinal cord segmentation
 - gray matter segmentation
 - lesion segmentation (e.g., MS or SCI lesions)
@@ -9,7 +11,8 @@ This repository contains scripts for the manual correction of spinal cord labels
 - ponto-medullary junction (PMJ) label
 - centerline
 
-We greatly appreciate feedback and suggestions for improvement. Feel free to open an issue and report bugs, suggest new features or ask questions.
+> **Note**
+> We greatly appreciate feedback and suggestions for improvement. Feel free to open an issue and report bugs, suggest new features or ask questions.
 
 ## Dependencies
 
