@@ -15,13 +15,13 @@ Currently supported labels are:
 > We greatly appreciate feedback and suggestions for improvement. Feel free to open an issue and report bugs, suggest new features or ask questions.
 
 ## Table of content
-* [1.Dependencies](#1-dependencies)
-* [2.Installation](#2-installation)
-* [3.Usage](#3-usage)
+* [1. Dependencies](#1-dependencies)
+* [2. Installation](#2-installation)
+* [3. Usage](#3-usage)
     * [`manual_correction.py`](#manual_correctionpy)
     * [`package_for_correction.py`](#package_for_correctionpy)
     * [`copy_files_to_derivatives.py`](#copy_files_to_derivativespy)
-* [4.Examples](#4-examples)
+* [4. Examples](#4-examples)
 
 ## 1. Dependencies
 
