@@ -15,21 +15,21 @@ Currently supported labels are:
 > We greatly appreciate feedback and suggestions for improvement. Feel free to open an issue and report bugs, suggest new features or ask questions.
 
 ## Table of content
-* [1.Dependencies](#1dependencies)
-* [2.Installation](#2installation)
-* [3.Usage](#3usage)
+* [1.Dependencies](#1-dependencies)
+* [2.Installation](#2-installation)
+* [3.Usage](#3-usage)
     * [`manual_correction.py`](#manual_correctionpy)
     * [`package_for_correction.py`](#package_for_correctionpy)
     * [`copy_files_to_derivatives.py`](#copy_files_to_derivativespy)
-* [4.Examples](#4examples)
+* [4.Examples](#4-examples)
 
-## 1.Dependencies
+## 1. Dependencies
 
 - [Spinal Cord Toolbox (SCT)](https://github.com/neuropoly/spinalcordtoolbox)
 - [FSLeyes](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FSLeyes) or [ITK-SNAP](http://www.itksnap.org)
 - Python 3.8
 
-## 2.Installation
+## 2. Installation
 
 ```console
 git clone https://github.com/spinalcordtoolbox/manual-correction.git
@@ -39,7 +39,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## 3.Usage
+## 3. Usage
 
 > **Important**
 > All scripts currently assume BIDS-compliant data. For more information about the BIDS standard, please visit http://bids.neuroimaging.io.
@@ -84,6 +84,6 @@ python copy_files_to_derivatives.py -path-in <INPUT_PATH> -path-out <OUTPUT_PATH
 
 For full help, please run: `python copy_files_to_derivatives.py -h`.
 
-## 4.Examples
+## 4. Examples
 
 See [wiki](https://github.com/spinalcordtoolbox/manual-correction/wiki)
