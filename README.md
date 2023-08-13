@@ -11,6 +11,12 @@ This repository contains scripts for the manual correction of spinal cord labels
 
 We greatly appreciate feedback and suggestions for improvement. Feel free to open an issue and report bugs, suggest new features or ask questions.
 
+## Dependencies
+
+- [Spinal Cord Toolbox (SCT)](https://github.com/neuropoly/spinalcordtoolbox)
+- [FSLeyes](https://fsl.fmrib.ox.ac.uk/fsl/fslwiki/FSLeyes) or [ITK-SNAP](http://www.itksnap.org)
+- Python 3.8
+
 ## Installation
 
 ```console
