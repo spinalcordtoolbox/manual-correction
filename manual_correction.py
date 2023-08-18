@@ -678,12 +678,12 @@ def main():
     path_img = utils.get_full_path(args.path_img)
     
     if args.path_label == '':
-        path_label = os.path.join(args.path_img, "derivatives/labels")
+        path_label = os.path.join(path_img, "derivatives/labels")
     else:
         path_label = utils.get_full_path(args.path_label)
     
     if args.path_out == '':
-        path_out = os.path.join(args.path_img, "derivatives/labels")
+        path_out = os.path.join(path_img, "derivatives/labels")
     else:
         path_out = utils.get_full_path(args.path_out)
     
@@ -840,6 +840,10 @@ def main():
                 # Generate QC report only
                 if args.qc_only:
                     generate_qc(fname, fname_out, task, fname_qc, subject, args.config, args.qc_lesion_plane, suffix_dict)
+                
+                # Keep track of corrected files in YAML.
+                utils.track_corrections(config_path=args.config, file_path=fname, task=task)
+
         else:
             sys.exit("ERROR: The list of files is empty.")
 

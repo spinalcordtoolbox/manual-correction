@@ -290,3 +290,32 @@ def create_empty_mask(fname, fname_label):
     img_mask = nib.Nifti1Image(data, affine=img.affine, header=img.header)
     nib.save(img_mask, fname_label)
     print("No label file found, creating an empty mask: {}".format(fname_label))
+
+
+def track_corrections(config_path, file_path, task):
+    '''
+    Keep track of corrected files by using comments.
+    :param config_path: path to config YAML file listing images that require manual corrections
+    :param file_path: path to the last corrected image
+    :param task: type of correction executed
+    '''
+    subjectID, sessionID, filename, contrast = fetch_subject_and_session(file_path)
+    writing_mode = False
+    file_found = False
+    lines = open(config_path).readlines()
+    for idx, line in enumerate(lines):
+        if task in line:
+            task_idx = idx
+            writing_mode = True
+        else:
+            if (filename in line) and writing_mode:
+                lines[idx] = '# ' + line
+                file_found = True
+            elif 'FILES' in line:
+                writing_mode = False
+    if not file_found:
+        lines.insert(task_idx+1, f'# {filename}')
+    
+    # write lines in YAML configuration
+    open(config_path, 'w').writelines(lines)
+        
