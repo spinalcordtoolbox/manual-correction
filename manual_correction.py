@@ -31,6 +31,9 @@ import subprocess
 
 import utils
 
+import numpy as np
+import nibabel as nib
+
 
 def get_parser():
     """
@@ -581,6 +584,13 @@ def generate_qc(fname, fname_label, task, fname_qc, subject, config_file, qc_les
     :param suffix_dict: dictionary of suffixes
     :return:
     """
+    # Check if fname_label is empty (i.e., no lesion was drawn in MS patient), if so, skip QC
+    img_label = nib.load(fname_label)
+    data_label = img_label.get_fdata()
+    if np.sum(data_label) == 0:
+        print(f"WARNING: {fname_label} is empty. Skipping QC.\n")
+        return
+
     # Lesion QC needs also SC segmentation for cropping
     if task == 'FILES_LESION':
         # Construct SC segmentation file name
