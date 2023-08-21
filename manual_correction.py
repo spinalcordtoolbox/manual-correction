@@ -327,14 +327,14 @@ def correct_segmentation(fname, fname_seg_out, fname_other_contrast, viewer, par
         if shutil.which('itksnap') is not None:  # Check if command 'itksnap' exists
             # macOS and Linux
             subprocess.check_call(['itksnap',
-                                    '-g', fname,
-                                    '-s', fname_seg_out])
+                                   '-g', fname,
+                                   '-s', fname_seg_out])
             
         elif shutil.which('ITK-SNAP') is not None:  # Check if command 'ITK-SNAP' exists
             # Windows
             subprocess.check_call(['ITK-SNAP',
-                                    '-g', fname,
-                                    '-s', fname_seg_out])
+                                   '-g', fname,
+                                   '-s', fname_seg_out])
         else:
             viewer_not_found(viewer)
     # launch FSLeyes
@@ -358,30 +358,33 @@ def correct_segmentation(fname, fname_seg_out, fname_other_contrast, viewer, par
                 if param_fsleyes.second_orthoview:
                     fname_script = create_fsleyes_script()
                     subprocess.check_call(['fsleyes',
-                                            '-S', 
-                                            '-r', fname_script, fname, 
-                                            '-dr', param_fsleyes.min_dr, param_fsleyes.max_dr, fname_other_contrast, fname_seg_out, 
-                                            '-cm', param_fsleyes.cm])
+                                           '-S',
+                                           '-r', fname_script,
+                                           fname, '-dr', param_fsleyes.min_dr, param_fsleyes.max_dr,
+                                           fname_other_contrast,
+                                           fname_seg_out, '-cm', param_fsleyes.cm])
                 # No second orthoview
                 else:
-                    subprocess.check_call(['fsleyes', 
-                                            '-S', fname, 
-                                            '-dr', param_fsleyes.min_dr, param_fsleyes.max_dr, fname_other_contrast, fname_seg_out, 
-                                            '-cm', param_fsleyes.cm])
+                    subprocess.check_call(['fsleyes',
+                                           '-S',
+                                           fname, '-dr', param_fsleyes.min_dr, param_fsleyes.max_dr,
+                                           fname_other_contrast,
+                                           fname_seg_out, '-cm', param_fsleyes.cm])
             # Open a second orthoview without second contrast
             elif param_fsleyes.second_orthoview:
                 fname_script = create_fsleyes_script()
                 subprocess.check_call(['fsleyes',
-                                        '-S',
-                                        '-r', fname_script, fname, 
-                                        '-dr', param_fsleyes.min_dr, param_fsleyes.max_dr, fname_seg_out, 
-                                        '-cm', param_fsleyes.cm])
+                                       '-S',
+                                       '-r', fname_script,
+                                       fname, '-dr', param_fsleyes.min_dr, param_fsleyes.max_dr,
+                                       fname_seg_out, '-cm', param_fsleyes.cm])
             # No second contrast, no second orthoview
             else:
                 subprocess.check_call(['fsleyes',
-                                       '-S', fname, 
-                                       '-dr', param_fsleyes.min_dr, param_fsleyes.max_dr, fname_seg_out, 
-                                       '-cm', param_fsleyes.cm])
+                                       '-S',
+                                       fname,
+                                       '-dr', param_fsleyes.min_dr, param_fsleyes.max_dr,
+                                       fname_seg_out, '-cm', param_fsleyes.cm])
         else:
             viewer_not_found(viewer)
     # launch 3D Slicer
@@ -422,10 +425,10 @@ def correct_vertebral_labeling(fname, fname_label, label_list, viewer='sct_label
                                    '-msg', message])
         else:
             subprocess.check_call(['sct_label_utils',
-                                    '-i', fname,
-                                    '-create-viewer', label_list,
-                                    '-o', fname_label,
-                                    '-msg', message])
+                                   '-i', fname,
+                                   '-create-viewer', label_list,
+                                   '-o', fname_label,
+                                   '-msg', message])
     else:
         viewer_not_found(viewer)
 
@@ -440,10 +443,10 @@ def correct_pmj_label(fname, fname_label, viewer='sct_label_utils'):
     if shutil.which(viewer) is not None:  # Check if command 'sct_label_utils' exists
         message = "Click at the posterior tip of the pontomedullary junction (PMJ). Then click 'Save and Quit'."
         subprocess.check_call(['sct_label_utils',
-                                '-i', fname,
-                                '-create-viewer', '50',
-                                '-o', fname_label,
-                                '-msg', message])
+                               '-i', fname,
+                               '-create-viewer', '50',
+                               '-o', fname_label,
+                               '-msg', message])
     else:
         viewer_not_found(viewer)
 
@@ -455,11 +458,11 @@ def correct_centerline(fname, fname_label, viewer='sct_get_centerline'):
     if shutil.which(viewer) is not None:  # Check if command 'sct_get_centerline' exists
         print("Select a few points to extract the centerline. Then click 'Save and Quit'.")
         subprocess.check_call(['sct_get_centerline',
-                                '-i', fname, 
-                                '-method viewer' 
-                                '-gap', '30', 
-                                '-qc qc-manual',
-                                '-o', fname_label])
+                               '-i', fname,
+                               '-method viewer' 
+                               '-gap', '30',
+                               '-qc qc-manual',
+                               '-o', fname_label])
     else:
         viewer_not_found(viewer)
 
@@ -588,29 +591,29 @@ def generate_qc(fname, fname_label, task, fname_qc, subject, config_file, qc_les
             # Lesion QC supports only binary segmentation --> binarize the lesion
             fname_label_bin = utils.add_suffix(fname_label, '_bin')
             subprocess.check_call(['sct_maths',
-                                    '-i', fname_label, 
-                                    '-bin', '0', 
-                                    '-o', fname_label_bin])
+                                   '-i', fname_label,
+                                   '-bin', '0',
+                                   '-o', fname_label_bin])
             # fname - background image; fname_seg - SC segmentation - used for cropping; fname_label - lesion
             # segmentation
             subprocess.check_call(['sct_qc',
-                                    '-i', fname,
-                                    '-s', fname_seg,
-                                    '-d', fname_label_bin,
-                                    '-p', get_function_for_qc(task),
-                                    '-plane', qc_lesion_plane, 
-                                    '-qc', fname_qc, 
-                                    '-qc-subject', subject])
+                                   '-i', fname,
+                                   '-s', fname_seg,
+                                   '-d', fname_label_bin,
+                                   '-p', get_function_for_qc(task),
+                                   '-plane', qc_lesion_plane,
+                                   '-qc', fname_qc,
+                                   '-qc-subject', subject])
             # remove binarized lesion segmentation
             os.remove(fname_label_bin)
         else:
             print("WARNING: SC segmentation file not found: {}. QC report will not be generated.".format(fname_seg))
     else:
         subprocess.check_call(['sct_qc',
-                                '-i', fname,
-                                '-s', fname_label, 
-                                '-p', get_function_for_qc(task), 
-                                '-qc', fname_qc,
+                               '-i', fname,
+                               '-s', fname_label,
+                               '-p', get_function_for_qc(task),
+                               '-qc', fname_qc,
                                 '-qc-subject', subject])
     # Archive QC folder
     shutil.copy(utils.get_full_path(config_file), fname_qc)
@@ -628,9 +631,9 @@ def denoise_image(fname):
     print("Denoising {}".format(fname))
     fname_denoised = utils.add_suffix(fname, '_denoised-p1b2')
     subprocess.check_call(['sct_maths',
-                            '-i', fname, 
-                            '-denoise', 'p=1,b=2', 
-                            '-o', fname_denoised])
+                           '-i', fname,
+                           '-denoise', 'p=1,b=2',
+                           '-o', fname_denoised])
     return fname_denoised
 
 
