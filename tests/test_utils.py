@@ -96,7 +96,7 @@ def test_check_files_exist_all_files_exist(tmp_path, caplog):
     open(path_data / "sub-002" / "ses-01" / "anat" / "sub-002_ses-01_T2star_gmseg.nii.gz", "w").close()
     open(path_data / "sub-002" / "ses-01" / "anat" / "sub-002_ses-01_T1w_labels-disc.nii.gz", "w").close()
 
-    # set up the input data
+    # create a YML config file
     dict_files = {
         "FILES_SEG": ["sub-001/ses-01/anat/sub-001_ses-01_T1w.nii.gz"],
         "FILES_GMSEG": ["sub-002/ses-01/anat/sub-002_ses-01_T2star.nii.gz"],
