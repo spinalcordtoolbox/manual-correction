@@ -91,17 +91,21 @@ def test_check_files_exist_all_files_exist(tmp_path, caplog):
     os.makedirs(path_data / "sub-002" / "ses-01" / "anat", exist_ok=True)
     open(path_data / "sub-001" / "ses-01" / "anat" / "sub-001_ses-01_T1w.nii.gz", "w").close()
     open(path_data / "sub-001" / "ses-01" / "anat" / "sub-001_ses-01_T1w_seg.nii.gz", "w").close()
+    open(path_data / "sub-001" / "ses-01" / "anat" / "sub-001_ses-01_T1w_labels-disc.nii.gz", "w").close()
     open(path_data / "sub-002" / "ses-01" / "anat" / "sub-002_ses-01_T2star.nii.gz", "w").close()
     open(path_data / "sub-002" / "ses-01" / "anat" / "sub-002_ses-01_T2star_gmseg.nii.gz", "w").close()
+    open(path_data / "sub-002" / "ses-01" / "anat" / "sub-002_ses-01_T1w_labels-disc.nii.gz", "w").close()
 
     # set up the input data
     dict_files = {
         "FILES_SEG": ["sub-001/ses-01/anat/sub-001_ses-01_T1w.nii.gz"],
         "FILES_GMSEG": ["sub-002/ses-01/anat/sub-002_ses-01_T2star.nii.gz"],
+        "FILES_LABEL": ["sub-*_T1w.nii.gz"],
     }
     suffix_dict = {
         'FILES_SEG': '_seg',
         'FILES_GMSEG': '_gmseg',
+        'FILES_LABEL': '_labels-disc',
     }
 
     # run the function
