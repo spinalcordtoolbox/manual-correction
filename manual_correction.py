@@ -22,6 +22,7 @@ import coloredlogs
 import glob
 import json
 import os
+import logging
 import sys
 import shutil
 from textwrap import dedent
@@ -588,7 +589,7 @@ def generate_qc(fname, fname_label, task, fname_qc, subject, config_file, qc_les
     img_label = nib.load(fname_label)
     data_label = img_label.get_fdata()
     if np.sum(data_label) == 0:
-        print(f"WARNING: {fname_label} is empty. Skipping QC.\n")
+        logging.warning(f"File {fname_label} is empty. Skipping QC.\n")
         return
 
     # Lesion QC needs also SC segmentation for cropping
