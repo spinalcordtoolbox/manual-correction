@@ -314,7 +314,7 @@ def track_corrections(config_path, file_path, task):
             elif 'FILES' in line:
                 writing_mode = False
     if not file_found:
-        lines.insert(task_idx+1, f'# {filename}')
+        lines.insert(task_idx+1, f'# {filename}\n')
     
     # write lines in YAML configuration
     open(config_path, 'w').writelines(lines)
