@@ -614,7 +614,7 @@ def generate_qc(fname, fname_label, task, fname_qc, subject, config_file, qc_les
                                '-s', fname_label,
                                '-p', get_function_for_qc(task),
                                '-qc', fname_qc,
-                                '-qc-subject', subject])
+                               '-qc-subject', subject])
     # Archive QC folder
     shutil.copy(utils.get_full_path(config_file), fname_qc)
     shutil.make_archive(fname_qc, 'zip', fname_qc)
