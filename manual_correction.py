@@ -685,6 +685,8 @@ def main():
                 # Get list of files recursively
                 files = sorted(glob.glob(os.path.join(path_img, '**', filename),
                                          recursive=True))
+                #  Remove labels under derivatives because we want to get only the list of original files
+                files = [file for file in files if 'derivatives' not in file]
             # Loop across files
             for file in tqdm.tqdm(files, desc="{}".format(task), unit="file"):
                 # Print empty line to not overlay with tqdm progress bar
