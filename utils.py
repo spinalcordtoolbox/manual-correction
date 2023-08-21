@@ -293,12 +293,12 @@ def create_empty_mask(fname, fname_label):
 
 
 def track_corrections(config_path, file_path, task):
-    '''
+    """
     Keep track of corrected files by using comments.
     :param config_path: path to config YAML file listing images that require manual corrections
     :param file_path: path to the last corrected image
     :param task: type of correction executed
-    '''
+    """
     subjectID, sessionID, filename, contrast = fetch_subject_and_session(file_path)
     writing_mode = False
     file_found = False
