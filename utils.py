@@ -207,7 +207,7 @@ def check_files_exist(dict_files, path_img, path_label, suffix_dict):
     missing_files = []
     missing_files_labels = []
     for task, files in dict_files.items():
-        if task.startswith('FILES'):
+        if task.startswith('FILES') and files:
             # Do no check if key is empty or if regex is used
             if files is not None and '*' not in files[0]:
                 for file in files:
@@ -293,7 +293,7 @@ def create_empty_mask(fname, fname_label):
     print("No label file found, creating an empty mask: {}".format(fname_label))
 
 
-def track_corrections(dict_yml, config_path, file_path, task):
+def track_corrections(files_dict, config_path, file_path, task):
     """
     Keep track of corrected files by moving corrected subjects from FILES_{task} to CORR_{task}.
     :param dict_yml: YAML dict with all the subjects
@@ -305,16 +305,16 @@ def track_corrections(dict_yml, config_path, file_path, task):
     subjectID, sessionID, filename, contrast = fetch_subject_and_session(file_path)
 
     # Create a new dictionary key with all the corrected subjects for a task
-    if task.replace('FILES','CORR') not in dict_yml.keys():
-        dict_yml[task.replace('FILES','CORR')] = [filename]
+    if task.replace('FILES','CORR') not in files_dict.keys():
+        files_dict[task.replace('FILES','CORR')] = [filename]
     else:
-        dict_yml[task.replace('FILES','CORR')].append(filename)
+        files_dict[task.replace('FILES','CORR')].append(filename)
 
     # Remove corrected subject from task
     # A comprehension list is used because both filenames and file_paths may be specified in dict
-    dict_yml[task] = [file for file in dict_yml[task] if filename not in file]
+    files_dict[task] = [file for file in files_dict[task] if filename not in file]
 
     # Update YAML file
-    yaml.dump(dict_yml, open(config_path, 'w'))
+    yaml.dump(files_dict, open(config_path, 'w'))
 
         
