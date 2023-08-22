@@ -292,30 +292,28 @@ def create_empty_mask(fname, fname_label):
     print("No label file found, creating an empty mask: {}".format(fname_label))
 
 
-def track_corrections(config_path, file_path, task):
+def track_corrections(dict_yml, config_path, file_path, task):
     """
-    Keep track of corrected files by using comments.
+    Keep track of corrected files by moving corrected subjects from FILES_{task} to CORR_{task}.
+    :param dict_yml: YAML dict with all the subjects
     :param config_path: path to config YAML file listing images that require manual corrections
     :param file_path: path to the last corrected image
     :param task: type of correction executed
     """
+    # Extract filename from file_path
     subjectID, sessionID, filename, contrast = fetch_subject_and_session(file_path)
-    writing_mode = False
-    file_found = False
-    lines = open(config_path).readlines()
-    for idx, line in enumerate(lines):
-        if task in line:
-            task_idx = idx
-            writing_mode = True
-        else:
-            if (filename in line) and writing_mode:
-                lines[idx] = '# ' + line
-                file_found = True
-            elif 'FILES' in line:
-                writing_mode = False
-    if not file_found:
-        lines.insert(task_idx+1, f'# {filename}\n')
-    
-    # write lines in YAML configuration
-    open(config_path, 'w').writelines(lines)
+
+    # Create a new dictionary key with all the corrected subjects for a task
+    if task.replace('FILES','CORR') not in dict_yml.keys():
+        dict_yml[task.replace('FILES','CORR')] = [filename]
+    else:
+        dict_yml[task.replace('FILES','CORR')].append(filename)
+
+    # Remove corrected subject from task
+    # A comprehension list is used because both filenames and file_paths may be specified in dict
+    dict_yml[task] = [file for file in dict_yml[task] if filename not in file]
+
+    # Update YAML file
+    yaml.dump(dict_yml, open(config_path, 'w'))
+
         
