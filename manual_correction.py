@@ -737,15 +737,19 @@ def main():
                 if '*' in files[0] and len(files) == 1:
                     subject, ses, filename, contrast = utils.fetch_subject_and_session(files[0])
                     # Get list of files recursively
-                    files = sorted(glob.glob(os.path.join(path_img, '**', filename),
+                    glob_files = sorted(glob.glob(os.path.join(path_img, '**', filename),
                                             recursive=True))
                     # Get list of already corrected files
                     if task.replace('FILES', 'CORR') in dict_yml.keys():
                         corr_files = dict_yml[task.replace('FILES', 'CORR')]
                     else:
                         corr_files = []
-                    #  Remove labels under derivatives because we want to get only the list of original files
-                    files = [file for file in files if ('derivatives' not in file) and (file not in corr_files)] #and file not in commented_files]
+                    #  Remove labels under derivatives and already corrected files
+                    files = []
+                    for file in glob_files:
+                        subject, ses, filename, contrast = utils.fetch_subject_and_session(file)
+                        if ('derivatives' not in file) and (filename not in corr_files):
+                            files.append(file)
                 # Loop across files
                 for file in tqdm.tqdm(files, desc="{}".format(task), unit="file"):
                     # Print empty line to not overlay with tqdm progress bar
