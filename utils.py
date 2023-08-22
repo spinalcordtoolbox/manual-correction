@@ -207,18 +207,19 @@ def check_files_exist(dict_files, path_img, path_label, suffix_dict):
     missing_files = []
     missing_files_labels = []
     for task, files in dict_files.items():
-        # Do no check if key is empty or if regex is used
-        if files is not None and '*' not in files[0]:
-            for file in files:
-                subject, ses, filename, contrast = fetch_subject_and_session(file)
-                fname = os.path.join(path_img, subject, ses, contrast, filename)
-                if not os.path.exists(fname):
-                    missing_files.append(fname)
-                # Construct absolute path to the input label (segmentation, labeling etc.) file
-                # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w_seg.nii.gz'
-                fname_label = add_suffix(os.path.join(path_label, subject, ses, contrast, filename), suffix_dict[task])
-                if not os.path.exists(fname_label):
-                    missing_files_labels.append(fname_label)
+        if task.startswith('FILES'):
+            # Do no check if key is empty or if regex is used
+            if files is not None and '*' not in files[0]:
+                for file in files:
+                    subject, ses, filename, contrast = fetch_subject_and_session(file)
+                    fname = os.path.join(path_img, subject, ses, contrast, filename)
+                    if not os.path.exists(fname):
+                        missing_files.append(fname)
+                    # Construct absolute path to the input label (segmentation, labeling etc.) file
+                    # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w_seg.nii.gz'
+                    fname_label = add_suffix(os.path.join(path_label, subject, ses, contrast, filename), suffix_dict[task])
+                    if not os.path.exists(fname_label):
+                        missing_files_labels.append(fname_label)
     if missing_files:
         logging.warning("The following files are missing: \n{}".format(missing_files))
         logging.warning("\nPlease check that the files listed in the yaml file and the input path are correct.\n")
