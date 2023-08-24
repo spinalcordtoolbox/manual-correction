@@ -33,15 +33,17 @@ def fetch_subject_and_session(filename_path):
     """
 
     _, filename = os.path.split(filename_path)              # Get just the filename (i.e., remove the path)
-    subject = re.search('sub-(.*?)[_/]', filename_path)
+    subject = re.search('sub-(.*?)[_/]', filename_path)     # [_/] means either underscore or slash
     subjectID = subject.group(0)[:-1] if subject else ""    # [:-1] removes the last underscore or slash
 
     session = re.search('ses-(.*?)[_/]', filename_path)     # [_/] means either underscore or slash
     sessionID = session.group(0)[:-1] if session else ""    # [:-1] removes the last underscore or slash
     # REGEX explanation
-    # \d - digit
-    # \d? - no or one occurrence of digit
+    # . - match any character (except newline)
     # *? - match the previous element as few times as possible (zero or more times)
+
+    # TODO - add support for func (fMRI)
+    contrast = 'dwi' if 'dwi' in filename_path else 'anat'  # Return contrast (dwi or anat)
 
     return subjectID, sessionID, filename, contrast
 
