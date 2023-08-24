@@ -36,7 +36,31 @@ def test_fetch_subject_and_session():
     assert filename == "sub-003_T1w.nii.gz"
     assert contrast == "anat"
 
-    # Test 4: Test for empty strings when input filename path is invalid
+    # Test 4: Test if only filename (without session) is provided
+    filename_path = "sub-003_T1w.nii.gz"
+    subjectID, sessionID, filename, contrast = fetch_subject_and_session(filename_path)
+    assert subjectID == "sub-003"
+    assert sessionID == ""
+    assert filename == "sub-003_T1w.nii.gz"
+    assert contrast == "anat"
+
+    # Test 5: Test if only filename (with session) is provided
+    filename_path = "sub-003_ses-01_T1w.nii.gz"
+    subjectID, sessionID, filename, contrast = fetch_subject_and_session(filename_path)
+    assert subjectID == "sub-003"
+    assert sessionID == "ses-01"
+    assert filename == "sub-003_ses-01_T1w.nii.gz"
+    assert contrast == "anat"
+
+    # Test 6: Test if only filename (with session with >2 characters) is provided
+    filename_path = "sub-003_ses-001_T1w.nii.gz"
+    subjectID, sessionID, filename, contrast = fetch_subject_and_session(filename_path)
+    assert subjectID == "sub-003"
+    assert sessionID == "ses-001"
+    assert filename == "sub-003_ses-001_T1w.nii.gz"
+    assert contrast == "anat"
+
+    # Test 7: Test for empty strings when input filename path is invalid
     filename_path = "invalid_filename_path.nii.gz"
     subjectID, sessionID, filename, contrast = fetch_subject_and_session(filename_path)
     assert subjectID == ""
