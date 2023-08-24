@@ -678,12 +678,12 @@ def main():
     path_img = utils.get_full_path(args.path_img)
     
     if args.path_label == '':
-        path_label = os.path.join(args.path_img, "derivatives/labels")
+        path_label = os.path.join(path_img, "derivatives/labels")
     else:
         path_label = utils.get_full_path(args.path_label)
     
     if args.path_out == '':
-        path_out = os.path.join(args.path_img, "derivatives/labels")
+        path_out = os.path.join(path_img, "derivatives/labels")
     else:
         path_out = utils.get_full_path(args.path_out)
     
@@ -721,127 +721,141 @@ def main():
     # TODO: address "none" issue if no file present under a key
     # Perform manual corrections
     for task, files in dict_yml.items():
-        # Get the list of segmentation files to add to derivatives, excluding the manually corrected files in -config.
-        # TODO: probably extend also for other tasks (such as FILES_GMSEG)
-        if args.add_seg_only and task == 'FILES_SEG':
-            # Remove the files in the -config list
-            for file in files:
-                # Remove the file suffix (e.g., '_RPI_r') to match the list of files in -path-img
-                file = utils.remove_suffix(file, args.suffix_files_in)
-                if file in file_list:
-                    file_list.remove(file)
-            files = file_list  # Rename to use those files instead of the ones to exclude
-        if len(files) > 0:
-            # Handle regex (i.e., iterate over all subjects)
-            if '*' in files[0] and len(files) == 1:
-                subject, ses, filename, contrast = utils.fetch_subject_and_session(files[0])
-                # Get list of files recursively
-                files = sorted(glob.glob(os.path.join(path_img, '**', filename),
-                                         recursive=True))
-                #  Remove labels under derivatives because we want to get only the list of original files
-                files = [file for file in files if 'derivatives' not in file]
-            # Loop across files
-            for file in tqdm.tqdm(files, desc="{}".format(task), unit="file"):
-                # Print empty line to not overlay with tqdm progress bar
-                time.sleep(0.1)
-                print("")
-                # build file names
-                subject, ses, filename, contrast = utils.fetch_subject_and_session(file)
-                # Construct absolute path to the input file
-                # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w.nii.gz'
-                fname = os.path.join(path_img, subject, ses, contrast, filename)
-                # Construct absolute path to the other contrast file
-                if args.load_other_contrast:
-                    # Do not include session in the filename
-                    if ses == '':
-                        other_contrast_filename = subject + '_' + args.load_other_contrast + '.nii.gz'
-                    # Include session in the filename
+        if task.startswith('FILES'):
+            # Get the list of segmentation files to add to derivatives, excluding the manually corrected files in -config.
+            # TODO: probably extend also for other tasks (such as FILES_GMSEG)
+            if args.add_seg_only and task == 'FILES_SEG':
+                # Remove the files in the -config list
+                for file in files:
+                    # Remove the file suffix (e.g., '_RPI_r') to match the list of files in -path-img
+                    file = utils.remove_suffix(file, args.suffix_files_in)
+                    if file in file_list:
+                        file_list.remove(file)
+                files = file_list  # Rename to use those files instead of the ones to exclude
+            if len(files) > 0:
+                # Handle regex (i.e., iterate over all subjects)
+                if '*' in files[0] and len(files) == 1:
+                    subject, ses, filename, contrast = utils.fetch_subject_and_session(files[0])
+                    # Get list of files recursively
+                    glob_files = sorted(glob.glob(os.path.join(path_img, '**', filename),
+                                            recursive=True))
+                    # Get list of already corrected files
+                    if task.replace('FILES', 'CORR') in dict_yml.keys():
+                        corr_files = dict_yml[task.replace('FILES', 'CORR')]
                     else:
-                        other_contrast_filename = subject + '_' + ses + '_' + args.load_other_contrast + '.nii.gz'
-                    fname_other_contrast = os.path.join(path_img, subject, ses, contrast, other_contrast_filename)
-                else:
-                    fname_other_contrast = None
-                # Construct absolute path to the input label (segmentation, labeling etc.) file
-                # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w_seg.nii.gz'
-                fname_label = utils.add_suffix(os.path.join(path_label, subject, ses, contrast, filename), suffix_dict[task])
-                
-                # Construct absolute path to the output file (i.e., path where manually corrected file will be saved)
-                # For example: '/Users/user/dataset/derivatives/labels/sub-001/anat/sub-001_T2w_seg.nii.gz'
-                # The information regarding the modified data will be stored within the sidecar .json file
-                fname_out = utils.add_suffix(os.path.join(path_out, subject, ses, contrast, filename), suffix_dict[task])
-                
-                # Create subject folder in output if they do not exist
-                os.makedirs(os.path.join(path_out, subject, ses, contrast), exist_ok=True)
-                if not args.qc_only:
-                    # Check if the output file already exists. If so, asks user if they want to modify it.
-                    do_labeling, copy, create_empty_mask, do_labeling_always = \
-                        ask_if_modify(fname_out=fname_out,
-                                      fname_label=fname_label,
-                                      do_labeling_always=do_labeling_always)
-                    # Perform labeling (i.e., segmentation correction, labeling correction etc.) for the specific task
-                    if do_labeling:
-                        if args.denoise:
-                            # Denoise the input file
-                            fname = denoise_image(fname)
-                        # Copy file to derivatives folder
-                        if copy:
-                            shutil.copyfile(fname_label, fname_out)
-                            print(f'Copying: {fname_label} to {fname_out}')
-                        # Create empty mask in derivatives folder
-                        elif create_empty_mask:
-                            utils.create_empty_mask(fname, fname_out)
+                        corr_files = []
+                    #  Remove labels under derivatives and already corrected files
+                    files = []
+                    for file in glob_files:
+                        subject, ses, filename, contrast = utils.fetch_subject_and_session(file)
+                        if ('derivatives' not in file) and (filename not in corr_files):
+                            files.append(file)
+                # Loop across files
+                for file in tqdm.tqdm(files, desc="{}".format(task), unit="file"):
+                    # Print empty line to not overlay with tqdm progress bar
+                    time.sleep(0.1)
+                    print("")
+                    # build file names
+                    subject, ses, filename, contrast = utils.fetch_subject_and_session(file)
+                    # Construct absolute path to the input file
+                    # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w.nii.gz'
+                    fname = os.path.join(path_img, subject, ses, contrast, filename)
+                    # Construct absolute path to the other contrast file
+                    if args.load_other_contrast:
+                        # Do not include session in the filename
+                        if ses == '':
+                            other_contrast_filename = subject + '_' + args.load_other_contrast + '.nii.gz'
+                        # Include session in the filename
+                        else:
+                            other_contrast_filename = subject + '_' + ses + '_' + args.load_other_contrast + '.nii.gz'
+                        fname_other_contrast = os.path.join(path_img, subject, ses, contrast, other_contrast_filename)
+                    else:
+                        fname_other_contrast = None
+                    # Construct absolute path to the input label (segmentation, labeling etc.) file
+                    # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w_seg.nii.gz'
+                    fname_label = utils.add_suffix(os.path.join(path_label, subject, ses, contrast, filename), suffix_dict[task])
+                    
+                    # Construct absolute path to the output file (i.e., path where manually corrected file will be saved)
+                    # For example: '/Users/user/dataset/derivatives/labels/sub-001/anat/sub-001_T2w_seg.nii.gz'
+                    # The information regarding the modified data will be stored within the sidecar .json file
+                    fname_out = utils.add_suffix(os.path.join(path_out, subject, ses, contrast, filename), suffix_dict[task])
+                    
+                    # Create subject folder in output if they do not exist
+                    os.makedirs(os.path.join(path_out, subject, ses, contrast), exist_ok=True)
+                    if not args.qc_only:
+                        # Check if the output file already exists. If so, asks user if they want to modify it.
+                        do_labeling, copy, create_empty_mask, do_labeling_always = \
+                            ask_if_modify(fname_out=fname_out,
+                                        fname_label=fname_label,
+                                        do_labeling_always=do_labeling_always)
+                        # Perform labeling (i.e., segmentation correction, labeling correction etc.) for the specific task
+                        if do_labeling:
+                            if args.denoise:
+                                # Denoise the input file
+                                fname = denoise_image(fname)
+                            # Copy file to derivatives folder
+                            if copy:
+                                shutil.copyfile(fname_label, fname_out)
+                                print(f'Copying: {fname_label} to {fname_out}')
+                            # Create empty mask in derivatives folder
+                            elif create_empty_mask:
+                                utils.create_empty_mask(fname, fname_out)
 
-                        if task in ['FILES_SEG', 'FILES_GMSEG']:
-                            if not args.add_seg_only:
+                            if task in ['FILES_SEG', 'FILES_GMSEG']:
+                                if not args.add_seg_only:
+                                    time_one = get_modification_time(fname_out)
+                                    correct_segmentation(fname, fname_out, fname_other_contrast, args.viewer, param_fsleyes)
+                                    time_two = get_modification_time(fname_out)
+                            elif task == 'FILES_LESION':
                                 time_one = get_modification_time(fname_out)
                                 correct_segmentation(fname, fname_out, fname_other_contrast, args.viewer, param_fsleyes)
                                 time_two = get_modification_time(fname_out)
-                        elif task == 'FILES_LESION':
-                            time_one = get_modification_time(fname_out)
-                            correct_segmentation(fname, fname_out, fname_other_contrast, args.viewer, param_fsleyes)
-                            time_two = get_modification_time(fname_out)
-                        elif task == 'FILES_LABEL':
-                            time_one = get_modification_time(fname_out)
-                            correct_vertebral_labeling(fname, fname_out, args.label_disc_list)
-                            time_two = get_modification_time(fname_out)
-                        elif task == 'FILES_COMPRESSION':
-                            time_one = get_modification_time(fname_out)
-                            # Note: be aware of possibility to create compression labels also using
-                            # 'sct_label_utils -create-viewer'
-                            # Context: https://github.com/spinalcordtoolbox/spinalcordtoolbox/issues/3984
-                            correct_segmentation(fname, fname_out, fname_other_contrast, 'fsleyes', param_fsleyes)
-                            time_two = get_modification_time(fname_out)
-                        elif task == 'FILES_PMJ':
-                            time_one = get_modification_time(fname_out)
-                            correct_pmj_label(fname, fname_out)
-                            time_two = get_modification_time(fname_out)
-                        elif task == 'FILES_CENTERLINE':
-                            time_one = get_modification_time(fname_out)
-                            correct_centerline(fname, fname_out)
-                            time_two = get_modification_time(fname_out)
-                        else:
-                            sys.exit('Task not recognized from the YAML file: {}'.format(task))
-                        if args.denoise:
-                            # Remove the denoised file (we do not need it anymore)
-                            remove_denoised_file(fname)
+                            elif task == 'FILES_LABEL':
+                                time_one = get_modification_time(fname_out)
+                                correct_vertebral_labeling(fname, fname_out, args.label_disc_list)
+                                time_two = get_modification_time(fname_out)
+                            elif task == 'FILES_COMPRESSION':
+                                time_one = get_modification_time(fname_out)
+                                # Note: be aware of possibility to create compression labels also using
+                                # 'sct_label_utils -create-viewer'
+                                # Context: https://github.com/spinalcordtoolbox/spinalcordtoolbox/issues/3984
+                                correct_segmentation(fname, fname_out, fname_other_contrast, 'fsleyes', param_fsleyes)
+                                time_two = get_modification_time(fname_out)
+                            elif task == 'FILES_PMJ':
+                                time_one = get_modification_time(fname_out)
+                                correct_pmj_label(fname, fname_out)
+                                time_two = get_modification_time(fname_out)
+                            elif task == 'FILES_CENTERLINE':
+                                time_one = get_modification_time(fname_out)
+                                correct_centerline(fname, fname_out)
+                                time_two = get_modification_time(fname_out)
+                            else:
+                                sys.exit('Task not recognized from the YAML file: {}'.format(task))
+                            if args.denoise:
+                                # Remove the denoised file (we do not need it anymore)
+                                remove_denoised_file(fname)
 
-                        # Add segmentation only (skip generating QC report)
-                        if args.add_seg_only:
-                            # We are passing modified=True because we are adding a new segmentation and we want
-                            # to create a JSON file
-                            update_json(fname_out, name_rater, modified=True)
-                        # Generate QC report
-                        else:
-                            modified = check_if_modified(time_one, time_two)
-                            update_json(fname_out, name_rater, modified)
+                            # Add segmentation only (skip generating QC report)
+                            if args.add_seg_only:
+                                # We are passing modified=True because we are adding a new segmentation and we want
+                                # to create a JSON file
+                                update_json(fname_out, name_rater, modified=True)
                             # Generate QC report
-                            generate_qc(fname, fname_out, task, fname_qc, subject, args.config, args.qc_lesion_plane, suffix_dict)
+                            else:
+                                modified = check_if_modified(time_one, time_two)
+                                update_json(fname_out, name_rater, modified)
+                                # Generate QC report
+                                generate_qc(fname, fname_out, task, fname_qc, subject, args.config, args.qc_lesion_plane, suffix_dict)
 
-                # Generate QC report only
-                if args.qc_only:
-                    generate_qc(fname, fname_out, task, fname_qc, subject, args.config, args.qc_lesion_plane, suffix_dict)
-        else:
-            sys.exit("ERROR: The list of files is empty.")
+                    # Generate QC report only
+                    if args.qc_only:
+                        generate_qc(fname, fname_out, task, fname_qc, subject, args.config, args.qc_lesion_plane, suffix_dict)
+                    
+                    # Keep track of corrected files in YAML.
+                    utils.track_corrections(files_dict=dict_yml.copy(), config_path=args.config, file_path=fname, task=task)
+
+            else:
+                sys.exit("ERROR: The list of files is empty.")
 
 
 if __name__ == '__main__':

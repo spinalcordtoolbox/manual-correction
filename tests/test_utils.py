@@ -8,7 +8,7 @@
 
 import os
 from utils import fetch_subject_and_session, add_suffix, remove_suffix, splitext, curate_dict_yml, get_full_path, \
-    check_files_exist
+    check_files_exist, fetch_yaml_config, track_corrections
 
 
 def test_fetch_subject_and_session():
@@ -168,3 +168,33 @@ def test_check_files_exist_missing_file(tmp_path, caplog):
     assert any('BIDS/sub-001/ses-01/anat/sub-001_ses-01_T1w_seg.nii.gz' in rec.message for rec in caplog.records)
     assert any('BIDS/sub-002/ses-01/anat/sub-001_ses-01_T2star_gmseg.nii.gz' in rec.message for rec in caplog.records)
     assert any("Please check that the used suffix '_gmseg' is correct" in rec.message for rec in caplog.records)
+
+
+def test_track_corrections(tmp_path):
+    """
+    Test that the track_corrections function correctly updates the config file
+    """
+    # Dictionary with the original config file
+    dict_files = {
+        "FILES_LABEL": ["sub-amuALT_T1w.nii.gz", "sub-amuAL_T1w.nii.gz"],
+    }
+    # Path where modified config file will be saved
+    path_data = tmp_path / "BIDS"
+    os.makedirs(path_data, exist_ok=True)
+    config_path = tmp_path / "BIDS" / "config.yml"
+    # Path to the last corrected image
+    file_path = "sub-amuAL/anat/sub-amuAL_T1w.nii.gz"
+    # Specify the task
+    task = "FILES_LABEL"
+
+    # Call the function --> the function will modify the config file
+    track_corrections(dict_files, config_path, file_path, task)
+
+    # Read the updated YAML file
+    dict_files_updated = fetch_yaml_config(config_path)
+
+    # Create a test dictionary
+    dict_files_test = {'FILES_LABEL': ['sub-amuALT_T1w.nii.gz'], 'CORR_LABEL': ['sub-amuAL_T1w.nii.gz']}
+
+    # Assert that the config file was updated correctly
+    assert dict_files_updated == dict_files_test

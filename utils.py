@@ -209,18 +209,19 @@ def check_files_exist(dict_files, path_img, path_label, suffix_dict):
     missing_files = []
     missing_files_labels = []
     for task, files in dict_files.items():
-        # Do no check if key is empty or if regex is used
-        if files is not None and '*' not in files[0]:
-            for file in files:
-                subject, ses, filename, contrast = fetch_subject_and_session(file)
-                fname = os.path.join(path_img, subject, ses, contrast, filename)
-                if not os.path.exists(fname):
-                    missing_files.append(fname)
-                # Construct absolute path to the input label (segmentation, labeling etc.) file
-                # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w_seg.nii.gz'
-                fname_label = add_suffix(os.path.join(path_label, subject, ses, contrast, filename), suffix_dict[task])
-                if not os.path.exists(fname_label):
-                    missing_files_labels.append(fname_label)
+        if task.startswith('FILES') and files:
+            # Do no check if key is empty or if regex is used
+            if files is not None and '*' not in files[0]:
+                for file in files:
+                    subject, ses, filename, contrast = fetch_subject_and_session(file)
+                    fname = os.path.join(path_img, subject, ses, contrast, filename)
+                    if not os.path.exists(fname):
+                        missing_files.append(fname)
+                    # Construct absolute path to the input label (segmentation, labeling etc.) file
+                    # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w_seg.nii.gz'
+                    fname_label = add_suffix(os.path.join(path_label, subject, ses, contrast, filename), suffix_dict[task])
+                    if not os.path.exists(fname_label):
+                        missing_files_labels.append(fname_label)
     if missing_files:
         logging.warning("The following files are missing: \n{}".format(missing_files))
         logging.warning("\nPlease check that the files listed in the yaml file and the input path are correct.\n")
@@ -292,3 +293,31 @@ def create_empty_mask(fname, fname_label):
     img_mask = nib.Nifti1Image(data, affine=img.affine, header=img.header)
     nib.save(img_mask, fname_label)
     print("No label file found, creating an empty mask: {}".format(fname_label))
+
+
+def track_corrections(files_dict, config_path, file_path, task):
+    """
+    Keep track of corrected files by moving corrected subjects from FILES_{task} to CORR_{task}.
+    Note: the function does modify the YML config file.
+    :param files_dict: dict with all the subjects
+    :param config_path: path to config YAML file listing images that require manual corrections
+    :param file_path: path to the last corrected image
+    :param task: type of correction executed
+    """
+    # Extract filename from file_path
+    _, _, filename, _ = fetch_subject_and_session(file_path)
+
+    # Create a new dictionary key with all the corrected subjects for a task
+    if task.replace('FILES', 'CORR') not in files_dict.keys():
+        files_dict[task.replace('FILES', 'CORR')] = [filename]
+    else:
+        files_dict[task.replace('FILES', 'CORR')].append(filename)
+
+    # Remove corrected subject from task
+    # A comprehension list is used because both filenames and file_paths may be specified in dict
+    files_dict[task] = [file for file in files_dict[task] if filename not in file]
+
+    # Update YAML file
+    yaml.dump(files_dict, open(config_path, 'w'))
+
+        
