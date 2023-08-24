@@ -296,19 +296,20 @@ def create_empty_mask(fname, fname_label):
 def track_corrections(files_dict, config_path, file_path, task):
     """
     Keep track of corrected files by moving corrected subjects from FILES_{task} to CORR_{task}.
-    :param dict_yml: YAML dict with all the subjects
+    Note: the function does modify the YML config file.
+    :param files_dict: dict with all the subjects
     :param config_path: path to config YAML file listing images that require manual corrections
     :param file_path: path to the last corrected image
     :param task: type of correction executed
     """
     # Extract filename from file_path
-    subjectID, sessionID, filename, contrast = fetch_subject_and_session(file_path)
+    _, _, filename, _ = fetch_subject_and_session(file_path)
 
     # Create a new dictionary key with all the corrected subjects for a task
-    if task.replace('FILES','CORR') not in files_dict.keys():
-        files_dict[task.replace('FILES','CORR')] = [filename]
+    if task.replace('FILES', 'CORR') not in files_dict.keys():
+        files_dict[task.replace('FILES', 'CORR')] = [filename]
     else:
-        files_dict[task.replace('FILES','CORR')].append(filename)
+        files_dict[task.replace('FILES', 'CORR')].append(filename)
 
     # Remove corrected subject from task
     # A comprehension list is used because both filenames and file_paths may be specified in dict
