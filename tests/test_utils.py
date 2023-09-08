@@ -12,61 +12,68 @@ from utils import fetch_subject_and_session, add_suffix, remove_suffix, splitext
 
 
 def test_fetch_subject_and_session():
-    # Test 1: Test for correct subject ID, session ID, filename, and contrast
-    filename_path = "/home/user/MRI/bids/sub-001/ses-01/anat/sub-001_ses-01_T1w.nii.gz"
-    subjectID, sessionID, filename, contrast = fetch_subject_and_session(filename_path)
+    # Test 1: Test for correct subject ID, session ID, filename, contrast and echo
+    filename_path = "/home/user/MRI/bids/sub-001/ses-01/anat/sub-001_ses-01_echo-6_T1w.nii.gz"
+    subjectID, sessionID, filename, contrast, echo = fetch_subject_and_session(filename_path)
     assert subjectID == "sub-001"
     assert sessionID == "ses-01"
     assert filename == "sub-001_ses-01_T1w.nii.gz"
     assert contrast == "anat"
+    assert echo == "echo-6"
 
     # Test 2: Test for correct subject ID, session ID, filename, and contrast for a different file
-    filename_path = "/home/user/MRI/bids/sub-002/ses-02/dwi/sub-002_ses-02_dwi.nii.gz"
-    subjectID, sessionID, filename, contrast = fetch_subject_and_session(filename_path)
+    filename_path = "/home/user/MRI/bids/sub-002/ses-02/dwi/sub-002_ses-02_echo-1_dwi.nii.gz"
+    subjectID, sessionID, filename, contrast, echo = fetch_subject_and_session(filename_path)
     assert subjectID == "sub-002"
     assert sessionID == "ses-02"
     assert filename == "sub-002_ses-02_dwi.nii.gz"
     assert contrast == "dwi"
+    assert echo == "echo-6"
 
-    # Test 3: Test for correct subject ID, session ID, and filename for a file with missing session ID
+    # Test 3: Test for correct subject ID, session ID, and filename for a file with missing session ID and missing echo ID
     filename_path = "/home/user/MRI/bids/sub-003/anat/sub-003_T1w.nii.gz"
-    subjectID, sessionID, filename, contrast = fetch_subject_and_session(filename_path)
+    subjectID, sessionID, filename, contrast, echo = fetch_subject_and_session(filename_path)
     assert subjectID == "sub-003"
     assert sessionID == ""
     assert filename == "sub-003_T1w.nii.gz"
     assert contrast == "anat"
+    assert echo == ""
 
-    # Test 4: Test if only filename (without session) is provided
+    # Test 4: Test if only filename (without session and echo) is provided
     filename_path = "sub-003_T1w.nii.gz"
-    subjectID, sessionID, filename, contrast = fetch_subject_and_session(filename_path)
+    subjectID, sessionID, filename, contrast, echo = fetch_subject_and_session(filename_path)
     assert subjectID == "sub-003"
     assert sessionID == ""
     assert filename == "sub-003_T1w.nii.gz"
     assert contrast == "anat"
+    assert echo == ""
 
-    # Test 5: Test if only filename (with session) is provided
+    # Test 5: Test if only filename (with session but without echo) is provided
     filename_path = "sub-003_ses-01_T1w.nii.gz"
-    subjectID, sessionID, filename, contrast = fetch_subject_and_session(filename_path)
+    subjectID, sessionID, filename, contrast, echo = fetch_subject_and_session(filename_path)
     assert subjectID == "sub-003"
     assert sessionID == "ses-01"
     assert filename == "sub-003_ses-01_T1w.nii.gz"
     assert contrast == "anat"
+    assert echo == ""
 
-    # Test 6: Test if only filename (with session with >2 characters) is provided
-    filename_path = "sub-003_ses-001_T1w.nii.gz"
-    subjectID, sessionID, filename, contrast = fetch_subject_and_session(filename_path)
+    # Test 6: Test if only filename (with session and echo with >2 characters) is provided
+    filename_path = "sub-003_ses-001_echo-02_T1w.nii.gz"
+    subjectID, sessionID, filename, contrast, echo = fetch_subject_and_session(filename_path)
     assert subjectID == "sub-003"
     assert sessionID == "ses-001"
     assert filename == "sub-003_ses-001_T1w.nii.gz"
     assert contrast == "anat"
+    assert echo == "echo-02"
 
     # Test 7: Test for empty strings when input filename path is invalid
     filename_path = "invalid_filename_path.nii.gz"
-    subjectID, sessionID, filename, contrast = fetch_subject_and_session(filename_path)
+    subjectID, sessionID, filename, contrast, echo = fetch_subject_and_session(filename_path)
     assert subjectID == ""
     assert sessionID == ""
     assert filename == "invalid_filename_path.nii.gz"
     assert contrast == "anat"
+    assert echo == ""
 
 
 def test_splitext():
