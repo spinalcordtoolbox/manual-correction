@@ -218,7 +218,7 @@ def check_files_exist(dict_files, path_img, path_label, suffix_dict):
             # Do no check if key is empty or if regex is used
             if files is not None and '*' not in files[0]:
                 for file in files:
-                    subject, ses, filename, contrast = fetch_subject_and_session(file)
+                    subject, ses, filename, contrast, echo = fetch_subject_and_session(file)
                     fname = os.path.join(path_img, subject, ses, contrast, filename)
                     if not os.path.exists(fname):
                         missing_files.append(fname)
@@ -310,7 +310,7 @@ def track_corrections(files_dict, config_path, file_path, task):
     :param task: type of correction executed
     """
     # Extract filename from file_path
-    _, _, filename, _ = fetch_subject_and_session(file_path)
+    _, _, filename, _, _ = fetch_subject_and_session(file_path)
 
     # Create a new dictionary key with all the corrected subjects for a task
     if task.replace('FILES', 'CORR') not in files_dict.keys():

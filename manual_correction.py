@@ -735,7 +735,7 @@ def main():
             if len(files) > 0:
                 # Handle regex (i.e., iterate over all subjects)
                 if '*' in files[0] and len(files) == 1:
-                    subject, ses, filename, contrast = utils.fetch_subject_and_session(files[0])
+                    subject, ses, filename, contrast, echo = utils.fetch_subject_and_session(files[0])
                     # Get list of files recursively
                     glob_files = sorted(glob.glob(os.path.join(path_img, '**', filename),
                                             recursive=True))
@@ -747,7 +747,7 @@ def main():
                     #  Remove labels under derivatives and already corrected files
                     files = []
                     for file in glob_files:
-                        subject, ses, filename, contrast = utils.fetch_subject_and_session(file)
+                        subject, ses, filename, contrast, echo = utils.fetch_subject_and_session(file)
                         if ('derivatives' not in file) and (filename not in corr_files):
                             files.append(file)
                 # Loop across files
@@ -756,7 +756,7 @@ def main():
                     time.sleep(0.1)
                     print("")
                     # build file names
-                    subject, ses, filename, contrast = utils.fetch_subject_and_session(file)
+                    subject, ses, filename, contrast, echo = utils.fetch_subject_and_session(file)
                     # Construct absolute path to the input file
                     # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w.nii.gz'
                     fname = os.path.join(path_img, subject, ses, contrast, filename)
