@@ -22,6 +22,7 @@ import coloredlogs
 import glob
 import json
 import os
+import logging
 import sys
 import shutil
 from textwrap import dedent
@@ -30,6 +31,9 @@ import tqdm
 import subprocess
 
 import utils
+
+import numpy as np
+import nibabel as nib
 
 
 def get_parser():
@@ -581,6 +585,16 @@ def generate_qc(fname, fname_label, task, fname_qc, subject, config_file, qc_les
     :param suffix_dict: dictionary of suffixes
     :return:
     """
+    # Not all sct_qc -p functions support empty label files. Check if the label file is empty and skip QC if so.
+    # Context: https://github.com/spinalcordtoolbox/manual-correction/issues/60#issuecomment-1720280352
+    skip_qc_list = ['FILES_LABEL', 'FILES_COMPRESSION', 'FILES_PMJ', 'FILES_CENTERLINE']
+    if task in skip_qc_list:
+        img_label = nib.load(fname_label)
+        data_label = img_label.get_fdata()
+        if np.sum(data_label) == 0:
+            logging.warning(f"File {fname_label} is empty. Skipping QC.\n")
+            return
+
     # Lesion QC needs also SC segmentation for cropping
     if task == 'FILES_LESION':
         # Construct SC segmentation file name
