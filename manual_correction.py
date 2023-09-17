@@ -773,8 +773,7 @@ def main():
                 if '*' in files[0] and len(files) == 1:
                     subject, ses, filename, contrast = utils.fetch_subject_and_session(files[0])
                     # Get list of files recursively
-                    glob_files = sorted(glob.glob(os.path.join(path_img, '**', filename),
-                                            recursive=True))
+                    glob_files = sorted(glob.glob(os.path.join(path_img, '**', filename), recursive=True))
                     # Get list of already corrected files
                     if task.replace('FILES', 'CORR') in dict_yml.keys():
                         corr_files = dict_yml[task.replace('FILES', 'CORR')]
