@@ -783,6 +783,10 @@ def main():
                         else:
                             other_contrast_filename = subject + '_' + ses + '_' + args.load_other_contrast + '.nii.gz'
                         fname_other_contrast = os.path.join(path_img, subject, ses, contrast, other_contrast_filename)
+                        # Check if other contrast exists
+                        if not os.path.isfile(fname_other_contrast):
+                            print(f'WARNING: {fname_other_contrast} not found. Skipping...')
+                            fname_other_contrast = None
                     else:
                         fname_other_contrast = None
                     # Construct absolute path to the input label (segmentation, labeling etc.) file
