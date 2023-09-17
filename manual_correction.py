@@ -628,6 +628,35 @@ def generate_qc(fname, fname_label, task, fname_qc, subject, config_file, qc_les
     print("Archive created:\n--> {}".format(fname_qc + '.zip'))
 
 
+def construct_other_contrast_filename(args, path_img, file):
+    """
+    Construct filename of the other contrast.
+    :param args:
+    :param path_img:
+    :param file:
+    :return:
+    """
+
+    subject, ses, filename, contrast = utils.fetch_subject_and_session(file)
+
+    if args.load_other_contrast:
+        # Do not include session in the filename
+        if ses == '':
+            other_contrast_filename = subject + '_' + args.load_other_contrast + '.nii.gz'
+        # Include session in the filename
+        else:
+            other_contrast_filename = subject + '_' + ses + '_' + args.load_other_contrast + '.nii.gz'
+        fname_other_contrast = os.path.join(path_img, subject, ses, contrast, other_contrast_filename)
+        # Check if other contrast exists
+        if not os.path.isfile(fname_other_contrast):
+            print(f'WARNING: {fname_other_contrast} not found. Skipping...')
+            fname_other_contrast = None
+    else:
+        fname_other_contrast = None
+
+    return fname_other_contrast
+
+
 def denoise_image(fname):
     """
     Denoise image using non-local means adaptative denoising from P. Coupe et al. as implemented in dipy. For details,
@@ -767,21 +796,8 @@ def main():
                     # Construct absolute path to the input file
                     # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w.nii.gz'
                     fname = os.path.join(path_img, subject, ses, contrast, filename)
-                    # Construct absolute path to the other contrast file
-                    if args.load_other_contrast:
-                        # Do not include session in the filename
-                        if ses == '':
-                            other_contrast_filename = subject + '_' + args.load_other_contrast + '.nii.gz'
-                        # Include session in the filename
-                        else:
-                            other_contrast_filename = subject + '_' + ses + '_' + args.load_other_contrast + '.nii.gz'
-                        fname_other_contrast = os.path.join(path_img, subject, ses, contrast, other_contrast_filename)
-                        # Check if other contrast exists
-                        if not os.path.isfile(fname_other_contrast):
-                            print(f'WARNING: {fname_other_contrast} not found. Skipping...')
-                            fname_other_contrast = None
-                    else:
-                        fname_other_contrast = None
+                    # Construct absolute path to the other contrast file, if specified
+                    fname_other_contrast = construct_other_contrast_filename(args, path_img, file)
                     # Construct absolute path to the input label (segmentation, labeling etc.) file
                     # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w_seg.nii.gz'
                     fname_label = utils.add_suffix(os.path.join(path_label, subject, ses, contrast, filename), suffix_dict[task])
