@@ -264,11 +264,7 @@ def create_fsleyes_script():
     Create a custom Python script to interact with the FSLeyes API.
     Note: the second orthoview cannot be opened from the CLI, instead, FSLeyes API via a custom Python script must
     be used. For details, see: https://www.jiscmail.ac.uk/cgi-bin/wa-jisc.exe?A2=FSL;ab356891.2301
-    :param fname: path of the input image
-    :param fname_seg_out: path to the derivative label file
-    :param fname_other_contrast: path of the other contrast to be loaded in FSLeyes
-    :param param_fsleyes:
-    :return:
+    :return: fname_script: filename of the custom Python script.
     """
     python_script = [
         "ortho_left = frame.addViewPanel(OrthoPanel)",
