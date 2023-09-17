@@ -264,9 +264,9 @@ def create_fsleyes_script():
     Create a custom Python script to interact with the FSLeyes API.
     Note: the second orthoview cannot be opened from the CLI, instead, FSLeyes API via a custom Python script must
     be used. For details, see: https://www.jiscmail.ac.uk/cgi-bin/wa-jisc.exe?A2=FSL;ab356891.2301
-    :param fname: path of the input image.
+    :param fname: path of the input image
     :param fname_seg_out: path to the derivative label file
-    :param fname_other_contrast: path of the other contrast to be loaded in FSLeyes.
+    :param fname_other_contrast: path of the other contrast to be loaded in FSLeyes
     :param param_fsleyes:
     :return:
     """
@@ -357,6 +357,9 @@ def correct_segmentation(fname, fname_seg_out, fname_other_contrast, viewer, par
             # -S, --skipfslcheck    Skip $FSLDIR check/warning
             # -dr, --displayRange   Set display range (min max) for the specified overlay
             # -cm, --cmap           Set colour map for the specified overlay
+            # -r, --runscript       Run custom FSLeyes script
+
+            # Load a second contrast/image
             if fname_other_contrast:
                 # Open a second orthoview (i.e., open two orthoviews next to each other)
                 if param_fsleyes.second_orthoview:
@@ -367,7 +370,7 @@ def correct_segmentation(fname, fname_seg_out, fname_other_contrast, viewer, par
                                            fname, '-dr', param_fsleyes.min_dr, param_fsleyes.max_dr,
                                            fname_other_contrast,
                                            fname_seg_out, '-cm', param_fsleyes.cm])
-                # No second orthoview
+                # No second orthoview - open both contrasts/images in the same orthoview
                 else:
                     subprocess.check_call(['fsleyes',
                                            '-S',
@@ -382,7 +385,7 @@ def correct_segmentation(fname, fname_seg_out, fname_other_contrast, viewer, par
                                        '-r', fname_script,
                                        fname, '-dr', param_fsleyes.min_dr, param_fsleyes.max_dr,
                                        fname_seg_out, '-cm', param_fsleyes.cm])
-            # No second contrast, no second orthoview
+            # Only a single contrast/image in a single orthoview
             else:
                 subprocess.check_call(['fsleyes',
                                        '-S',
