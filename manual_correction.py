@@ -709,7 +709,15 @@ def main():
         path_out = os.path.join(path_img, "derivatives/labels")
     else:
         path_out = utils.get_full_path(args.path_out)
-    
+
+    # Print parsed arguments
+    logging.info('-' * 100)
+    logging.info('Parsing of arguments:')
+    logging.info('  Input folder .............. ' + path_img)
+    logging.info('  Label folder .............. ' + path_label)
+    logging.info('  Output folder ............. ' + path_out)
+    logging.info('-' * 100)
+
     # check that output folder exists or create it
     utils.check_output_folder(path_out)
 
