@@ -358,7 +358,8 @@ def correct_segmentation(fname, fname_seg_out, fname_other_contrast, viewer, par
             # -dr, --displayRange   Set display range (min max) for the specified overlay
             # -cm, --cmap           Set colour map for the specified overlay
             if fname_other_contrast:
-                # Open a second orthoview (i.e., open two orthoviews next to each other)
+                # Open a second orthoview (i.e., open two orthoviews next to each other) using a custom Python script
+                # (-r flag)
                 if param_fsleyes.second_orthoview:
                     fname_script = create_fsleyes_script()
                     subprocess.check_call(['fsleyes',
