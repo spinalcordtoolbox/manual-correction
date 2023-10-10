@@ -598,7 +598,7 @@ def generate_qc(fname, fname_label, task, fname_qc, subject, config_file, qc_les
     # Lesion QC needs also SC segmentation for cropping
     if task == 'FILES_LESION':
         # Construct SC segmentation file name
-        fname_seg = fname.replace(suffix_dict['FILES_LESION'], suffix_dict['FILES_SEG'])
+        fname_seg = fname_label.replace(suffix_dict['FILES_LESION'], suffix_dict['FILES_SEG'])
         # Check if SC segmentation file exists
         if os.path.isfile(fname_seg):
             print("SC segmentation file found: {}. Creating QC.".format(fname_seg))
@@ -620,6 +620,8 @@ def generate_qc(fname, fname_label, task, fname_qc, subject, config_file, qc_les
                                    '-qc-subject', subject])
             # remove binarized lesion segmentation
             os.remove(fname_label_bin)
+            # Archive QC folder
+            archive_qc(fname_qc, config_file)
         else:
             print("WARNING: SC segmentation file not found: {}. QC report will not be generated.".format(fname_seg))
     else:
@@ -629,7 +631,14 @@ def generate_qc(fname, fname_label, task, fname_qc, subject, config_file, qc_les
                                '-p', get_function_for_qc(task),
                                '-qc', fname_qc,
                                '-qc-subject', subject])
-    # Archive QC folder
+        # Archive QC folder
+        archive_qc(fname_qc, config_file)
+
+
+def archive_qc(fname_qc, config_file):
+    """
+    Archive QC folder
+    """
     shutil.copy(utils.get_full_path(config_file), fname_qc)
     shutil.make_archive(fname_qc, 'zip', fname_qc)
     print("Archive created:\n--> {}".format(fname_qc + '.zip'))
