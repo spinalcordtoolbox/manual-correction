@@ -884,7 +884,7 @@ def main():
                         generate_qc(fname, fname_out, task, fname_qc, subject, args.config, args.qc_lesion_plane, suffix_dict)
                     
                     # Keep track of corrected files in YAML.
-                    utils.track_corrections(files_dict=dict_yml.copy(), config_path=args.config, file_path=fname, task=task)
+                    dict_yml = utils.track_corrections(files_dict=dict_yml.copy(), config_path=args.config, file_path=fname, task=task)
 
             else:
                 sys.exit("ERROR: The list of files is empty.")
