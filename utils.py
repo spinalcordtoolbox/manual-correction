@@ -320,4 +320,6 @@ def track_corrections(files_dict, config_path, file_path, task):
     # Update YAML file
     yaml.dump(files_dict, open(config_path, 'w'))
 
+    return files_dict
+
         
