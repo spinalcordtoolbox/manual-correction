@@ -264,11 +264,7 @@ def create_fsleyes_script():
     Create a custom Python script to interact with the FSLeyes API.
     Note: the second orthoview cannot be opened from the CLI, instead, FSLeyes API via a custom Python script must
     be used. For details, see: https://www.jiscmail.ac.uk/cgi-bin/wa-jisc.exe?A2=FSL;ab356891.2301
-    :param fname: path of the input image.
-    :param fname_seg_out: path to the derivative label file
-    :param fname_other_contrast: path of the other contrast to be loaded in FSLeyes.
-    :param param_fsleyes:
-    :return:
+    :return: fname_script: filename of the custom Python script.
     """
     python_script = [
         "ortho_left = frame.addViewPanel(OrthoPanel)",
@@ -324,32 +320,32 @@ def correct_segmentation(fname, fname_seg_out, fname_other_contrast, viewer, par
     :param param_fsleyes: parameters for FSLeyes viewer.
     :return:
     """
-    # launch ITK-SNAP
-    if viewer == 'itksnap':
+
+    def _itk_snap():
         print("In ITK-SNAP, correct the segmentation, then save it with the same name (overwrite).")
-        # Note: command line differs for macOs/Linux and Windows
-        if shutil.which('itksnap') is not None:  # Check if command 'itksnap' exists
-            # macOS and Linux
-            subprocess.check_call(['itksnap',
-                                   '-g', fname,
-                                   '-s', fname_seg_out])
-            
-        elif shutil.which('ITK-SNAP') is not None:  # Check if command 'ITK-SNAP' exists
-            # Windows
-            subprocess.check_call(['ITK-SNAP',
-                                   '-g', fname,
-                                   '-s', fname_seg_out])
+        viewer_command = None
+
+        # macOS and Linux
+        if shutil.which('itksnap'):
+            viewer_command = 'itksnap'
+        # Windows
+        elif shutil.which('ITK-SNAP'):
+            viewer_command = 'ITK-SNAP'
+
+        # Construct command
+        if viewer_command:
+            subprocess.check_call([viewer_command, '-g', fname, '-s', fname_seg_out])
         else:
             viewer_not_found(viewer)
-    # launch FSLeyes
-    elif viewer == 'fsleyes':
-        if shutil.which('fsleyes') is not None:  # Check if command 'fsleyes' exists
+
+    def _fsleyes():
+        if shutil.which('fsleyes'):
             # Get min and max intensity
             min_intensity, max_intensity = utils.get_image_intensities(fname)
             # Set min intensity
-            param_fsleyes.min_dr = str((max_intensity * int(param_fsleyes.dr.split(',')[0]))/100)
+            param_fsleyes.min_dr = str((max_intensity * int(param_fsleyes.dr.split(',')[0])) / 100)
             # Decrease max intensity
-            param_fsleyes.max_dr = str((max_intensity * int(param_fsleyes.dr.split(',')[1]))/100)
+            param_fsleyes.max_dr = str((max_intensity * int(param_fsleyes.dr.split(',')[1])) / 100)
 
             print("In FSLeyes, click on 'Edit mode', correct the segmentation, and then save it with the same name "
                   "(overwrite).")
@@ -357,48 +353,45 @@ def correct_segmentation(fname, fname_seg_out, fname_other_contrast, viewer, par
             # -S, --skipfslcheck    Skip $FSLDIR check/warning
             # -dr, --displayRange   Set display range (min max) for the specified overlay
             # -cm, --cmap           Set colour map for the specified overlay
+            # -r, --runscript       Run custom FSLeyes script
+
+            # Construct command
+            cmd_args = ['fsleyes', '-S', fname, '-dr', param_fsleyes.min_dr, param_fsleyes.max_dr, fname_seg_out, '-cm',
+                        param_fsleyes.cm]
+
+            # Load a second contrast/image if provided
             if fname_other_contrast:
                 # Open a second orthoview (i.e., open two orthoviews next to each other) using a custom Python script
                 # (-r flag)
                 if param_fsleyes.second_orthoview:
-                    fname_script = create_fsleyes_script()
-                    subprocess.check_call(['fsleyes',
-                                           '-S',
-                                           '-r', fname_script,
-                                           fname, '-dr', param_fsleyes.min_dr, param_fsleyes.max_dr,
-                                           fname_other_contrast,
-                                           fname_seg_out, '-cm', param_fsleyes.cm])
-                # No second orthoview
-                else:
-                    subprocess.check_call(['fsleyes',
-                                           '-S',
-                                           fname, '-dr', param_fsleyes.min_dr, param_fsleyes.max_dr,
-                                           fname_other_contrast,
-                                           fname_seg_out, '-cm', param_fsleyes.cm])
-            # Open a second orthoview without second contrast
-            elif param_fsleyes.second_orthoview:
-                fname_script = create_fsleyes_script()
-                subprocess.check_call(['fsleyes',
-                                       '-S',
-                                       '-r', fname_script,
-                                       fname, '-dr', param_fsleyes.min_dr, param_fsleyes.max_dr,
-                                       fname_seg_out, '-cm', param_fsleyes.cm])
-            # No second contrast, no second orthoview
-            else:
-                subprocess.check_call(['fsleyes',
-                                       '-S',
-                                       fname,
-                                       '-dr', param_fsleyes.min_dr, param_fsleyes.max_dr,
-                                       fname_seg_out, '-cm', param_fsleyes.cm])
+                    # Intert '-r', create_fsleyes_script() after '-S'
+                    cmd_args.insert(2, '-r ' + create_fsleyes_script())
+                cmd_args.append(fname_other_contrast)
+
+            # Convert list to string
+            cmd_args = ' '.join(cmd_args)
+            print(cmd_args)
+            os.system(cmd_args)
         else:
             viewer_not_found(viewer)
-    # launch 3D Slicer
-    elif viewer == 'slicer':
+
+    def _slicer():
         if shutil.which('slicer') is not None:
+            print("ERROR: 3D Slicer is not supported yet.")
             # TODO: Add instructions for 3D Slicer
             pass
         else:
             viewer_not_found(viewer)
+
+    # launch ITK-SNAP
+    if viewer == 'itksnap':
+        _itk_snap()
+    # launch FSLeyes
+    elif viewer == 'fsleyes':
+        _fsleyes()
+    # launch 3D Slicer
+    elif viewer == 'slicer':
+        _slicer()
 
 
 def viewer_not_found(viewer):
@@ -645,6 +638,35 @@ def archive_qc(fname_qc, config_file):
     print("Archive created:\n--> {}".format(fname_qc + '.zip'))
 
 
+def construct_other_contrast_filename(args, path_img, file):
+    """
+    Construct filename of the other contrast.
+    :param args:
+    :param path_img:
+    :param file:
+    :return:
+    """
+
+    subject, ses, filename, contrast = utils.fetch_subject_and_session(file)
+
+    if args.load_other_contrast:
+        # Do not include session in the filename
+        if ses == '':
+            other_contrast_filename = subject + '_' + args.load_other_contrast + '.nii.gz'
+        # Include session in the filename
+        else:
+            other_contrast_filename = subject + '_' + ses + '_' + args.load_other_contrast + '.nii.gz'
+        fname_other_contrast = os.path.join(path_img, subject, ses, contrast, other_contrast_filename)
+        # Check if other contrast exists
+        if not os.path.isfile(fname_other_contrast):
+            print(f'WARNING: {fname_other_contrast} not found. Skipping...')
+            fname_other_contrast = None
+    else:
+        fname_other_contrast = None
+
+    return fname_other_contrast
+
+
 def denoise_image(fname):
     """
     Denoise image using non-local means adaptative denoising from P. Coupe et al. as implemented in dipy. For details,
@@ -769,8 +791,7 @@ def main():
                 if '*' in files[0] and len(files) == 1:
                     subject, ses, filename, contrast = utils.fetch_subject_and_session(files[0])
                     # Get list of files recursively
-                    glob_files = sorted(glob.glob(os.path.join(path_img, '**', filename),
-                                            recursive=True))
+                    glob_files = sorted(glob.glob(os.path.join(path_img, '**', filename), recursive=True))
                     # Get list of already corrected files
                     if task.replace('FILES', 'CORR') in dict_yml.keys():
                         corr_files = dict_yml[task.replace('FILES', 'CORR')]
@@ -792,17 +813,8 @@ def main():
                     # Construct absolute path to the input file
                     # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w.nii.gz'
                     fname = os.path.join(path_img, subject, ses, contrast, filename)
-                    # Construct absolute path to the other contrast file
-                    if args.load_other_contrast:
-                        # Do not include session in the filename
-                        if ses == '':
-                            other_contrast_filename = subject + '_' + args.load_other_contrast + '.nii.gz'
-                        # Include session in the filename
-                        else:
-                            other_contrast_filename = subject + '_' + ses + '_' + args.load_other_contrast + '.nii.gz'
-                        fname_other_contrast = os.path.join(path_img, subject, ses, contrast, other_contrast_filename)
-                    else:
-                        fname_other_contrast = None
+                    # Construct absolute path to the other contrast file, if specified
+                    fname_other_contrast = construct_other_contrast_filename(args, path_img, file)
                     # Construct absolute path to the input label (segmentation, labeling etc.) file
                     # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w_seg.nii.gz'
                     fname_label = utils.add_suffix(os.path.join(path_label, subject, ses, contrast, filename), suffix_dict[task])
