@@ -202,8 +202,8 @@ def check_files_exist(dict_yml, path_img, path_label, suffix_dict):
     Check if the files listed in the input config yml file
     The function checks for the images and their corresponding labels
     :param dict_yml: dictionary with input files fetched from the config yml file
-    :param path_img: full path to the folder with images (BIDS-compliant)
-    :param path_label: full path to the folder with labels (BIDS-compliant)
+    :param path_img: full path to the folder with images
+    :param path_label: full path to the folder with labels
     :param suffix_dict: dictionary with label file suffixes
     :return:
     """
