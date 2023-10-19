@@ -197,18 +197,19 @@ def get_full_path(path):
     return os.path.abspath(os.path.expanduser(path))
 
 
-def check_files_exist(dict_files, path_img, path_label, suffix_dict):
+def check_files_exist(dict_yml, path_img, path_label, suffix_dict):
     """
-    Check if all files listed in the input dictionary exist
-    :param dict_files:
-    :param path_data: folder where BIDS dataset is located
+    Check if the files listed in the input config yml file
+    The function checks for the images and their corresponding labels
+    :param dict_yml: dictionary with input files fetched from the config yml file
+    :param path_img: full path to the folder with images (BIDS-compliant)
+    :param path_label: full path to the folder with labels (BIDS-compliant)
     :param suffix_dict: dictionary with label file suffixes
-    :param path_derivatives: folder where derivatives are located
     :return:
     """
     missing_files = []
     missing_files_labels = []
-    for task, files in dict_files.items():
+    for task, files in dict_yml.items():
         if task.startswith('FILES') and files:
             # Do no check if key is empty or if regex is used
             if files is not None and '*' not in files[0]:
