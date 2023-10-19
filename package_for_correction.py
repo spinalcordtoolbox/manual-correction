@@ -176,7 +176,10 @@ def main():
     }
 
     # Check for missing files before starting the whole process
-    utils.check_files_exist(dict_yml, utils.get_full_path(args.path_in), suffix_dict)
+    # Note: we pass args.path_in for both path_img and path_label because both both images and their labels (e.g.,
+    # SC seg) are located in the same folder, e.g., ~/<your_dataset>/data_processed
+    utils.check_files_exist(dict_yml=dict_yml, path_img=utils.get_full_path(args.path_in),
+                            path_label=utils.get_full_path(args.path_in), suffix_dict=suffix_dict)
 
     # Create temp folder
     path_tmp = tempfile.mkdtemp()
