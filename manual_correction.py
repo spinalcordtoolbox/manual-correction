@@ -889,7 +889,8 @@ def main():
                     dict_yml = utils.track_corrections(files_dict=dict_yml.copy(), config_path=args.config, file_path=fname, task=task)
 
             else:
-                sys.exit("ERROR: The list of files is empty.")
+                sys.exit("ERROR: The list of files to correct is empty. \nMaybe, you have already corrected all the "
+                         "files? Please, check the YAML file: {}".format(args.config))
 
 
 if __name__ == '__main__':
