@@ -207,6 +207,12 @@ def get_parser():
         type=str,
         default=None
     )
+    parser.add_argument(    #TODO
+        '-add-subfolder',
+        help="Add a subfolder to find labels or segmentation to correct",
+        type=str,
+        default=None
+    )
     parser.add_argument(
         '-qc-only',
         help="Only output QC report based on the manually-corrected files already present in the 'derivatives' folder. "
@@ -518,6 +524,8 @@ def ask_if_modify(fname_out, fname_label, do_labeling_always=False):
         create_empty_mask = False
 
     # If the output file does not exist, copy it from label folder
+        print(os.path.isfile(fname_label))
+        print('fname_label', fname_label)
     elif not os.path.isfile(fname_out) and os.path.isfile(fname_label):
         do_labeling = True
         copy = True
@@ -692,9 +700,16 @@ def main():
                 print("")
                 # build file names
                 subject, ses, filename, contrast = utils.fetch_subject_and_session(file)
+                if args.add_subfolder:
+                    subfolder = args.add_subfolder
+                else:
+                    subfolder = False
                 # Construct absolute path to the input file
                 # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w.nii.gz'
-                fname = os.path.join(path_img, subject, ses, contrast, filename)
+                if subfolder:
+                    fname = os.path.join(path_img, subject, ses, contrast, subfolder, filename)
+                else:
+                    fname = os.path.join(path_img, subject, ses, contrast, filename)
                 # Construct absolute path to the other contrast file
                 if args.load_other_contrast:
                     # Do not include session in the filename
@@ -708,8 +723,10 @@ def main():
                     fname_other_contrast = None
                 # Construct absolute path to the input label (segmentation, labeling etc.) file
                 # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w_seg.nii.gz'
-                fname_label = utils.add_suffix(os.path.join(path_label, subject, ses, contrast, filename), suffix_dict[task])
-                
+                if subfolder:
+                    fname_label = utils.add_suffix(os.path.join(path_label, subject, ses, contrast, subfolder, filename), suffix_dict[task])
+                else:
+                    fname_label = utils.add_suffix(os.path.join(path_label, subject, ses, contrast, filename), suffix_dict[task])
                 # Construct absolute path to the output file (i.e., path where manually corrected file will be saved)
                 # For example: '/Users/user/dataset/derivatives/labels/sub-001/anat/sub-001_T2w_seg.nii.gz'
                 # The information regarding the modified data will be stored within the sidecar .json file
@@ -780,7 +797,7 @@ def main():
                             modified = check_if_modified(time_one, time_two)
                             update_json(fname_out, name_rater, modified)
                             # Generate QC report
-                            generate_qc(fname, fname_out, task, fname_qc, subject, args.config, args.qc_lesion_plane, suffix_dict)
+                            #generate_qc(fname, fname_out, task, fname_qc, subject, args.config, args.qc_lesion_plane, suffix_dict)
 
                 # Generate QC report only
                 if args.qc_only:

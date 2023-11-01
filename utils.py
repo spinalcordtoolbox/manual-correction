@@ -35,9 +35,15 @@ def fetch_subject_and_session(filename_path):
     _, filename = os.path.split(filename_path)              # Get just the filename (i.e., remove the path)
     subject = re.search('sub-(.*?)[_/]', filename_path)
     subjectID = subject.group(0)[:-1] if subject else ""    # [:-1] removes the last underscore or slash
-    session = re.findall(r'ses-..', filename_path)
-    sessionID = session[0] if session else ""               # Return None if there is no session
-    contrast = 'dwi' if 'dwi' in filename_path else 'anat'  # Return contrast (dwi or anat)
+    session = re.findall(r'ses-.*', filename_path)
+    sessionID = session[0].split('_')[0] if session else ""               # Return None if there is no session
+    if 'dwi' in filename_path:
+        contrast = 'dwi'
+    elif 'bold' in filename_path:
+        contrast = 'func'
+    else:
+        contrast = 'anat'
+
     # REGEX explanation
     # \d - digit
     # \d? - no or one occurrence of digit
