@@ -96,25 +96,27 @@ def get_parser():
         metavar="<folder>",
         required=True,
         help=
-        "R|Full path to the folder with images (BIDS-compliant).",
+        "R|Full path to the folder with images (BIDS-compliant). "
+        "Examples: '~/<your_dataset>' or 'output/data_processed'."
     )
     parser.add_argument(
         '-path-label',
         metavar="<folder>",
         help=
-        "R|Full path to the folder with labels (BIDS-compliant). Examples: '~/<your_dataset>/derivatives/labels' or "
-        "'~/<your_dataset>/derivatives/labels_softseg' "
-        "If not provided, '-path-img' + 'derivatives/labels' will be used. ",
+        "R|Full path to the folder with labels (BIDS-compliant). "
+        "\nIf labels are located in the same folder as the images, provide the same path as '-path-img', for example "
+        "'output/data_processed'."
+        "\nIf not provided, '-path-img' + 'derivatives/labels' will be used. ",
         default=''
     )
     parser.add_argument(
         '-path-out',
         metavar="<folder>",
         help=
-        "R| Full path to the folder where corrected labels will be stored. "
-        "Example: '~/<your_dataset>/derivatives/labels' "
-        "If not provided, '-path-img' + 'derivatives/labels' will be used. "
-        "Note: If the specified path does not exist, it will be created.",
+        "R|Full path to the folder where corrected labels will be stored. "
+        "Example: '~/<your_dataset>/derivatives/labels'. "
+        "\nIf not provided, '-path-img' + 'derivatives/labels' will be used. "
+        "\nNote: If the specified path does not exist, it will be created.",
         default=''
     )
     parser.add_argument(
