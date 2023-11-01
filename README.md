@@ -31,12 +31,26 @@ Currently supported labels are:
 
 ## 2. Installation
 
+Download the repository:
+
 ```console
 git clone https://github.com/spinalcordtoolbox/manual-correction.git
 cd manual-correction
+```
+
+Create a virtual environment and install the required packages:
+
+```console
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
+```
+
+Alternatively, you can use existing SCT's conda environment:
+
+```console
+source ${SCT_DIR}/python/etc/profile.d/conda.sh                                                                                                  (main|✚1⚑3)
+conda activate venv_sct
 ```
 
 ## 3. Usage
