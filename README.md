@@ -49,7 +49,7 @@ pip install -r requirements.txt
 Alternatively, you can use existing SCT's conda environment:
 
 ```console
-source ${SCT_DIR}/python/etc/profile.d/conda.sh                                                                                                  (main|✚1⚑3)
+source ${SCT_DIR}/python/etc/profile.d/conda.sh
 conda activate venv_sct
 ```
 
