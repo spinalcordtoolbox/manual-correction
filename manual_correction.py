@@ -756,6 +756,10 @@ def main():
     # Perform manual corrections
     for task, files in dict_yml.items():
         if task.startswith('FILES'):
+            # Check if task is in suffix_dict.keys(), if not, skip it
+            if task not in suffix_dict.keys():
+                logging.warning("WARNING: {} is not a valid task. Skipping it.".format(task))
+                continue
             # Get the list of segmentation files to add to derivatives, excluding the manually corrected files in -config.
             # TODO: probably extend also for other tasks (such as FILES_GMSEG)
             if args.add_seg_only and task == 'FILES_SEG':

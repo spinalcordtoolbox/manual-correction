@@ -211,6 +211,10 @@ def check_files_exist(dict_yml, path_img, path_label, suffix_dict):
     missing_files_labels = []
     for task, files in dict_yml.items():
         if task.startswith('FILES') and files:
+            # Check if task is in suffix_dict.keys(), if not, skip it
+            if task not in suffix_dict.keys():
+                logging.warning("WARNING: {} is not a valid task. Skipping it.".format(task))
+                continue
             # Do no check if key is empty or if regex is used
             if files is not None and '*' not in files[0]:
                 for file in files:
