@@ -757,6 +757,9 @@ def main():
     for task, files in dict_yml.items():
         if task.startswith('FILES'):
             # Check if task is in suffix_dict.keys(), if not, skip it
+            # Note that this check is done after the task.startswith('FILES') check because the manual-correction
+            # script should ignore keys that start with CORR (CORR keys are used to track the manual correction
+            # progress)
             if task not in suffix_dict.keys():
                 logging.warning("WARNING: {} is not a valid task. Skipping it.".format(task))
                 continue
