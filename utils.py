@@ -209,8 +209,13 @@ def check_files_exist(dict_yml, path_img, path_label, suffix_dict):
     """
     missing_files = []
     missing_files_labels = []
+    missing_suffixes = set()
     for task, files in dict_yml.items():
         if task.startswith('FILES') and files:
+            # Check if task is in suffix_dict.keys(), if not, skip it
+            if task not in suffix_dict.keys():
+                logging.warning("WARNING: {} is not a valid task. Skipping it.".format(task))
+                continue
             # Do no check if key is empty or if regex is used
             if files is not None and '*' not in files[0]:
                 for file in files:
@@ -223,14 +228,15 @@ def check_files_exist(dict_yml, path_img, path_label, suffix_dict):
                     fname_label = add_suffix(os.path.join(path_label, subject, ses, contrast, filename), suffix_dict[task])
                     if not os.path.exists(fname_label):
                         missing_files_labels.append(fname_label)
+                        missing_suffixes.add(suffix_dict[task])
     if missing_files:
         logging.warning("The following files are missing: \n{}".format(missing_files))
         logging.warning("\nPlease check that the files listed in the yaml file and the input path are correct.\n")
     if missing_files_labels:
         logging.warning("If you are creating label(s) from scratch, ignore the following message.")
         logging.warning("\nThe following label files are missing: \n{}".format(missing_files_labels))
-        logging.warning("\nPlease check that the used suffix '{}' is correct. "
-                        "If not, you can provide custom suffix using '-suffix-files-' flags.\n".format(suffix_dict[task]))
+        logging.warning("\nPlease check that the used suffix {} is correct. "
+                        "If not, you can provide custom suffix using '-suffix-files-' flags.\n".format(sorted(missing_suffixes)))
 
 
 def check_output_folder(path_bids):
@@ -323,4 +329,4 @@ def track_corrections(files_dict, config_path, file_path, task):
 
     return files_dict
 
-        
+

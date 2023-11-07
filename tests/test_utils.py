@@ -167,7 +167,7 @@ def test_check_files_exist_missing_file(tmp_path, caplog):
     assert any('Please check that the files listed in the yaml file and the input path are correct' in rec.message for rec in caplog.records)
     assert any('BIDS/sub-001/ses-01/anat/sub-001_ses-01_T1w_seg.nii.gz' in rec.message for rec in caplog.records)
     assert any('BIDS/sub-002/ses-01/anat/sub-001_ses-01_T2star_gmseg.nii.gz' in rec.message for rec in caplog.records)
-    assert any("Please check that the used suffix '_gmseg' is correct" in rec.message for rec in caplog.records)
+    assert any("Please check that the used suffix ['_gmseg', '_seg'] is correct" in rec.message for rec in caplog.records)
 
 
 def test_track_corrections(tmp_path):
