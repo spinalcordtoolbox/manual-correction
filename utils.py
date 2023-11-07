@@ -235,7 +235,7 @@ def check_files_exist(dict_yml, path_img, path_label, suffix_dict):
     if missing_files_labels:
         logging.warning("If you are creating label(s) from scratch, ignore the following message.")
         logging.warning("\nThe following label files are missing: \n{}".format(missing_files_labels))
-        logging.warning("\nPlease check that the used suffix '{}' is correct. "
+        logging.warning("\nPlease check that the used suffix {} is correct. "
                         "If not, you can provide custom suffix using '-suffix-files-' flags.\n".format(sorted(missing_suffixes)))
 
 
