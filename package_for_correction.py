@@ -84,7 +84,7 @@ def get_parser():
     )
     parser.add_argument(
         '-o',
-        metavar="<folder>",
+        metavar="<file>",
         help="Zip file that contains the packaged data, without the extension. Default: data_to_correct",
         default='data_to_correct'
     )
