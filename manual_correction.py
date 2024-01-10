@@ -780,6 +780,8 @@ def main():
                     # Get list of files recursively
                     glob_files = sorted(glob.glob(os.path.join(path_img, '**', filename),
                                             recursive=True))
+                    # Skip filenames containing "notused"
+                    glob_files = [file for file in glob_files if 'notused' not in file]
                     # Get list of already corrected files
                     if task.replace('FILES', 'CORR') in dict_yml.keys():
                         corr_files = dict_yml[task.replace('FILES', 'CORR')]
