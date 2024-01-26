@@ -507,26 +507,37 @@ def update_json(fname_nifti, name_rater, modified):
     :return:
     """
     fname_json = fname_nifti.replace('.gz', '').replace('.nii', '.json')
+
+    # Check if the json file already exists
+    if os.path.exists(fname_json):
+        # Read already existing json file
+        with open(fname_json, "r") as outfile:  # r to read
+            json_dict = json.load(outfile)
+
+        # Special check to fix all of our current json files (Might be deleted later)
+        if 'GeneratedBy' not in json_dict.keys():
+            json_dict = {'GeneratedBy': [json_dict]}
+    else:
+        # Init new json dict
+        json_dict = {'GeneratedBy': []}
+
+    # If the label was modified, add "Note": "Manually corrected" to the JSON sidecar
     if modified:
-        if os.path.exists(fname_json):
-            # Read already existing json file
-            with open(fname_json, "r") as outfile:  # r to read
-                json_dict = json.load(outfile)
-            
-            # Special check to fix all of our current json files (Might be deleted later)
-            if 'GeneratedBy' not in json_dict.keys():
-                json_dict = {'GeneratedBy': [json_dict]}
-        else:
-            # Init new json dict
-            json_dict = {'GeneratedBy': []}
-        
-        # Add new author with time and date
-        json_dict['GeneratedBy'].append({'Author': name_rater, 'Date': time.strftime('%Y-%m-%d %H:%M:%S')})
-        with open(fname_json, 'w') as outfile: # w to overwrite the file
-            json.dump(json_dict, outfile, indent=4)
-            # Add last newline
-            outfile.write("\n")
-        print("JSON sidecar was updated: {}".format(fname_json))
+        json_dict['GeneratedBy'].append({'Author': name_rater,
+                                         'Note': 'Manually corrected',
+                                         'Date': time.strftime('%Y-%m-%d %H:%M:%S')})
+    # If the was not modified, add "Note": ""Visually verified"" to the JSON sidecar
+    else:
+        json_dict['GeneratedBy'].append({'Author': name_rater,
+                                         'Note': 'Visually verified',
+                                         'Date': time.strftime('%Y-%m-%d %H:%M:%S')})
+
+    # Write the data to the JSON file
+    with open(fname_json, 'w') as outfile:  # w to overwrite the file
+        json.dump(json_dict, outfile, indent=4)
+        # Add last newline
+        outfile.write("\n")
+    print("JSON sidecar was updated: {}".format(fname_json))
 
 
 def ask_if_modify(fname_out, fname_label, do_labeling_always=False):
