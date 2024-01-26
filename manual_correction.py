@@ -7,7 +7,7 @@
 #
 # Example:
 #       python manual_correction.py
-#       -path-in ~/<your_dataset>/data_processed
+#       -path-img ~/<your_dataset>/data_processed
 #       -config config.yml
 #
 # For all examples, see: https://github.com/spinalcordtoolbox/manual-correction/wiki
