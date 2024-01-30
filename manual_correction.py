@@ -520,7 +520,8 @@ def update_json(fname_nifti, name_rater, modified):
     # If the json file does not exist, initialize a new one
     else:
         # Init new json dict
-        json_dict = {'GeneratedBy': []}
+        json_dict = {'SpatialReference': 'orig',
+                     'GeneratedBy': []}
 
     # If the label was modified, add "Note": "Manually corrected" to the JSON sidecar
     if modified:
