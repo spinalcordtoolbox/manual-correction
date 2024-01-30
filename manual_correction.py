@@ -508,7 +508,7 @@ def update_json(fname_nifti, name_rater, modified):
     """
     fname_json = fname_nifti.replace('.gz', '').replace('.nii', '.json')
 
-    # Check if the json file already exists
+    # Check if the json file already exists, if so, open it
     if os.path.exists(fname_json):
         # Read already existing json file
         with open(fname_json, "r") as outfile:  # r to read
@@ -517,6 +517,7 @@ def update_json(fname_nifti, name_rater, modified):
         # Special check to fix all of our current json files (Might be deleted later)
         if 'GeneratedBy' not in json_dict.keys():
             json_dict = {'GeneratedBy': [json_dict]}
+    # If the json file does not exist, initialize a new one
     else:
         # Init new json dict
         json_dict = {'GeneratedBy': []}
