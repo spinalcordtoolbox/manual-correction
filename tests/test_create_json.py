@@ -25,8 +25,9 @@ def test_create_json_modified_true(tmp_path):
     update_json(str(nifti_file), "Test Rater", modified=True)
 
     # Check that the JSON file was created and contains the expected metadata
-    expected_metadata = {'GeneratedBy': [{'Author': "Test Rater",
-                                          'Note': 'Manually corrected',
+    expected_metadata = {'SpatialReference': 'orig',
+                         'GeneratedBy': [{'Name': 'Manually corrected',
+                                          'Author': "Test Rater",
                                           'Date': time.strftime('%Y-%m-%d %H:%M:%S')}]}
     json_file = tmp_path / fname_label.replace(".nii.gz", ".json")
     assert json_file.exists()
@@ -49,8 +50,9 @@ def test_create_json_modified_false(tmp_path):
     update_json(str(nifti_file), "Test Rater", modified=False)
 
     # Check that the JSON file was created and contains the expected metadata
-    expected_metadata = {'GeneratedBy': [{'Author': "Test Rater",
-                                          'Note': 'Visually verified',
+    expected_metadata = {'SpatialReference': 'orig',
+                         'GeneratedBy': [{'Name': 'Visually verified',
+                                          'Author': "Test Rater",
                                           'Date': time.strftime('%Y-%m-%d %H:%M:%S')}]}
     json_file = tmp_path / fname_label.replace(".nii.gz", ".json")
     assert json_file.exists()
@@ -71,19 +73,21 @@ def test_update_json_modified_true(tmp_path):
     # Create JSON file with some metadata
     json_file = tmp_path / fname_label.replace(".nii.gz", ".json")
     with open(str(json_file), "w") as f:
-        json.dump({'GeneratedBy': [{'Author': "Test Rater 1",
-                                    'Note': 'Manually corrected',
-                                    'Date': "2023-01-01 00:00:00"}]}, f)
+        json.dump({'SpatialReference': 'orig',
+                        'GeneratedBy': [{'Name': 'Manually corrected',
+                                         'Author': "Test Rater 1",
+                                         'Date': "2023-01-01 00:00:00"}]}, f)
 
     # Call the function with modified=True
     update_json(str(nifti_file), "Test Rater 2", modified=True)
 
     # Check that the JSON file was created and contains the expected metadata
-    expected_metadata = {'GeneratedBy': [{'Author': "Test Rater 1",
-                                          'Note': 'Manually corrected',
+    expected_metadata = {'SpatialReference': 'orig',
+                         'GeneratedBy': [{'Name': 'Manually corrected',
+                                          'Author': "Test Rater 1",
                                           'Date': "2023-01-01 00:00:00"},
-                                         {'Author': "Test Rater 2",
-                                          'Note': 'Manually corrected',
+                                         {'Name': 'Manually corrected',
+                                          'Author': "Test Rater 2",
                                           'Date': time.strftime('%Y-%m-%d %H:%M:%S')}]}
     json_file = tmp_path / fname_label.replace(".nii.gz", ".json")
     assert json_file.exists()
@@ -104,19 +108,21 @@ def test_update_json_modified_false(tmp_path):
     # Create JSON file with some metadata
     json_file = tmp_path / fname_label.replace(".nii.gz", ".json")
     with open(str(json_file), "w") as f:
-        json.dump({'GeneratedBy': [{'Author': "Test Rater 1",
-                                    'Note': 'Manually corrected',
+        json.dump({'SpatialReference': 'orig',
+                   'GeneratedBy': [{'Name': 'Manually corrected',
+                                    'Author': "Test Rater 1",
                                     'Date': "2023-01-01 00:00:00"}]}, f)
 
     # Call the function with modified=True
     update_json(str(nifti_file), "Test Rater 2", modified=False)
 
     # Check that the JSON file was created and contains the expected metadata
-    expected_metadata = {'GeneratedBy': [{'Author': "Test Rater 1",
-                                          'Note': 'Manually corrected',
+    expected_metadata = {'SpatialReference': 'orig',
+                         'GeneratedBy': [{'Name': 'Manually corrected',
+                                          'Author': "Test Rater 1",
                                           'Date': "2023-01-01 00:00:00"},
-                                         {'Author': "Test Rater 2",
-                                          'Note': 'Visually verified',
+                                         {'Name': 'Visually verified',
+                                          'Author': "Test Rater 2",
                                           'Date': time.strftime('%Y-%m-%d %H:%M:%S')}]}
     json_file = tmp_path / fname_label.replace(".nii.gz", ".json")
     assert json_file.exists()
