@@ -525,13 +525,13 @@ def update_json(fname_nifti, name_rater, modified):
 
     # If the label was modified, add "Note": "Manually corrected" to the JSON sidecar
     if modified:
-        json_dict['GeneratedBy'].append({'Author': name_rater,
-                                         'Note': 'Manually corrected',
+        json_dict['GeneratedBy'].append({'Name': 'Manually corrected',
+                                         'Author': name_rater,
                                          'Date': time.strftime('%Y-%m-%d %H:%M:%S')})
     # If the was not modified, add "Note": ""Visually verified"" to the JSON sidecar
     else:
-        json_dict['GeneratedBy'].append({'Author': name_rater,
-                                         'Note': 'Visually verified',
+        json_dict['GeneratedBy'].append({'Name': 'Visually verified',
+                                         'Author': name_rater,
                                          'Date': time.strftime('%Y-%m-%d %H:%M:%S')})
 
     # Write the data to the JSON file
