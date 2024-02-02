@@ -189,8 +189,10 @@ def get_parser():
     )
     parser.add_argument(
         '-fsleyes-dr',
-        help="Display range (dr) in percentages to be used for loading the input file in FSLeyes (default: 0,70). "
-             "\nNote: Use comma to separate values, e.g., 0,70.",
+        help="R|Display range (dr) in percentages to be used for loading the input file in FSLeyes (default: 0,70). "
+             "\nNote: Use comma to separate values, e.g., 0,70."
+             "\nNote: If you need to provide negative values (for example for PSIR/STIR images), use the following "
+             "format: -fsleyes-dr=\"-40,70\"",
         type=str,
         default='0,70'
     )
