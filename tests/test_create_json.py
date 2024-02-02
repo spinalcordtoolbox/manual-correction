@@ -26,7 +26,7 @@ def test_create_json_modified_true(tmp_path):
 
     # Check that the JSON file was created and contains the expected metadata
     expected_metadata = {'SpatialReference': 'orig',
-                         'GeneratedBy': [{'Name': 'Manually corrected',
+                         'GeneratedBy': [{'Name': 'Manual',
                                           'Author': "Test Rater",
                                           'Date': time.strftime('%Y-%m-%d %H:%M:%S')}]}
     json_file = tmp_path / fname_label.replace(".nii.gz", ".json")
@@ -74,7 +74,7 @@ def test_update_json_modified_true(tmp_path):
     json_file = tmp_path / fname_label.replace(".nii.gz", ".json")
     with open(str(json_file), "w") as f:
         json.dump({'SpatialReference': 'orig',
-                        'GeneratedBy': [{'Name': 'Manually corrected',
+                        'GeneratedBy': [{'Name': 'Manual',
                                          'Author': "Test Rater 1",
                                          'Date': "2023-01-01 00:00:00"}]}, f)
 
@@ -83,10 +83,10 @@ def test_update_json_modified_true(tmp_path):
 
     # Check that the JSON file was created and contains the expected metadata
     expected_metadata = {'SpatialReference': 'orig',
-                         'GeneratedBy': [{'Name': 'Manually corrected',
+                         'GeneratedBy': [{'Name': 'Manual',
                                           'Author': "Test Rater 1",
                                           'Date': "2023-01-01 00:00:00"},
-                                         {'Name': 'Manually corrected',
+                                         {'Name': 'Manual',
                                           'Author': "Test Rater 2",
                                           'Date': time.strftime('%Y-%m-%d %H:%M:%S')}]}
     json_file = tmp_path / fname_label.replace(".nii.gz", ".json")
@@ -109,7 +109,7 @@ def test_update_json_modified_false(tmp_path):
     json_file = tmp_path / fname_label.replace(".nii.gz", ".json")
     with open(str(json_file), "w") as f:
         json.dump({'SpatialReference': 'orig',
-                   'GeneratedBy': [{'Name': 'Manually corrected',
+                   'GeneratedBy': [{'Name': 'Manual',
                                     'Author': "Test Rater 1",
                                     'Date': "2023-01-01 00:00:00"}]}, f)
 
@@ -118,7 +118,7 @@ def test_update_json_modified_false(tmp_path):
 
     # Check that the JSON file was created and contains the expected metadata
     expected_metadata = {'SpatialReference': 'orig',
-                         'GeneratedBy': [{'Name': 'Manually corrected',
+                         'GeneratedBy': [{'Name': 'Manual',
                                           'Author': "Test Rater 1",
                                           'Date': "2023-01-01 00:00:00"},
                                          {'Name': 'Visually verified',
