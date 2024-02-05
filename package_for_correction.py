@@ -192,6 +192,8 @@ def main():
             subject, ses, filename, contrast = utils.fetch_subject_and_session(files[0])
             # Get list of files recursively
             files = sorted(glob.glob(os.path.join(utils.get_full_path(args.path_in), '**', filename), recursive=True))
+            # Skip filenames containing "notused"
+            files = [file for file in files if 'notused' not in file]
         for file in files:
             if task in suffix_dict.keys():
                 suffix_label = suffix_dict[task]
