@@ -483,27 +483,11 @@ def get_modification_time(fname):
     return datetime.datetime.fromtimestamp(os.path.getmtime(fname))
 
 
-def check_if_modified(time_one, time_two):
-    """
-    Check if the file was modified by the user. Return True if the file was modified, False otherwise.
-    :param time_one: modification time of the file before viewing
-    :param time_two: modification time of the file after viewing
-    :return:
-    """
-    if time_one != time_two:
-        print("The label file was modified.")
-        return True
-    else:
-        print("The label file was not modified.")
-        return False
-
-
-def update_json(fname_nifti, name_rater, modified):
+def update_json(fname_nifti, name_rater):
     """
     Create/update JSON sidecar with meta information
     :param fname_nifti: str: File name of the nifti image to associate with the JSON sidecar
     :param name_rater: str: Name of the expert rater
-    :param modified: bool: True if the file was modified by the user
     :return:
     """
     fname_json = fname_nifti.replace('.gz', '').replace('.nii', '.json')
@@ -523,16 +507,10 @@ def update_json(fname_nifti, name_rater, modified):
         json_dict = {'SpatialReference': 'orig',
                      'GeneratedBy': []}
 
-    # If the label was modified, add "Name": "Manual" to the JSON sidecar
-    if modified:
-        json_dict['GeneratedBy'].append({'Name': 'Manual',
-                                         'Author': name_rater,
-                                         'Date': time.strftime('%Y-%m-%d %H:%M:%S')})
-    # If the was not modified, add "Name": ""Visually verified"" to the JSON sidecar
-    else:
-        json_dict['GeneratedBy'].append({'Name': 'Visually verified',
-                                         'Author': name_rater,
-                                         'Date': time.strftime('%Y-%m-%d %H:%M:%S')})
+    # If the label was modified or just checked, add "Name": "Manual" to the JSON sidecar
+    json_dict['GeneratedBy'].append({'Name': 'Manual',
+                                     'Author': name_rater,
+                                     'Date': time.strftime('%Y-%m-%d %H:%M:%S')})
 
     # Write the data to the JSON file
     with open(fname_json, 'w') as outfile:  # w to overwrite the file
@@ -895,11 +873,10 @@ def main():
                             if args.add_seg_only:
                                 # We are passing modified=True because we are adding a new segmentation and we want
                                 # to create a JSON file
-                                update_json(fname_out, name_rater, modified=True)
+                                update_json(fname_out, name_rater)
                             # Generate QC report
                             else:
-                                modified = check_if_modified(time_one, time_two)
-                                update_json(fname_out, name_rater, modified)
+                                update_json(fname_out, name_rater)
                                 # Generate QC report
                                 generate_qc(fname, fname_out, task, fname_qc, subject, args.config, args.qc_lesion_plane, suffix_dict)
 
