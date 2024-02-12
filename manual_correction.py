@@ -498,9 +498,12 @@ def update_json(fname_nifti, name_rater):
         with open(fname_json, "r") as outfile:  # r to read
             json_dict = json.load(outfile)
 
-        # Special check to fix all of our current json files (Might be deleted later)
+        # Special checks to fix all of our current json files (Might be deleted later)
         if 'GeneratedBy' not in json_dict.keys():
             json_dict = {'GeneratedBy': [json_dict]}
+        if 'SpatialReference' not in json_dict.keys():
+            json_dict['SpatialReference'] = 'orig'
+    
     # If the json file does not exist, initialize a new one
     else:
         # Init new json dict
