@@ -54,7 +54,7 @@ def get_parser():
         + dedent(
             """
             FILES_SEG:
-            - sub-001_T1w.nii.gz
+            - sub-001_ses-01_T1w.nii.gz         # example how to specify a specific session
             - sub-002_T2w.nii.gz
             FILES_GMSEG:
             - sub-001_T1w.nii.gz
