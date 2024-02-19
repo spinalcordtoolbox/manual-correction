@@ -485,50 +485,44 @@ def get_modification_time(fname):
     return datetime.datetime.fromtimestamp(os.path.getmtime(fname))
 
 
-def check_if_modified(time_one, time_two):
-    """
-    Check if the file was modified by the user. Return True if the file was modified, False otherwise.
-    :param time_one: modification time of the file before viewing
-    :param time_two: modification time of the file after viewing
-    :return:
-    """
-    if time_one != time_two:
-        print("The label file was modified.")
-        return True
-    else:
-        print("The label file was not modified.")
-        return False
-
-
-def update_json(fname_nifti, name_rater, modified):
+def update_json(fname_nifti, name_rater):
     """
     Create/update JSON sidecar with meta information
     :param fname_nifti: str: File name of the nifti image to associate with the JSON sidecar
     :param name_rater: str: Name of the expert rater
-    :param modified: bool: True if the file was modified by the user
     :return:
     """
     fname_json = fname_nifti.replace('.gz', '').replace('.nii', '.json')
-    if modified:
-        if os.path.exists(fname_json):
-            # Read already existing json file
-            with open(fname_json, "r") as outfile:  # r to read
-                json_dict = json.load(outfile)
-            
-            # Special check to fix all of our current json files (Might be deleted later)
-            if 'GeneratedBy' not in json_dict.keys():
-                json_dict = {'GeneratedBy': [json_dict]}
-        else:
-            # Init new json dict
-            json_dict = {'GeneratedBy': []}
-        
-        # Add new author with time and date
-        json_dict['GeneratedBy'].append({'Author': name_rater, 'Date': time.strftime('%Y-%m-%d %H:%M:%S')})
-        with open(fname_json, 'w') as outfile: # w to overwrite the file
-            json.dump(json_dict, outfile, indent=4)
-            # Add last newline
-            outfile.write("\n")
-        print("JSON sidecar was updated: {}".format(fname_json))
+
+    # Check if the json file already exists, if so, open it
+    if os.path.exists(fname_json):
+        # Read already existing json file
+        with open(fname_json, "r") as outfile:  # r to read
+            json_dict = json.load(outfile)
+
+        # Special checks to fix all of our current json files (Might be deleted later)
+        if 'GeneratedBy' not in json_dict.keys():
+            json_dict = {'GeneratedBy': [json_dict]}
+        if 'SpatialReference' not in json_dict.keys():
+            json_dict['SpatialReference'] = 'orig'
+    
+    # If the json file does not exist, initialize a new one
+    else:
+        # Init new json dict
+        json_dict = {'SpatialReference': 'orig',
+                     'GeneratedBy': []}
+
+    # If the label was modified or just checked, add "Name": "Manual" to the JSON sidecar
+    json_dict['GeneratedBy'].append({'Name': 'Manual',
+                                     'Author': name_rater,
+                                     'Date': time.strftime('%Y-%m-%d %H:%M:%S')})
+
+    # Write the data to the JSON file
+    with open(fname_json, 'w') as outfile:  # w to overwrite the file
+        json.dump(json_dict, outfile, indent=4)
+        # Add last newline
+        outfile.write("\n")
+    print("JSON sidecar was updated: {}".format(fname_json))
 
 
 def ask_if_modify(fname_out, fname_label, do_labeling_always=False):
@@ -884,11 +878,10 @@ def main():
                             if args.add_seg_only:
                                 # We are passing modified=True because we are adding a new segmentation and we want
                                 # to create a JSON file
-                                update_json(fname_out, name_rater, modified=True)
+                                update_json(fname_out, name_rater)
                             # Generate QC report
                             else:
-                                modified = check_if_modified(time_one, time_two)
-                                update_json(fname_out, name_rater, modified)
+                                update_json(fname_out, name_rater)
                                 # Generate QC report
                                 generate_qc(fname, fname_out, task, fname_qc, subject, args.config, args.qc_lesion_plane, suffix_dict)
 
