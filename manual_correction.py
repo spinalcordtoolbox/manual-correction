@@ -17,7 +17,6 @@
 
 import argparse
 import tempfile
-import datetime
 import coloredlogs
 import glob
 import json
@@ -476,15 +475,6 @@ def correct_centerline(fname, fname_label, viewer='sct_get_centerline'):
         viewer_not_found(viewer)
 
 
-def get_modification_time(fname):
-    """
-    Get the modification time of a file.
-    :param fname: file name
-    :return:
-    """
-    return datetime.datetime.fromtimestamp(os.path.getmtime(fname))
-
-
 def update_json(fname_nifti, name_rater):
     """
     Create/update JSON sidecar with meta information
@@ -842,32 +832,20 @@ def main():
 
                             if task in ['FILES_SEG', 'FILES_GMSEG']:
                                 if not args.add_seg_only:
-                                    time_one = get_modification_time(fname_out)
                                     correct_segmentation(fname, fname_out, fname_other_contrast, args.viewer, param_fsleyes)
-                                    time_two = get_modification_time(fname_out)
                             elif task == 'FILES_LESION':
-                                time_one = get_modification_time(fname_out)
                                 correct_segmentation(fname, fname_out, fname_other_contrast, args.viewer, param_fsleyes)
-                                time_two = get_modification_time(fname_out)
                             elif task == 'FILES_LABEL':
-                                time_one = get_modification_time(fname_out)
                                 correct_vertebral_labeling(fname, fname_out, args.label_disc_list)
-                                time_two = get_modification_time(fname_out)
                             elif task == 'FILES_COMPRESSION':
-                                time_one = get_modification_time(fname_out)
                                 # Note: be aware of possibility to create compression labels also using
                                 # 'sct_label_utils -create-viewer'
                                 # Context: https://github.com/spinalcordtoolbox/spinalcordtoolbox/issues/3984
                                 correct_segmentation(fname, fname_out, fname_other_contrast, 'fsleyes', param_fsleyes)
-                                time_two = get_modification_time(fname_out)
                             elif task == 'FILES_PMJ':
-                                time_one = get_modification_time(fname_out)
                                 correct_pmj_label(fname, fname_out)
-                                time_two = get_modification_time(fname_out)
                             elif task == 'FILES_CENTERLINE':
-                                time_one = get_modification_time(fname_out)
                                 correct_centerline(fname, fname_out)
-                                time_two = get_modification_time(fname_out)
                             else:
                                 sys.exit('Task not recognized from the YAML file: {}'.format(task))
                             if args.denoise:
