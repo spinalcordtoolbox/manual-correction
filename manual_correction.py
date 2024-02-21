@@ -876,8 +876,8 @@ def main():
 
                             # Add segmentation only (skip generating QC report)
                             if args.add_seg_only:
-                                # We are passing modified=True because we are adding a new segmentation and we want
-                                # to create a JSON file
+                                # We use update_json because we are adding a new segmentation, and we want to create
+                                # a JSON file
                                 update_json(fname_out, name_rater)
                             # Generate QC report
                             else:
