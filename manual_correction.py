@@ -235,6 +235,21 @@ def get_parser():
         action='store_true'
     )
     parser.add_argument(
+        '-json-metadata', metavar="<file>", required=False,
+        help="R|A custom JSON file containing metadata to be added to the JSON sidecar of all corrected labels. "
+             "This flag is useful, for example, when a label was obtained automatically and you want to include this "
+             "information into the JSON sidecar."
+             "Below is an example JSON file:\n"
+             + dedent(
+             """
+             {
+                "Name": "sct_deepseg_sc",
+                "Version": "SCT v6.2",
+                "Date": "yyyy-mm-dd hh:mm:ss"
+             }\n
+             """),
+    )
+    parser.add_argument(
         '-v', '--verbose',
         help="Full verbose (for debugging)",
         action='store_true'
@@ -475,11 +490,28 @@ def correct_centerline(fname, fname_label, viewer='sct_get_centerline'):
         viewer_not_found(viewer)
 
 
-def update_json(fname_nifti, name_rater):
+def load_custom_json(fname):
+    """
+    Load custom JSON file.
+    :param fname: path to the custom JSON file.
+    :return: dictionary with the metadata to be added to the JSON sidecar.
+    """
+    if not os.path.isfile(fname):
+        sys.exit("ERROR: The file {} does not exist.".format(fname))
+    try:
+        with open(fname, "r") as f:
+            json_metadata = json.load(f)
+        return json_metadata
+    except json.JSONDecodeError:
+        sys.exit("ERROR: The file {} is not a valid JSON file.".format(fname))
+
+
+def update_json(fname_nifti, name_rater, json_metadata):
     """
     Create/update JSON sidecar with meta information
     :param fname_nifti: str: File name of the nifti image to associate with the JSON sidecar
     :param name_rater: str: Name of the expert rater
+    :param json_metadata: dict: Dictionary with the metadata to be added to the JSON sidecar
     :return:
     """
     fname_json = fname_nifti.replace('.gz', '').replace('.nii', '.json')
@@ -501,6 +533,10 @@ def update_json(fname_nifti, name_rater):
         # Init new json dict
         json_dict = {'SpatialReference': 'orig',
                      'GeneratedBy': []}
+        # NOTE: we add the custom metadata only when initializing a new JSON file. Because it does not make sense to add
+        # these metadata into already existing labels, which we do not know how they were generated.
+        if json_metadata:
+            json_dict['GeneratedBy'].append(json_metadata)
 
     # If the label was modified or just checked, add "Name": "Manual" to the JSON sidecar
     json_dict['GeneratedBy'].append({'Name': 'Manual',
@@ -726,6 +762,9 @@ def main():
         if not file_list:
             sys.exit("ERROR: No segmentation file found in {}.".format(args.path_label))
 
+    # If a custom JSON file containing metadata was provided, load it, and verify that it is a valid JSON file
+    json_metadata = load_custom_json(args.json_metadata) if args.json_metadata else None
+
     # Get name of expert rater (skip if -qc-only is true)
     if not args.qc_only:
         name_rater = input("Enter your name (Firstname Lastname). It will be used to generate a json sidecar with each "
@@ -856,10 +895,10 @@ def main():
                             if args.add_seg_only:
                                 # We use update_json because we are adding a new segmentation, and we want to create
                                 # a JSON file
-                                update_json(fname_out, name_rater)
+                                update_json(fname_out, name_rater, json_metadata)
                             # Generate QC report
                             else:
-                                update_json(fname_out, name_rater)
+                                update_json(fname_out, name_rater, json_metadata)
                                 # Generate QC report
                                 generate_qc(fname, fname_out, task, fname_qc, subject, args.config, args.qc_lesion_plane, suffix_dict)
 
