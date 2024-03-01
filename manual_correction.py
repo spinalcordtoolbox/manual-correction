@@ -245,7 +245,7 @@ def get_parser():
              {
                 "Name": "sct_deepseg_sc",
                 "Version": "SCT v6.2",
-                "Date": "2024-02-21"
+                "Date": "yyyy-mm-dd hh:mm:ss"
              }\n
              """),
     )

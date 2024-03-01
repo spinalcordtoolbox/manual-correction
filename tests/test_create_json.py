@@ -47,7 +47,7 @@ def test_create_json_custom_metadata(tmp_path):
 
     custom_metada = {'Name': 'sct_deepseg_sc',
                      'Author': "SCT v6.2",
-                     'Date': "2024-02-21"}
+                     'Date': "2024-02-21 00:00:00"}
 
     # Call the function with modified=True
     update_json(str(nifti_file), "Test Rater", json_metadata=custom_metada)
@@ -56,7 +56,7 @@ def test_create_json_custom_metadata(tmp_path):
     expected_metadata = {'SpatialReference': 'orig',
                          'GeneratedBy': [{'Name': 'sct_deepseg_sc',
                                           'Author': "SCT v6.2",
-                                          'Date': "2024-02-21"},
+                                          'Date': "2024-02-21 00:00:00"},
                                          {'Name': 'Manual',
                                           'Author': "Test Rater",
                                           'Date': time.strftime('%Y-%m-%d %H:%M:%S')}]}
