@@ -230,13 +230,13 @@ def check_files_exist(dict_yml, path_img, path_label, suffix_dict):
                         missing_files_labels.append(fname_label)
                         missing_suffixes.add(suffix_dict[task])
     if missing_files:
-        logging.warning("The following files are missing: \n{}".format(missing_files))
+        logging.warning(f"The following files are missing: \n{missing_files}")
         logging.warning("\nPlease check that the files listed in the yaml file and the input path are correct.\n")
     if missing_files_labels:
         logging.warning("If you are creating label(s) from scratch, ignore the following message.")
-        logging.warning("\nThe following label files are missing: \n{}".format(missing_files_labels))
-        logging.warning("\nPlease check that the used suffix {} is correct. "
-                        "If not, you can provide custom suffix using '-suffix-files-' flags.\n".format(sorted(missing_suffixes)))
+        logging.warning(f"\nThe following label files are missing: \n{missing_files_labels}")
+        logging.warning(f"\nPlease check that the used suffix {sorted(missing_suffixes)} is correct. "
+                        "If not, you can provide custom suffix using '-suffix-files-' flags.\n")
 
 
 def check_output_folder(path_bids):
