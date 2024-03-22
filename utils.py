@@ -237,6 +237,8 @@ def check_files_exist(dict_yml, path_img, path_label, suffix_dict):
         logging.warning(f"\nThe following label files are missing: \n{missing_files_labels}")
         logging.warning(f"\nPlease check that the used suffix {sorted(missing_suffixes)} is correct. "
                         "If not, you can provide custom suffix using '-suffix-files-' flags.\n")
+        logging.warning(f"Also check that the path specified by the '-path-label' flag points to the folder with "
+                        f"the labels.\n")
 
 
 def check_output_folder(path_bids):
