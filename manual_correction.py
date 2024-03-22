@@ -145,12 +145,12 @@ def get_parser():
     )
     parser.add_argument(
         '-suffix-files-label',
-        help="FILES-LABEL suffix. Examples: '_labels' (default), '_label-disc'.",
+        help="FILES-LABEL suffix. Examples: '_labels', '_label-disc' (default).",
         default='_label-disc'
     )
     parser.add_argument(
         '-suffix-files-compression',
-        help="FILES-COMPRESSION suffix. Examples: '_compression' (default), '_label-compression'.",
+        help="FILES-COMPRESSION suffix. Examples: '_compression', '_label-compression' (default).",
         default='_label-compression'
     )
     parser.add_argument(
