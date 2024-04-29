@@ -772,7 +772,7 @@ def main():
         print('')
 
     # Build QC report folder name
-    fname_qc = os.path.join(path_img, 'qc_corr_' + time.strftime('%Y%m%d%H%M%S'))
+    fname_qc = os.path.join(path_img, 'qc_corr')
     
     # Set overwrite variable to False
     do_labeling_always = False
