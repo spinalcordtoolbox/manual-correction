@@ -51,9 +51,6 @@ def fetch_subject_and_session(filename_path):
     # . - match any character (except newline)
     # *? - match the previous element as few times as possible (zero or more times)
 
-    # TODO - add support for func (fMRI)
-    contrast = 'dwi' if 'dwi' in filename_path else 'anat'  # Return contrast (dwi or anat)
-
     return subjectID, sessionID, filename, contrast
 
 
