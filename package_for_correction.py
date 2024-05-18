@@ -54,7 +54,7 @@ def get_parser():
         + dedent(
             """
             FILES_SEG:
-            - sub-001_T1w.nii.gz
+            - sub-001_ses-01_T1w.nii.gz         # example how to specify a specific session
             - sub-002_T2w.nii.gz
             FILES_GMSEG:
             - sub-001_T1w.nii.gz
@@ -84,7 +84,7 @@ def get_parser():
     )
     parser.add_argument(
         '-o',
-        metavar="<folder>",
+        metavar="<file>",
         help="Zip file that contains the packaged data, without the extension. Default: data_to_correct",
         default='data_to_correct'
     )
@@ -105,8 +105,8 @@ def get_parser():
     )
     parser.add_argument(
         '-suffix-files-label',
-        help="FILES-LABEL suffix. Examples: '_labels' (default), '_labels-disc'.",
-        default='_labels'
+        help="FILES-LABEL suffix. Examples: '_labels' (default), '_label-disc'.",
+        default='_label-disc'
     )
     parser.add_argument(
         '-suffix-files-compression',
@@ -176,7 +176,10 @@ def main():
     }
 
     # Check for missing files before starting the whole process
-    utils.check_files_exist(dict_yml, utils.get_full_path(args.path_in), suffix_dict)
+    # Note: we pass args.path_in for both path_img and path_label because both both images and their labels (e.g.,
+    # SC seg) are located in the same folder, e.g., ~/<your_dataset>/data_processed
+    utils.check_files_exist(dict_yml=dict_yml, path_img=utils.get_full_path(args.path_in),
+                            path_label=utils.get_full_path(args.path_in), suffix_dict=suffix_dict)
 
     # Create temp folder
     path_tmp = tempfile.mkdtemp()
@@ -189,6 +192,8 @@ def main():
             subject, ses, filename, contrast = utils.fetch_subject_and_session(files[0])
             # Get list of files recursively
             files = sorted(glob.glob(os.path.join(utils.get_full_path(args.path_in), '**', filename), recursive=True))
+            # Skip filenames containing "notused"
+            files = [file for file in files if 'notused' not in file]
         for file in files:
             if task in suffix_dict.keys():
                 suffix_label = suffix_dict[task]

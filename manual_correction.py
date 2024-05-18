@@ -7,7 +7,7 @@
 #
 # Example:
 #       python manual_correction.py
-#       -path-in ~/<your_dataset>/data_processed
+#       -path-img ~/<your_dataset>/data_processed
 #       -config config.yml
 #
 # For all examples, see: https://github.com/spinalcordtoolbox/manual-correction/wiki
@@ -17,18 +17,22 @@
 
 import argparse
 import tempfile
-import datetime
 import coloredlogs
 import glob
 import json
 import os
+import logging
 import sys
 import shutil
 from textwrap import dedent
 import time
 import tqdm
+import subprocess
 
 import utils
+
+import numpy as np
+import nibabel as nib
 
 
 def get_parser():
@@ -91,25 +95,27 @@ def get_parser():
         metavar="<folder>",
         required=True,
         help=
-        "R|Full path to the folder with images (BIDS-compliant).",
+        "R|Full path to the folder with images (BIDS-compliant). "
+        "Examples: '~/<your_dataset>' or 'output/data_processed'."
     )
     parser.add_argument(
         '-path-label',
         metavar="<folder>",
         help=
-        "R|Full path to the folder with labels (BIDS-compliant). Examples: '~/<your_dataset>/derivatives/labels' or "
-        "'~/<your_dataset>/derivatives/labels_softseg' "
-        "If not provided, '-path-img' + 'derivatives/labels' will be used. ",
+        "R|Full path to the folder with labels (BIDS-compliant). "
+        "\nIf labels are located in the same folder as the images, provide the same path as '-path-img', for example "
+        "'output/data_processed'."
+        "\nIf not provided, '-path-img' + 'derivatives/labels' will be used. ",
         default=''
     )
     parser.add_argument(
         '-path-out',
         metavar="<folder>",
         help=
-        "R| Full path to the folder where corrected labels will be stored. "
-        "Example: '~/<your_dataset>/derivatives/labels' "
-        "If not provided, '-path-img' + 'derivatives/labels' will be used. "
-        "Note: If the specified path does not exist, it will be created.",
+        "R|Full path to the folder where corrected labels will be stored. "
+        "Example: '~/<your_dataset>/derivatives/labels'. "
+        "\nIf not provided, '-path-img' + 'derivatives/labels' will be used. "
+        "\nNote: If the specified path does not exist, it will be created.",
         default=''
     )
     parser.add_argument(
@@ -139,12 +145,12 @@ def get_parser():
     )
     parser.add_argument(
         '-suffix-files-label',
-        help="FILES-LABEL suffix. Examples: '_labels' (default), '_labels-disc'.",
-        default='_labels-disc'
+        help="FILES-LABEL suffix. Examples: '_labels', '_label-disc' (default).",
+        default='_label-disc'
     )
     parser.add_argument(
         '-suffix-files-compression',
-        help="FILES-COMPRESSION suffix. Examples: '_compression' (default), '_label-compression'.",
+        help="FILES-COMPRESSION suffix. Examples: '_compression', '_label-compression' (default).",
         default='_label-compression'
     )
     parser.add_argument(
@@ -182,8 +188,10 @@ def get_parser():
     )
     parser.add_argument(
         '-fsleyes-dr',
-        help="Display range (dr) in percentages to be used for loading the input file in FSLeyes (default: 0,70). "
-             "\nNote: Use comma to separate values, e.g., 0,70.",
+        help="R|Display range (dr) in percentages to be used for loading the input file in FSLeyes (default: 0,70). "
+             "\nNote: Use comma to separate values, e.g., 0,70."
+             "\nNote: If you need to provide negative values (for example for PSIR/STIR images), use the following "
+             "format: -fsleyes-dr=\"-40,70\"",
         type=str,
         default='0,70'
     )
@@ -231,6 +239,21 @@ def get_parser():
              "'-path-out' flag. Use this flag to add automatically generated and manually QC-ed segmentations to the "
              "final dataset.",
         action='store_true'
+    )
+    parser.add_argument(
+        '-json-metadata', metavar="<file>", required=False,
+        help="R|A custom JSON file containing metadata to be added to the JSON sidecar of all corrected labels. "
+             "This flag is useful, for example, when a label was obtained automatically and you want to include this "
+             "information into the JSON sidecar."
+             "Below is an example JSON file:\n"
+             + dedent(
+             """
+             {
+                "Name": "sct_deepseg_sc",
+                "Version": "SCT v6.2",
+                "Date": "yyyy-mm-dd hh:mm:ss"
+             }\n
+             """),
     )
     parser.add_argument(
         '-v', '--verbose',
@@ -331,10 +354,15 @@ def correct_segmentation(fname, fname_seg_out, fname_other_contrast, viewer, par
         # Note: command line differs for macOs/Linux and Windows
         if shutil.which('itksnap') is not None:  # Check if command 'itksnap' exists
             # macOS and Linux
-            os.system(f'itksnap -g {fname} -s {fname_seg_out}')
+            subprocess.check_call(['itksnap',
+                                   '-g', fname,
+                                   '-s', fname_seg_out])
+            
         elif shutil.which('ITK-SNAP') is not None:  # Check if command 'ITK-SNAP' exists
             # Windows
-            os.system(f'ITK-SNAP -g {fname} -s {fname_seg_out}')
+            subprocess.check_call(['ITK-SNAP',
+                                   '-g', fname,
+                                   '-s', fname_seg_out])
         else:
             viewer_not_found(viewer)
     # launch FSLeyes
@@ -354,24 +382,38 @@ def correct_segmentation(fname, fname_seg_out, fname_other_contrast, viewer, par
             # -dr, --displayRange   Set display range (min max) for the specified overlay
             # -cm, --cmap           Set colour map for the specified overlay
             if fname_other_contrast:
-                # Open a second orthoview (i.e., open two orthoviews next to each other)
+                # Open a second orthoview (i.e., open two orthoviews next to each other) using a custom Python script
+                # (-r flag)
                 if param_fsleyes.second_orthoview:
                     fname_script = create_fsleyes_script()
-                    os.system(f'fsleyes -S -r {fname_script} {fname} -dr {param_fsleyes.min_dr} {param_fsleyes.max_dr} '
-                              f'{fname_other_contrast} {fname_seg_out} -cm {param_fsleyes.cm}')
+                    subprocess.check_call(['fsleyes',
+                                           '-S',
+                                           '-r', fname_script,
+                                           fname, '-dr', param_fsleyes.min_dr, param_fsleyes.max_dr,
+                                           fname_other_contrast,
+                                           fname_seg_out, '-cm', param_fsleyes.cm])
                 # No second orthoview
                 else:
-                    os.system(f'fsleyes -S {fname} -dr {param_fsleyes.min_dr} {param_fsleyes.max_dr} '
-                              f'{fname_other_contrast} {fname_seg_out} -cm {param_fsleyes.cm}')
+                    subprocess.check_call(['fsleyes',
+                                           '-S',
+                                           fname, '-dr', param_fsleyes.min_dr, param_fsleyes.max_dr,
+                                           fname_other_contrast,
+                                           fname_seg_out, '-cm', param_fsleyes.cm])
             # Open a second orthoview without second contrast
             elif param_fsleyes.second_orthoview:
                 fname_script = create_fsleyes_script()
-                os.system(f'fsleyes -S -r {fname_script} {fname} -dr {param_fsleyes.min_dr} {param_fsleyes.max_dr} '
-                          f'{fname_seg_out} -cm {param_fsleyes.cm}')
+                subprocess.check_call(['fsleyes',
+                                       '-S',
+                                       '-r', fname_script,
+                                       fname, '-dr', param_fsleyes.min_dr, param_fsleyes.max_dr,
+                                       fname_seg_out, '-cm', param_fsleyes.cm])
             # No second contrast, no second orthoview
             else:
-                os.system(f'fsleyes -S {fname} -dr {param_fsleyes.min_dr} {param_fsleyes.max_dr} {fname_seg_out} -cm '
-                          f'{param_fsleyes.cm}')
+                subprocess.check_call(['fsleyes',
+                                       '-S',
+                                       fname,
+                                       '-dr', param_fsleyes.min_dr, param_fsleyes.max_dr,
+                                       fname_seg_out, '-cm', param_fsleyes.cm])
         else:
             viewer_not_found(viewer)
     # launch 3D Slicer
@@ -404,9 +446,18 @@ def correct_vertebral_labeling(fname, fname_label, label_list, viewer='sct_label
     if shutil.which(viewer) is not None:  # Check if command 'sct_label_utils' exists
         message = "Click at the posterior tip of the disc(s). Then click 'Save and Quit'."
         if os.path.exists(fname_label):
-            os.system(f'sct_label_utils -i {fname} -create-viewer {label_list} -o {fname_label} -ilabel {fname_label} -msg "{message}"')
+            subprocess.check_call(['sct_label_utils', 
+                                   '-i', fname, 
+                                   '-create-viewer', label_list, 
+                                   '-o', fname_label, 
+                                   '-ilabel', fname_label, 
+                                   '-msg', message])
         else:
-            os.system(f'sct_label_utils -i {fname} -create-viewer {label_list} -o {fname_label} -msg "{message}"')
+            subprocess.check_call(['sct_label_utils',
+                                   '-i', fname,
+                                   '-create-viewer', label_list,
+                                   '-o', fname_label,
+                                   '-msg', message])
     else:
         viewer_not_found(viewer)
 
@@ -420,7 +471,11 @@ def correct_pmj_label(fname, fname_label, viewer='sct_label_utils'):
     """
     if shutil.which(viewer) is not None:  # Check if command 'sct_label_utils' exists
         message = "Click at the posterior tip of the pontomedullary junction (PMJ). Then click 'Save and Quit'."
-        os.system(f'sct_label_utils -i {fname} -create-viewer 50 -o {fname_label} -msg "{message}"')
+        subprocess.check_call(['sct_label_utils',
+                               '-i', fname,
+                               '-create-viewer', '50',
+                               '-o', fname_label,
+                               '-msg', message])
     else:
         viewer_not_found(viewer)
 
@@ -431,64 +486,75 @@ def correct_centerline(fname, fname_label, viewer='sct_get_centerline'):
     """
     if shutil.which(viewer) is not None:  # Check if command 'sct_get_centerline' exists
         print("Select a few points to extract the centerline. Then click 'Save and Quit'.")
-        os.system(f'sct_get_centerline -i {fname} -method viewer -gap 30 -qc qc-manual -o {fname_label}')
+        subprocess.check_call(['sct_get_centerline',
+                               '-i', fname,
+                               '-method viewer' 
+                               '-gap', '30',
+                               '-qc qc-manual',
+                               '-o', fname_label])
     else:
         viewer_not_found(viewer)
 
 
-def get_modification_time(fname):
+def load_custom_json(fname):
     """
-    Get the modification time of a file.
-    :param fname: file name
-    :return:
+    Load custom JSON file.
+    :param fname: path to the custom JSON file.
+    :return: dictionary with the metadata to be added to the JSON sidecar.
     """
-    return datetime.datetime.fromtimestamp(os.path.getmtime(fname))
+    if not os.path.isfile(fname):
+        sys.exit("ERROR: The file {} does not exist.".format(fname))
+    try:
+        with open(fname, "r") as f:
+            json_metadata = json.load(f)
+        return json_metadata
+    except json.JSONDecodeError:
+        sys.exit("ERROR: The file {} is not a valid JSON file.".format(fname))
 
 
-def check_if_modified(time_one, time_two):
-    """
-    Check if the file was modified by the user. Return True if the file was modified, False otherwise.
-    :param time_one: modification time of the file before viewing
-    :param time_two: modification time of the file after viewing
-    :return:
-    """
-    if time_one != time_two:
-        print("The label file was modified.")
-        return True
-    else:
-        print("The label file was not modified.")
-        return False
-
-
-def update_json(fname_nifti, name_rater, modified):
+def update_json(fname_nifti, name_rater, json_metadata):
     """
     Create/update JSON sidecar with meta information
     :param fname_nifti: str: File name of the nifti image to associate with the JSON sidecar
     :param name_rater: str: Name of the expert rater
-    :param modified: bool: True if the file was modified by the user
+    :param json_metadata: dict: Dictionary with the metadata to be added to the JSON sidecar
     :return:
     """
     fname_json = fname_nifti.replace('.gz', '').replace('.nii', '.json')
-    if modified:
-        if os.path.exists(fname_json):
-            # Read already existing json file
-            with open(fname_json, "r") as outfile:  # r to read
-                json_dict = json.load(outfile)
-            
-            # Special check to fix all of our current json files (Might be deleted later)
-            if 'GeneratedBy' not in json_dict.keys():
-                json_dict = {'GeneratedBy': [json_dict]}
-        else:
-            # Init new json dict
-            json_dict = {'GeneratedBy': []}
-        
-        # Add new author with time and date
-        json_dict['GeneratedBy'].append({'Author': name_rater, 'Date': time.strftime('%Y-%m-%d %H:%M:%S')})
-        with open(fname_json, 'w') as outfile: # w to overwrite the file
-            json.dump(json_dict, outfile, indent=4)
-            # Add last newline
-            outfile.write("\n")
-        print("JSON sidecar was updated: {}".format(fname_json))
+
+    # Check if the json file already exists, if so, open it
+    if os.path.exists(fname_json):
+        # Read already existing json file
+        with open(fname_json, "r") as outfile:  # r to read
+            json_dict = json.load(outfile)
+
+        # Special checks to fix all of our current json files (Might be deleted later)
+        if 'GeneratedBy' not in json_dict.keys():
+            json_dict = {'GeneratedBy': [json_dict]}
+        if 'SpatialReference' not in json_dict.keys():
+            json_dict['SpatialReference'] = 'orig'
+    
+    # If the json file does not exist, initialize a new one
+    else:
+        # Init new json dict
+        json_dict = {'SpatialReference': 'orig',
+                     'GeneratedBy': []}
+        # NOTE: we add the custom metadata only when initializing a new JSON file. Because it does not make sense to add
+        # these metadata into already existing labels, which we do not know how they were generated.
+        if json_metadata:
+            json_dict['GeneratedBy'].append(json_metadata)
+
+    # If the label was modified or just checked, add "Name": "Manual" to the JSON sidecar
+    json_dict['GeneratedBy'].append({'Name': 'Manual',
+                                     'Author': name_rater,
+                                     'Date': time.strftime('%Y-%m-%d %H:%M:%S')})
+
+    # Write the data to the JSON file
+    with open(fname_json, 'w') as outfile:  # w to overwrite the file
+        json.dump(json_dict, outfile, indent=4)
+        # Add last newline
+        outfile.write("\n")
+    print("JSON sidecar was updated: {}".format(fname_json))
 
 
 def ask_if_modify(fname_out, fname_label, do_labeling_always=False):
@@ -552,28 +618,60 @@ def generate_qc(fname, fname_label, task, fname_qc, subject, config_file, qc_les
     :param suffix_dict: dictionary of suffixes
     :return:
     """
+    # Not all sct_qc -p functions support empty label files. Check if the label file is empty and skip QC if so.
+    # Context: https://github.com/spinalcordtoolbox/manual-correction/issues/60#issuecomment-1720280352
+    skip_qc_list = ['FILES_LABEL', 'FILES_COMPRESSION', 'FILES_PMJ', 'FILES_CENTERLINE']
+    if task in skip_qc_list:
+        img_label = nib.load(fname_label)
+        data_label = img_label.get_fdata()
+        if np.sum(data_label) == 0:
+            logging.warning(f"File {fname_label} is empty. Skipping QC.\n")
+            return
+
     # Lesion QC needs also SC segmentation for cropping
     if task == 'FILES_LESION':
         # Construct SC segmentation file name
-        fname_seg = fname.replace(suffix_dict['FILES_LESION'], suffix_dict['FILES_SEG'])
+        fname_seg = fname_label.replace(suffix_dict['FILES_LESION'], suffix_dict['FILES_SEG'])
         # Check if SC segmentation file exists
         if os.path.isfile(fname_seg):
             print("SC segmentation file found: {}. Creating QC.".format(fname_seg))
             # Lesion QC supports only binary segmentation --> binarize the lesion
             fname_label_bin = utils.add_suffix(fname_label, '_bin')
-            os.system(f'sct_maths -i {fname_label} -bin 0 -o {fname_label_bin}')
+            subprocess.check_call(['sct_maths',
+                                   '-i', fname_label,
+                                   '-bin', '0',
+                                   '-o', fname_label_bin])
             # fname - background image; fname_seg - SC segmentation - used for cropping; fname_label - lesion
             # segmentation
-            os.system(f'sct_qc -i {fname} -s {fname_seg} -d {fname_label_bin} -p {get_function_for_qc(task)} '
-                      f'-plane {qc_lesion_plane} -qc {fname_qc} -qc-subject {subject}')
+            subprocess.check_call(['sct_qc',
+                                   '-i', fname,
+                                   '-s', fname_seg,
+                                   '-d', fname_label_bin,
+                                   '-p', get_function_for_qc(task),
+                                   '-plane', qc_lesion_plane,
+                                   '-qc', fname_qc,
+                                   '-qc-subject', subject])
             # remove binarized lesion segmentation
             os.remove(fname_label_bin)
+            # Archive QC folder
+            archive_qc(fname_qc, config_file)
         else:
             print("WARNING: SC segmentation file not found: {}. QC report will not be generated.".format(fname_seg))
     else:
-        os.system(f'sct_qc -i {fname} -s {fname_label} -p {get_function_for_qc(task)} -qc {fname_qc} '
-                  f'-qc-subject {subject}')
-    # Archive QC folder
+        subprocess.check_call(['sct_qc',
+                               '-i', fname,
+                               '-s', fname_label,
+                               '-p', get_function_for_qc(task),
+                               '-qc', fname_qc,
+                               '-qc-subject', subject])
+        # Archive QC folder
+        archive_qc(fname_qc, config_file)
+
+
+def archive_qc(fname_qc, config_file):
+    """
+    Archive QC folder
+    """
     shutil.copy(utils.get_full_path(config_file), fname_qc)
     shutil.make_archive(fname_qc, 'zip', fname_qc)
     print("Archive created:\n--> {}".format(fname_qc + '.zip'))
@@ -588,7 +686,10 @@ def denoise_image(fname):
     """
     print("Denoising {}".format(fname))
     fname_denoised = utils.add_suffix(fname, '_denoised-p1b2')
-    os.system('sct_maths -i {} -denoise p=1,b=2 -o {}'.format(fname, fname_denoised))
+    subprocess.check_call(['sct_maths',
+                           '-i', fname,
+                           '-denoise', 'p=1,b=2',
+                           '-o', fname_denoised])
     return fname_denoised
 
 
@@ -625,7 +726,7 @@ def main():
         'FILES_SEG': args.suffix_files_seg,                 # e.g., _seg or _label-SC_mask
         'FILES_GMSEG': args.suffix_files_gmseg,             # e.g., _gmseg or _label-GM_mask
         'FILES_LESION': args.suffix_files_lesion,           # e.g., _lesion
-        'FILES_LABEL': args.suffix_files_label,             # e.g., _labels or _labels-disc
+        'FILES_LABEL': args.suffix_files_label,             # e.g., _labels or _label-disc
         'FILES_COMPRESSION': args.suffix_files_compression,  # e.g., _label-compression
         'FILES_PMJ': args.suffix_files_pmj,                 # e.g., _pmj or _label-pmj
         'FILES_CENTERLINE': args.suffix_files_centerline    # e.g., _centerline or _label-centerline
@@ -633,15 +734,23 @@ def main():
     path_img = utils.get_full_path(args.path_img)
     
     if args.path_label == '':
-        path_label = os.path.join(args.path_img, "derivatives/labels")
+        path_label = os.path.join(path_img, "derivatives/labels")
     else:
         path_label = utils.get_full_path(args.path_label)
     
     if args.path_out == '':
-        path_out = os.path.join(args.path_img, "derivatives/labels")
+        path_out = os.path.join(path_img, "derivatives/labels")
     else:
         path_out = utils.get_full_path(args.path_out)
-    
+
+    # Print parsed arguments
+    logging.info("-" * 100)
+    logging.info("Parsing of arguments:")
+    logging.info("  Input folder ('-path-img') .............. " + path_img)
+    logging.info("  Label folder ('-path-label') .............. " + path_label)
+    logging.info("  Output folder ('-path-out') ............. " + path_out)
+    logging.info("-" * 100)
+
     # check that output folder exists or create it
     utils.check_output_folder(path_out)
 
@@ -661,6 +770,9 @@ def main():
         if not file_list:
             sys.exit("ERROR: No segmentation file found in {}.".format(args.path_label))
 
+    # If a custom JSON file containing metadata was provided, load it, and verify that it is a valid JSON file
+    json_metadata = load_custom_json(args.json_metadata) if args.json_metadata else None
+
     # Get name of expert rater (skip if -qc-only is true)
     if not args.qc_only:
         name_rater = input("Enter your name (Firstname Lastname). It will be used to generate a json sidecar with each "
@@ -668,7 +780,7 @@ def main():
         print('')
 
     # Build QC report folder name
-    fname_qc = os.path.join(path_img, 'qc_corr_' + time.strftime('%Y%m%d%H%M%S'))
+    fname_qc = os.path.join(path_img, 'qc_corr')
     
     # Set overwrite variable to False
     do_labeling_always = False
@@ -793,17 +905,139 @@ def main():
                             # to create a JSON file
                             update_json(fname_out, name_rater, modified=True)
                         # Generate QC report
+        if task.startswith('FILES'):
+            # Check if task is in suffix_dict.keys(), if not, skip it
+            # Note that this check is done after the task.startswith('FILES') check because the manual-correction
+            # script should ignore keys that start with CORR (CORR keys are used to track the manual correction
+            # progress)
+            if task not in suffix_dict.keys():
+                logging.warning("WARNING: {} is not a valid task. Skipping it.".format(task))
+                continue
+            # Get the list of segmentation files to add to derivatives, excluding the manually corrected files in -config.
+            # TODO: probably extend also for other tasks (such as FILES_GMSEG)
+            if args.add_seg_only and task == 'FILES_SEG':
+                # Remove the files in the -config list
+                for file in files:
+                    # Remove the file suffix (e.g., '_RPI_r') to match the list of files in -path-img
+                    file = utils.remove_suffix(file, args.suffix_files_in)
+                    if file in file_list:
+                        file_list.remove(file)
+                files = file_list  # Rename to use those files instead of the ones to exclude
+            if len(files) > 0:
+                # Handle regex (i.e., iterate over all subjects)
+                if '*' in files[0] and len(files) == 1:
+                    subject, ses, filename, contrast = utils.fetch_subject_and_session(files[0])
+                    # Get list of files recursively
+                    glob_files = sorted(glob.glob(os.path.join(path_img, '**', filename),
+                                            recursive=True))
+                    # Skip filenames containing "notused"
+                    glob_files = [file for file in glob_files if 'notused' not in file]
+                    # Get list of already corrected files
+                    if task.replace('FILES', 'CORR') in dict_yml.keys():
+                        corr_files = dict_yml[task.replace('FILES', 'CORR')]
+                    else:
+                        corr_files = []
+                    #  Remove labels under derivatives and already corrected files
+                    files = []
+                    for file in glob_files:
+                        subject, ses, filename, contrast = utils.fetch_subject_and_session(file)
+                        if ('derivatives' not in file) and (filename not in corr_files):
+                            files.append(file)
+                # Loop across files
+                for file in tqdm.tqdm(files, desc="{}".format(task), unit="file"):
+                    # Print empty line to not overlay with tqdm progress bar
+                    time.sleep(0.1)
+                    print("")
+                    # build file names
+                    subject, ses, filename, contrast = utils.fetch_subject_and_session(file)
+                    # Construct absolute path to the input file
+                    # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w.nii.gz'
+                    fname = os.path.join(path_img, subject, ses, contrast, filename)
+                    # Construct absolute path to the other contrast file
+                    if args.load_other_contrast:
+                        # Do not include session in the filename
+                        if ses == '':
+                            other_contrast_filename = subject + '_' + args.load_other_contrast + '.nii.gz'
+                        # Include session in the filename
                         else:
-                            modified = check_if_modified(time_one, time_two)
-                            update_json(fname_out, name_rater, modified)
+                            other_contrast_filename = subject + '_' + ses + '_' + args.load_other_contrast + '.nii.gz'
+                        fname_other_contrast = os.path.join(path_img, subject, ses, contrast, other_contrast_filename)
+                    else:
+                        fname_other_contrast = None
+                    # Construct absolute path to the input label (segmentation, labeling etc.) file
+                    # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w_seg.nii.gz'
+                    fname_label = utils.add_suffix(os.path.join(path_label, subject, ses, contrast, filename), suffix_dict[task])
+                    
+                    # Construct absolute path to the output file (i.e., path where manually corrected file will be saved)
+                    # For example: '/Users/user/dataset/derivatives/labels/sub-001/anat/sub-001_T2w_seg.nii.gz'
+                    # The information regarding the modified data will be stored within the sidecar .json file
+                    fname_out = utils.add_suffix(os.path.join(path_out, subject, ses, contrast, filename), suffix_dict[task])
+                    
+                    # Create subject folder in output if they do not exist
+                    os.makedirs(os.path.join(path_out, subject, ses, contrast), exist_ok=True)
+                    if not args.qc_only:
+                        # Check if the output file already exists. If so, asks user if they want to modify it.
+                        do_labeling, copy, create_empty_mask, do_labeling_always = \
+                            ask_if_modify(fname_out=fname_out,
+                                        fname_label=fname_label,
+                                        do_labeling_always=do_labeling_always)
+                        # Perform labeling (i.e., segmentation correction, labeling correction etc.) for the specific task
+                        if do_labeling:
+                            if args.denoise:
+                                # Denoise the input file
+                                fname = denoise_image(fname)
+                            # Copy file to derivatives folder
+                            if copy:
+                                shutil.copyfile(fname_label, fname_out)
+                                print(f'Copying: {fname_label} to {fname_out}')
+                            # Create empty mask in derivatives folder
+                            elif create_empty_mask:
+                                utils.create_empty_mask(fname, fname_out)
+
+                            if task in ['FILES_SEG', 'FILES_GMSEG']:
+                                if not args.add_seg_only:
+                                    correct_segmentation(fname, fname_out, fname_other_contrast, args.viewer, param_fsleyes)
+                            elif task == 'FILES_LESION':
+                                correct_segmentation(fname, fname_out, fname_other_contrast, args.viewer, param_fsleyes)
+                            elif task == 'FILES_LABEL':
+                                correct_vertebral_labeling(fname, fname_out, args.label_disc_list)
+                            elif task == 'FILES_COMPRESSION':
+                                # Note: be aware of possibility to create compression labels also using
+                                # 'sct_label_utils -create-viewer'
+                                # Context: https://github.com/spinalcordtoolbox/spinalcordtoolbox/issues/3984
+                                correct_segmentation(fname, fname_out, fname_other_contrast, 'fsleyes', param_fsleyes)
+                            elif task == 'FILES_PMJ':
+                                correct_pmj_label(fname, fname_out)
+                            elif task == 'FILES_CENTERLINE':
+                                correct_centerline(fname, fname_out)
+                            else:
+                                sys.exit('Task not recognized from the YAML file: {}'.format(task))
+                            if args.denoise:
+                                # Remove the denoised file (we do not need it anymore)
+                                remove_denoised_file(fname)
+
+                            # Add segmentation only (skip generating QC report)
+                            if args.add_seg_only:
+                                # We use update_json because we are adding a new segmentation, and we want to create
+                                # a JSON file
+                                update_json(fname_out, name_rater, json_metadata)
                             # Generate QC report
                             #generate_qc(fname, fname_out, task, fname_qc, subject, args.config, args.qc_lesion_plane, suffix_dict)
+                            else:
+                                update_json(fname_out, name_rater, json_metadata)
+                                # Generate QC report
+                                generate_qc(fname, fname_out, task, fname_qc, subject, args.config, args.qc_lesion_plane, suffix_dict)
 
-                # Generate QC report only
-                if args.qc_only:
-                    generate_qc(fname, fname_out, task, fname_qc, subject, args.config, args.qc_lesion_plane, suffix_dict)
-        else:
-            sys.exit("ERROR: The list of files is empty.")
+                    # Generate QC report only
+                    if args.qc_only:
+                        generate_qc(fname, fname_out, task, fname_qc, subject, args.config, args.qc_lesion_plane, suffix_dict)
+                    
+                    # Keep track of corrected files in YAML.
+                    dict_yml = utils.track_corrections(files_dict=dict_yml.copy(), config_path=args.config, file_path=fname, task=task)
+
+            else:
+                sys.exit("ERROR: The list of files to correct is empty. \nMaybe, you have already corrected all the "
+                         "files? Please, check the YAML file: {}".format(args.config))
 
 
 if __name__ == '__main__':

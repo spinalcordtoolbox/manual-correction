@@ -8,7 +8,7 @@
 
 import os
 from utils import fetch_subject_and_session, add_suffix, remove_suffix, splitext, curate_dict_yml, get_full_path, \
-    check_files_exist
+    check_files_exist, fetch_yaml_config, track_corrections
 
 
 def test_fetch_subject_and_session():
@@ -36,7 +36,31 @@ def test_fetch_subject_and_session():
     assert filename == "sub-003_T1w.nii.gz"
     assert contrast == "anat"
 
-    # Test 4: Test for empty strings when input filename path is invalid
+    # Test 4: Test if only filename (without session) is provided
+    filename_path = "sub-003_T1w.nii.gz"
+    subjectID, sessionID, filename, contrast = fetch_subject_and_session(filename_path)
+    assert subjectID == "sub-003"
+    assert sessionID == ""
+    assert filename == "sub-003_T1w.nii.gz"
+    assert contrast == "anat"
+
+    # Test 5: Test if only filename (with session) is provided
+    filename_path = "sub-003_ses-01_T1w.nii.gz"
+    subjectID, sessionID, filename, contrast = fetch_subject_and_session(filename_path)
+    assert subjectID == "sub-003"
+    assert sessionID == "ses-01"
+    assert filename == "sub-003_ses-01_T1w.nii.gz"
+    assert contrast == "anat"
+
+    # Test 6: Test if only filename (with session with >2 characters) is provided
+    filename_path = "sub-003_ses-001_T1w.nii.gz"
+    subjectID, sessionID, filename, contrast = fetch_subject_and_session(filename_path)
+    assert subjectID == "sub-003"
+    assert sessionID == "ses-001"
+    assert filename == "sub-003_ses-001_T1w.nii.gz"
+    assert contrast == "anat"
+
+    # Test 7: Test for empty strings when input filename path is invalid
     filename_path = "invalid_filename_path.nii.gz"
     subjectID, sessionID, filename, contrast = fetch_subject_and_session(filename_path)
     assert subjectID == ""
@@ -91,17 +115,21 @@ def test_check_files_exist_all_files_exist(tmp_path, caplog):
     os.makedirs(path_data / "sub-002" / "ses-01" / "anat", exist_ok=True)
     open(path_data / "sub-001" / "ses-01" / "anat" / "sub-001_ses-01_T1w.nii.gz", "w").close()
     open(path_data / "sub-001" / "ses-01" / "anat" / "sub-001_ses-01_T1w_seg.nii.gz", "w").close()
+    open(path_data / "sub-001" / "ses-01" / "anat" / "sub-001_ses-01_T1w_labels-disc.nii.gz", "w").close()
     open(path_data / "sub-002" / "ses-01" / "anat" / "sub-002_ses-01_T2star.nii.gz", "w").close()
     open(path_data / "sub-002" / "ses-01" / "anat" / "sub-002_ses-01_T2star_gmseg.nii.gz", "w").close()
+    open(path_data / "sub-002" / "ses-01" / "anat" / "sub-002_ses-01_T1w_labels-disc.nii.gz", "w").close()
 
-    # set up the input data
+    # create a YML config file
     dict_files = {
         "FILES_SEG": ["sub-001/ses-01/anat/sub-001_ses-01_T1w.nii.gz"],
         "FILES_GMSEG": ["sub-002/ses-01/anat/sub-002_ses-01_T2star.nii.gz"],
+        "FILES_LABEL": ["sub-*_T1w.nii.gz"],
     }
     suffix_dict = {
         'FILES_SEG': '_seg',
         'FILES_GMSEG': '_gmseg',
+        'FILES_LABEL': '_labels-disc',
     }
 
     # run the function
@@ -139,4 +167,34 @@ def test_check_files_exist_missing_file(tmp_path, caplog):
     assert any('Please check that the files listed in the yaml file and the input path are correct' in rec.message for rec in caplog.records)
     assert any('BIDS/sub-001/ses-01/anat/sub-001_ses-01_T1w_seg.nii.gz' in rec.message for rec in caplog.records)
     assert any('BIDS/sub-002/ses-01/anat/sub-001_ses-01_T2star_gmseg.nii.gz' in rec.message for rec in caplog.records)
-    assert any("Please check that the used suffix '_gmseg' is correct" in rec.message for rec in caplog.records)
+    assert any("Please check that the used suffix ['_gmseg', '_seg'] is correct" in rec.message for rec in caplog.records)
+
+
+def test_track_corrections(tmp_path):
+    """
+    Test that the track_corrections function correctly updates the config file
+    """
+    # Dictionary with the original config file
+    dict_files = {
+        "FILES_LABEL": ["sub-amuALT_T1w.nii.gz", "sub-amuAL_T1w.nii.gz"],
+    }
+    # Path where modified config file will be saved
+    path_data = tmp_path / "BIDS"
+    os.makedirs(path_data, exist_ok=True)
+    config_path = tmp_path / "BIDS" / "config.yml"
+    # Path to the last corrected image
+    file_path = "sub-amuAL/anat/sub-amuAL_T1w.nii.gz"
+    # Specify the task
+    task = "FILES_LABEL"
+
+    # Call the function --> the function will modify the config file
+    track_corrections(dict_files, config_path, file_path, task)
+
+    # Read the updated YAML file
+    dict_files_updated = fetch_yaml_config(config_path)
+
+    # Create a test dictionary
+    dict_files_test = {'FILES_LABEL': ['sub-amuALT_T1w.nii.gz'], 'CORR_LABEL': ['sub-amuAL_T1w.nii.gz']}
+
+    # Assert that the config file was updated correctly
+    assert dict_files_updated == dict_files_test
