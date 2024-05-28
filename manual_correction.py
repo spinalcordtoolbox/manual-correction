@@ -590,8 +590,6 @@ def ask_if_modify(fname_out, fname_label, do_labeling_always=False):
         create_empty_mask = False
 
     # If the output file does not exist, copy it from label folder
-        print(os.path.isfile(fname_label))
-        print('fname_label', fname_label)
     elif not os.path.isfile(fname_out) and os.path.isfile(fname_label):
         do_labeling = True
         copy = True
@@ -1022,7 +1020,7 @@ def main():
                                 # a JSON file
                                 update_json(fname_out, name_rater, json_metadata)
                             # Generate QC report
-                            #generate_qc(fname, fname_out, task, fname_qc, subject, args.config, args.qc_lesion_plane, suffix_dict)
+                                generate_qc(fname, fname_out, task, fname_qc, subject, args.config, args.qc_lesion_plane, suffix_dict)
                             else:
                                 update_json(fname_out, name_rater, json_metadata)
                                 # Generate QC report
