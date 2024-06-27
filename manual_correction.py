@@ -60,6 +60,7 @@ def get_parser():
         "'FILES_LABEL' lists images associated with vertebral labeling, "
         "'FILES_COMPRESSION' lists images associated with compression labeling, "
         "'FILES_PMJ' lists images associated with pontomedullary junction labeling, "
+        "'FILES_ROOTLETS' lists images associated with rootlets segmentation, "
         "and 'FILES_CENTERLINE' lists images associated with centerline. "
         "You can validate your YAML file at this website: http://www.yamllint.com/."
         "\nNote: if you want to iterate over all subjects, you can use the wildcard '*' (Examples: sub-*_T1w.nii.gz, "
@@ -83,6 +84,9 @@ def get_parser():
             - sub-001_T1w.nii.gz
             - sub-002_T1w.nii.gz
             FILES_PMJ:
+            - sub-001_T1w.nii.gz
+            - sub-002_T1w.nii.gz
+            FILES_ROOTLETS:
             - sub-001_T1w.nii.gz
             - sub-002_T1w.nii.gz
             FILES_CENTERLINE:
@@ -162,6 +166,11 @@ def get_parser():
         '-suffix-files-centerline',
         help="FILES-CENTERLINE suffix. Examples: '_centerline' (default), '_label-centerline'.",
         default='_centerline'
+    )
+    parser.add_argument(
+        '-suffix-files-rootlets',
+        help="FILES-ROOTLETS suffix. Examples: '_label-rootlets_dseg' (default), '_rootlets'.",
+        default='_label-rootlets_dseg'
     )
     parser.add_argument(
         '-label-disc-list',
@@ -649,6 +658,11 @@ def generate_qc(fname, fname_label, task, fname_qc, subject, config_file, qc_les
             archive_qc(fname_qc, config_file)
         else:
             print("WARNING: SC segmentation file not found: {}. QC report will not be generated.".format(fname_seg))
+
+    # for rootlets segmentation do not make QC
+    elif task == 'FILES_ROOTLETS':
+        pass
+
     else:
         subprocess.check_call(['sct_qc',
                                '-i', fname,
@@ -721,6 +735,7 @@ def main():
         'FILES_LABEL': args.suffix_files_label,             # e.g., _labels or _label-disc
         'FILES_COMPRESSION': args.suffix_files_compression,  # e.g., _label-compression
         'FILES_PMJ': args.suffix_files_pmj,                 # e.g., _pmj or _label-pmj
+        'FILES_ROOTLETS': args.suffix_files_rootlets,       # e.g., _rootlets or _label-rootlets
         'FILES_CENTERLINE': args.suffix_files_centerline    # e.g., _centerline or _label-centerline
     }
     path_img = utils.get_full_path(args.path_img)
@@ -869,7 +884,7 @@ def main():
                             elif create_empty_mask:
                                 utils.create_empty_mask(fname, fname_out)
 
-                            if task in ['FILES_SEG', 'FILES_GMSEG']:
+                            if task in ['FILES_SEG', 'FILES_GMSEG', 'FILES_ROOTLETS']:
                                 if not args.add_seg_only:
                                     correct_segmentation(fname, fname_out, fname_other_contrast, args.viewer, param_fsleyes)
                             elif task == 'FILES_LESION':
