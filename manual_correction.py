@@ -259,6 +259,21 @@ def get_parser():
              """),
     )
     parser.add_argument(
+        '-change-orient',
+        type=str,
+        help=
+        " R| Orientation to show the image in the viewer. If provided, the image and label will be reoriented before "
+        "opening the viewer. After manual correction, the image and label will be reoriented back to the original "
+        "orientation. "
+        "Possible options: LAS,LAI,LPS,LPI,LSA,LSP,LIA,LIP,RAS,RAI,RPS,RPI,RSA,RSP,RIA,RIP,ALS,ALI,ARS,ARI,ASL,ASR,"
+        "AIL,AIR,PLS,PLI,PRS,PRI,PSL,PSR,PIL,PIR,SLA,SLP,SRA,SRP,SAL,SAR,SPL,SPR,ILA,ILP,IRA,IRP,IAL,IAR,IPL,IPR}",
+        choices=['LAS', 'LAI', 'LPS', 'LPI', 'LSA', 'LSP', 'LIA', 'LIP', 'RAS', 'RAI', 'RPS', 'RPI', 'RSA', 'RSP',
+                 'RIA', 'RIP', 'ALS', 'ALI', 'ARS', 'ARI', 'ASL', 'ASR', 'AIL', 'AIR', 'PLS', 'PLI', 'PRS', 'PRI',
+                 'PSL', 'PSR', 'PIL', 'PIR', 'SLA', 'SLP', 'SRA', 'SRP', 'SAL', 'SAR', 'SPL', 'SPR', 'ILA', 'ILP',
+                 'IRA', 'IRP', 'IAL', 'IAR', 'IPL', 'IPR'],
+        default=''
+    )
+    parser.add_argument(
         '-v', '--verbose',
         help="Full verbose (for debugging)",
         action='store_true'
@@ -862,6 +877,16 @@ def main():
                     # For example: '/Users/user/dataset/derivatives/labels/sub-001/anat/sub-001_T2w_seg.nii.gz'
                     # The information regarding the modified data will be stored within the sidecar .json file
                     fname_out = utils.add_suffix(os.path.join(path_out, subject, ses, contrast, filename), suffix_dict[task])
+
+                    # Change orientation of the input image (if different from the original orientation)
+                    if args.change_orient:
+                        # Get image and label orientation
+                        image_orig_orient = utils.get_orientation(fname)
+                        label_orig_orient = utils.get_orientation(fname_label)
+                        # Change orientation of the input image for better visualization
+                        if image_orig_orient != args.change_orient or label_orig_orient != args.change_orient:
+                            utils.change_orientation(fname, args.change_orient)
+                            utils.change_orientation(fname_label, args.change_orient)
                     
                     # Create subject folder in output if they do not exist
                     os.makedirs(os.path.join(path_out, subject, ses, contrast), exist_ok=True)
@@ -923,6 +948,14 @@ def main():
                     
                     # Keep track of corrected files in YAML.
                     dict_yml = utils.track_corrections(files_dict=dict_yml.copy(), config_path=args.config, file_path=fname, task=task)
+
+                    # Change orientation of the input image back to the original orientation
+                    if args.change_orient:
+                        image_current_orientation = utils.get_orientation(fname)
+                        label_current_orientation = utils.get_orientation(fname_label)
+                        if image_current_orientation != image_orig_orient or label_current_orientation != label_orig_orient:
+                            utils.change_orientation(fname, image_orig_orient)
+                            utils.change_orientation(fname_out, label_orig_orient)
 
             else:
                 sys.exit("ERROR: The list of files to correct is empty. \nMaybe, you have already corrected all the "
