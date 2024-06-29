@@ -7,8 +7,12 @@
 #######################################################################
 
 import os
+
+import numpy as np
+import nibabel as nib
+
 from utils import fetch_subject_and_session, add_suffix, remove_suffix, splitext, curate_dict_yml, get_full_path, \
-    check_files_exist, fetch_yaml_config, track_corrections
+    check_files_exist, fetch_yaml_config, track_corrections, get_orientation, change_orientation
 
 
 def test_fetch_subject_and_session():
@@ -198,3 +202,56 @@ def test_track_corrections(tmp_path):
 
     # Assert that the config file was updated correctly
     assert dict_files_updated == dict_files_test
+
+
+def create_dummy_nii_file(tmp_path, filename):
+    """
+    Create a dummy nifti file for testing purposes
+    :param tmp_path: Path to the temporary directory
+    :param filename: Name of the nifti file
+    :return: Path to the created nifti file
+    """
+    path_data = tmp_path / "BIDS" / "sub-001" / "ses-01" / "anat"
+    os.makedirs(path_data, exist_ok=True)
+
+    # Note: we have to create a 3D array to save it as a nifti file to simulate a real nifti file
+    data = np.random.rand(10, 10, 10)
+    affine = np.eye(4)
+    img = nib.Nifti1Image(data, affine)
+    fname_path = path_data / filename
+    nib.save(img, fname_path)
+
+    return fname_path
+
+
+def test_get_orientation(tmp_path):
+    """
+    Test that the get_orientation function returns the expected orientation
+    In this case, we create and check a nifti file with LPI orientation
+    """
+    # Create a test dummy nifti file using nibabel
+    fname_path = create_dummy_nii_file(tmp_path, "sub-001_ses-01_T1w.nii.gz")
+
+    # Get the orientation
+    orientation = get_orientation(fname_path)
+
+    # Assert that the orientation is correct
+    assert orientation == "LPI"
+
+
+def test_change_orientation(tmp_path):
+    """
+    Test that the change_orientation function changes the orientation of the nifti file
+    In this case, we reorient the file from LPI to AIL
+    """
+    # Create a test dummy nifti file using nibabel
+    fname_path = create_dummy_nii_file(tmp_path, "sub-001_ses-01_T1w.nii.gz")
+
+    # Change orientation to AIL
+    change_orientation(fname_path, "AIL")
+
+    # Get the orientation
+    orientation = get_orientation(fname_path)
+
+    # Assert that the orientation is correct
+    assert orientation == "AIL"
