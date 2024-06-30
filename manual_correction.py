@@ -674,7 +674,8 @@ def generate_qc(fname, fname_label, task, fname_qc, subject, config_file, qc_les
         else:
             print("WARNING: SC segmentation file not found: {}. QC report will not be generated.".format(fname_seg))
 
-    # for rootlets segmentation do not make QC
+    # Skip QC for the spinal rootlets segmentation as `sct_qc` does not support it
+    # Context: https://github.com/spinalcordtoolbox/spinalcordtoolbox/issues/4166#issuecomment-1654175610
     elif task == 'FILES_ROOTLETS':
         pass
 
