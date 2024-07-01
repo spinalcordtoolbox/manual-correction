@@ -267,6 +267,8 @@ def get_parser():
         "orientation. "
         "Possible options: LAS,LAI,LPS,LPI,LSA,LSP,LIA,LIP,RAS,RAI,RPS,RPI,RSA,RSP,RIA,RIP,ALS,ALI,ARS,ARI,ASL,ASR,"
         "AIL,AIR,PLS,PLI,PRS,PRI,PSL,PSR,PIL,PIR,SLA,SLP,SRA,SRP,SAL,SAR,SPL,SPR,ILA,ILP,IRA,IRP,IAL,IAR,IPL,IPR}",
+        "Warning: be aware of this issue when using this flag: "
+        "https://github.com/spinalcordtoolbox/manual-correction/issues/101",
         choices=['LAS', 'LAI', 'LPS', 'LPI', 'LSA', 'LSP', 'LIA', 'LIP', 'RAS', 'RAI', 'RPS', 'RPI', 'RSA', 'RSP',
                  'RIA', 'RIP', 'ALS', 'ALI', 'ARS', 'ARI', 'ASL', 'ASR', 'AIL', 'AIR', 'PLS', 'PLI', 'PRS', 'PRI',
                  'PSL', 'PSR', 'PIL', 'PIR', 'SLA', 'SLP', 'SRA', 'SRP', 'SAL', 'SAR', 'SPL', 'SPR', 'ILA', 'ILP',
