@@ -262,11 +262,9 @@ def get_parser():
         '-change-orient',
         type=str,
         help=
-        " R| Orientation to show the image in the viewer. If provided, the image and label will be reoriented before "
+        "R|Orientation to show the image in the viewer. If provided, the image and label will be reoriented before "
         "opening the viewer. After manual correction, the image and label will be reoriented back to the original "
-        "orientation. "
-        "Possible options: LAS,LAI,LPS,LPI,LSA,LSP,LIA,LIP,RAS,RAI,RPS,RPI,RSA,RSP,RIA,RIP,ALS,ALI,ARS,ARI,ASL,ASR,"
-        "AIL,AIR,PLS,PLI,PRS,PRI,PSL,PSR,PIL,PIR,SLA,SLP,SRA,SRP,SAL,SAR,SPL,SPR,ILA,ILP,IRA,IRP,IAL,IAR,IPL,IPR}",
+        "orientation.\n"
         "Warning: be aware of this issue when using this flag: "
         "https://github.com/spinalcordtoolbox/manual-correction/issues/101",
         choices=['LAS', 'LAI', 'LPS', 'LPI', 'LSA', 'LSP', 'LIA', 'LIP', 'RAS', 'RAI', 'RPS', 'RPI', 'RSA', 'RSP',
