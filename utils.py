@@ -332,3 +332,43 @@ def track_corrections(files_dict, config_path, file_path, task):
     return files_dict
 
 
+def get_orientation(file_path):
+    """
+    Get the orientation of the input nifti file
+    :param file_path: path to the nifti file
+    :return: actual orientation of the nifti file, e.g., 'RPI'
+    """
+
+    def _parse_orientation(output_bytes: bytes) -> str:
+        """
+        Parse the image orientation from the provided output bytes.
+        Args: output_bytes (bytes): The input bytes containing the output from sct_image command.
+        Returns:
+        str: The parsed image orientation.
+        """
+
+        output_string = output_bytes.decode('utf-8')
+        lines = output_string.strip().split('\n')
+        # Get only the string containing the orientation, e.g., 'RPI'
+        orientation = lines[-1].strip()
+        return orientation
+
+    # Note: we use bash command 'sct_image' to get the orientation instead of SCT's Image class because this would
+    # introduce dependency on SCT conda environment
+    output = subprocess.run(['sct_image', '-i', file_path, '-getorient'], capture_output=True)
+    orientation = _parse_orientation(output.stdout)  # e.g., 'RPI'
+
+    return orientation
+
+
+def change_orientation(file_path, orientation):
+    """
+    Change the orientation of the input nifti file
+    :param file_path: path to the nifti file
+    :param orientation: desired orientation of the nifti file, e.g., 'RPI'
+    """
+
+    # Change the orientation of the input nifti file
+    # Note: The image is currently being overwritten
+    subprocess.run(['sct_image', '-i', file_path, '-setorient', orientation, '-o', file_path], capture_output=True)
+    print(f"Orientation of {file_path} has been changed to {orientation}")

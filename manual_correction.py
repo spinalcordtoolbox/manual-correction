@@ -60,6 +60,7 @@ def get_parser():
         "'FILES_LABEL' lists images associated with vertebral labeling, "
         "'FILES_COMPRESSION' lists images associated with compression labeling, "
         "'FILES_PMJ' lists images associated with pontomedullary junction labeling, "
+        "'FILES_ROOTLETS' lists images associated with rootlets segmentation, "
         "and 'FILES_CENTERLINE' lists images associated with centerline. "
         "You can validate your YAML file at this website: http://www.yamllint.com/."
         "\nNote: if you want to iterate over all subjects, you can use the wildcard '*' (Examples: sub-*_T1w.nii.gz, "
@@ -83,6 +84,9 @@ def get_parser():
             - sub-001_T1w.nii.gz
             - sub-002_T1w.nii.gz
             FILES_PMJ:
+            - sub-001_T1w.nii.gz
+            - sub-002_T1w.nii.gz
+            FILES_ROOTLETS:
             - sub-001_T1w.nii.gz
             - sub-002_T1w.nii.gz
             FILES_CENTERLINE:
@@ -162,6 +166,11 @@ def get_parser():
         '-suffix-files-centerline',
         help="FILES-CENTERLINE suffix. Examples: '_centerline' (default), '_label-centerline'.",
         default='_centerline'
+    )
+    parser.add_argument(
+        '-suffix-files-rootlets',
+        help="FILES-ROOTLETS suffix. Examples: '_label-rootlets_dseg' (default), '_rootlets'.",
+        default='_label-rootlets_dseg'
     )
     parser.add_argument(
         '-label-disc-list',
@@ -248,6 +257,21 @@ def get_parser():
                 "Date": "yyyy-mm-dd hh:mm:ss"
              }\n
              """),
+    )
+    parser.add_argument(
+        '-change-orient',
+        type=str,
+        help=
+        "R|Orientation to show the image in the viewer. If provided, the image and label will be reoriented before "
+        "opening the viewer. After manual correction, the image and label will be reoriented back to the original "
+        "orientation.\n"
+        "Warning: be aware of this issue when using this flag: "
+        "https://github.com/spinalcordtoolbox/manual-correction/issues/101",
+        choices=['LAS', 'LAI', 'LPS', 'LPI', 'LSA', 'LSP', 'LIA', 'LIP', 'RAS', 'RAI', 'RPS', 'RPI', 'RSA', 'RSP',
+                 'RIA', 'RIP', 'ALS', 'ALI', 'ARS', 'ARI', 'ASL', 'ASR', 'AIL', 'AIR', 'PLS', 'PLI', 'PRS', 'PRI',
+                 'PSL', 'PSR', 'PIL', 'PIR', 'SLA', 'SLP', 'SRA', 'SRP', 'SAL', 'SAR', 'SPL', 'SPR', 'ILA', 'ILP',
+                 'IRA', 'IRP', 'IAL', 'IAR', 'IPL', 'IPR'],
+        default=''
     )
     parser.add_argument(
         '-v', '--verbose',
@@ -649,6 +673,12 @@ def generate_qc(fname, fname_label, task, fname_qc, subject, config_file, qc_les
             archive_qc(fname_qc, config_file)
         else:
             print("WARNING: SC segmentation file not found: {}. QC report will not be generated.".format(fname_seg))
+
+    # Skip QC for the spinal rootlets segmentation as `sct_qc` does not support it
+    # Context: https://github.com/spinalcordtoolbox/spinalcordtoolbox/issues/4166#issuecomment-1654175610
+    elif task == 'FILES_ROOTLETS':
+        pass
+
     else:
         subprocess.check_call(['sct_qc',
                                '-i', fname,
@@ -721,6 +751,7 @@ def main():
         'FILES_LABEL': args.suffix_files_label,             # e.g., _labels or _label-disc
         'FILES_COMPRESSION': args.suffix_files_compression,  # e.g., _label-compression
         'FILES_PMJ': args.suffix_files_pmj,                 # e.g., _pmj or _label-pmj
+        'FILES_ROOTLETS': args.suffix_files_rootlets,       # e.g., _rootlets or _label-rootlets
         'FILES_CENTERLINE': args.suffix_files_centerline    # e.g., _centerline or _label-centerline
     }
     path_img = utils.get_full_path(args.path_img)
@@ -847,6 +878,16 @@ def main():
                     # For example: '/Users/user/dataset/derivatives/labels/sub-001/anat/sub-001_T2w_seg.nii.gz'
                     # The information regarding the modified data will be stored within the sidecar .json file
                     fname_out = utils.add_suffix(os.path.join(path_out, subject, ses, contrast, filename), suffix_dict[task])
+
+                    # Change orientation of the input image (if different from the original orientation)
+                    if args.change_orient:
+                        # Get image and label orientation
+                        image_orig_orient = utils.get_orientation(fname)
+                        label_orig_orient = utils.get_orientation(fname_label)
+                        # Change orientation of the input image for better visualization
+                        if image_orig_orient != args.change_orient or label_orig_orient != args.change_orient:
+                            utils.change_orientation(fname, args.change_orient)
+                            utils.change_orientation(fname_label, args.change_orient)
                     
                     # Create subject folder in output if they do not exist
                     os.makedirs(os.path.join(path_out, subject, ses, contrast), exist_ok=True)
@@ -869,7 +910,7 @@ def main():
                             elif create_empty_mask:
                                 utils.create_empty_mask(fname, fname_out)
 
-                            if task in ['FILES_SEG', 'FILES_GMSEG']:
+                            if task in ['FILES_SEG', 'FILES_GMSEG', 'FILES_ROOTLETS']:
                                 if not args.add_seg_only:
                                     correct_segmentation(fname, fname_out, fname_other_contrast, args.viewer, param_fsleyes)
                             elif task == 'FILES_LESION':
@@ -908,6 +949,14 @@ def main():
                     
                     # Keep track of corrected files in YAML.
                     dict_yml = utils.track_corrections(files_dict=dict_yml.copy(), config_path=args.config, file_path=fname, task=task)
+
+                    # Change orientation of the input image back to the original orientation
+                    if args.change_orient:
+                        image_current_orientation = utils.get_orientation(fname)
+                        label_current_orientation = utils.get_orientation(fname_label)
+                        if image_current_orientation != image_orig_orient or label_current_orientation != label_orig_orient:
+                            utils.change_orientation(fname, image_orig_orient)
+                            utils.change_orientation(fname_out, label_orig_orient)
 
             else:
                 sys.exit("ERROR: The list of files to correct is empty. \nMaybe, you have already corrected all the "
