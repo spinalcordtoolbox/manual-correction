@@ -9,6 +9,7 @@ Currently supported labels are:
 - disc labels
 - compression labels
 - ponto-medullary junction (PMJ) label
+- rootlets segmentation
 - centerline
 
 > **Note**
