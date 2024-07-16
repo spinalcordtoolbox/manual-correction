@@ -238,7 +238,7 @@ def get_parser():
         '-json-metadata', metavar="<file>", required=False,
         help="R|A custom JSON file containing metadata to be added to the JSON sidecar of all corrected labels. "
              "This flag is useful, for example, when a label was obtained automatically and you want to include this "
-             "information into the JSON sidecar."
+             "information into the JSON sidecar. "
              "Below is an example JSON file:\n"
              + dedent(
              """
