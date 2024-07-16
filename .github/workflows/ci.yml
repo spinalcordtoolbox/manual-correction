@@ -35,6 +35,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      # https://github.com/spinalcordtoolbox/spinalcordtoolbox/blob/master/.ci.sh
+      - name: Install SCT
+        run: |
+          git clone https://github.com/spinalcordtoolbox/spinalcordtoolbox.git
+          cd spinalcordtoolbox
+          ./.ci.sh -i
+
       - name: Run tests with pytest
         run: |
           python -m pytest -v tests/test_utils.py
