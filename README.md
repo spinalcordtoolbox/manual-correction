@@ -12,7 +12,7 @@ Currently supported labels are:
 - rootlets segmentation
 - centerline
 
-> **Note**
+> [!NOTE]
 > We greatly appreciate feedback and suggestions for improvement. Feel free to open an issue and report bugs, suggest new features or ask questions.
 
 ## Table of content
@@ -56,7 +56,7 @@ conda activate venv_sct
 
 ## 3. Usage
 
-> **Important**
+> [!Important]
 > All scripts currently assume BIDS-compliant data. For more information about the BIDS standard, please visit http://bids.neuroimaging.io.
 
 ---
