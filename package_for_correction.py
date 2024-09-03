@@ -85,7 +85,8 @@ def get_parser():
     parser.add_argument(
         '-o',
         metavar="<file>",
-        help="Zip file that contains the packaged data, without the extension. Default: data_to_correct",
+        help="Path to the zip file that will contain the packaged data. NOTE: do not use the '.zip' extension (it will"
+             "be added automatically by the script). Example: ~/<your_dataset>/data_to_correct",
         default='data_to_correct'
     )
     parser.add_argument(
