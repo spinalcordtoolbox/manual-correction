@@ -540,8 +540,8 @@ def update_json(fname_nifti, name_rater, json_metadata):
     """
     fname_json = fname_nifti.replace('.gz', '').replace('.nii', '.json')
 
-    # Check if the json file already exists, if so, open it
-    if os.path.exists(fname_json):
+    # Check if the json file already exists and is not empty, open it
+    if os.path.exists(fname_json) and os.path.getsize(fname_json) != 0:
         # Read already existing json file
         with open(fname_json, "r") as outfile:  # r to read
             json_dict = json.load(outfile)
