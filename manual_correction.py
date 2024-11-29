@@ -262,7 +262,7 @@ def get_parser():
         '-task-name', type=str, required=False, default='Manual',
         help=
         "R|The name of the task being done, which will be added in the json file. It must be added between \"\"."
-        " For example: \"Manual correction of lesions generated from model XXX\" Default: \"Manual\".",
+        " For example: \"Manual correction of lesions generated from model XXX\" Default: \"Manual\"g.",
     )
     parser.add_argument(
         '-change-orient',
