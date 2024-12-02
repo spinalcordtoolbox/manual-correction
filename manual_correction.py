@@ -372,15 +372,11 @@ def correct_segmentation(fname, fname_seg_out, fname_other_contrast, viewer, par
         # Note: command line differs for macOs/Linux and Windows
         if shutil.which('itksnap') is not None:  # Check if command 'itksnap' exists
             # macOS and Linux
-            subprocess.check_call(['itksnap',
-                                   '-g', fname,
-                                   '-s', fname_seg_out])
+            os.system(f'itksnap -g {fname} -s {fname_seg_out}')
             
         elif shutil.which('ITK-SNAP') is not None:  # Check if command 'ITK-SNAP' exists
             # Windows
-            subprocess.check_call(['ITK-SNAP',
-                                   '-g', fname,
-                                   '-s', fname_seg_out])
+            os.system(f'ITK-SNAP -g {fname} -s {fname_seg_out}')
         else:
             viewer_not_found(viewer)
     # launch FSLeyes
@@ -404,34 +400,21 @@ def correct_segmentation(fname, fname_seg_out, fname_other_contrast, viewer, par
                 # (-r flag)
                 if param_fsleyes.second_orthoview:
                     fname_script = create_fsleyes_script()
-                    subprocess.check_call(['fsleyes',
-                                           '-S',
-                                           '-r', fname_script,
-                                           fname, '-dr', param_fsleyes.min_dr, param_fsleyes.max_dr,
-                                           fname_other_contrast,
-                                           fname_seg_out, '-cm', param_fsleyes.cm])
+                    os.system(f'fsleyes -S -r {fname_script} {fname} -dr {param_fsleyes.min_dr} {param_fsleyes.max_dr} '
+                              f'{fname_other_contrast} {fname_seg_out} -cm {param_fsleyes.cm}')
                 # No second orthoview
                 else:
-                    subprocess.check_call(['fsleyes',
-                                           '-S',
-                                           fname, '-dr', param_fsleyes.min_dr, param_fsleyes.max_dr,
-                                           fname_other_contrast,
-                                           fname_seg_out, '-cm', param_fsleyes.cm])
-            # Open a second orthoview without second contrast
+                    os.system(f'fsleyes -S {fname} -dr {param_fsleyes.min_dr} {param_fsleyes.max_dr} '
+                              f'{fname_other_contrast} {fname_seg_out} -cm {param_fsleyes.cm}')
+            # Open a second orthoview without second contrast using a custom Python script (-r flag)
             elif param_fsleyes.second_orthoview:
                 fname_script = create_fsleyes_script()
-                subprocess.check_call(['fsleyes',
-                                       '-S',
-                                       '-r', fname_script,
-                                       fname, '-dr', param_fsleyes.min_dr, param_fsleyes.max_dr,
-                                       fname_seg_out, '-cm', param_fsleyes.cm])
+                os.system(f'fsleyes -S -r {fname_script} {fname} -dr {param_fsleyes.min_dr} {param_fsleyes.max_dr} '
+                          f'{fname_seg_out} -cm {param_fsleyes.cm}')
             # No second contrast, no second orthoview
             else:
-                subprocess.check_call(['fsleyes',
-                                       '-S',
-                                       fname,
-                                       '-dr', param_fsleyes.min_dr, param_fsleyes.max_dr,
-                                       fname_seg_out, '-cm', param_fsleyes.cm])
+                os.system(f'fsleyes -S {fname} -dr {param_fsleyes.min_dr} {param_fsleyes.max_dr} {fname_seg_out} -cm '
+                          f'{param_fsleyes.cm}')
         else:
             viewer_not_found(viewer)
     # launch 3D Slicer
