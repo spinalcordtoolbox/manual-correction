@@ -906,6 +906,15 @@ def main():
                             if copy:
                                 shutil.copyfile(fname_label, fname_out)
                                 print(f'Copying: {fname_label} to {fname_out}')
+                                # If the label has a JSON sidecar, read its content
+                                # Context: SCT v6.4+ produces JSON sidecars for some outputs that track the provenance
+                                # of the function, models, etc.
+                                # Details: https://github.com/spinalcordtoolbox/spinalcordtoolbox/pull/4466
+                                # We want to include this information in the final JSON sidecar
+                                fname_label_json = fname_label.replace('.nii.gz', '.json')
+                                if os.path.isfile(fname_label_json):
+                                    # Read the JSON file to include the metadata in the final JSON sidecar
+                                    json_metadata = load_json(fname_label_json)
                             # Create empty mask in derivatives folder
                             elif create_empty_mask:
                                 utils.create_empty_mask(fname, fname_out)
