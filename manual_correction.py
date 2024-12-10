@@ -514,11 +514,11 @@ def correct_centerline(fname, fname_label, viewer='sct_get_centerline'):
         viewer_not_found(viewer)
 
 
-def load_custom_json(fname):
+def load_json(fname):
     """
-    Load custom JSON file.
-    :param fname: path to the custom JSON file.
-    :return: dictionary with the metadata to be added to the JSON sidecar.
+    Load existing JSON file. The content of the JSON file will be added to the JSON file produced by this script.
+    :param fname: path to the existing JSON file.
+    :return: dictionary with the metadata to be added to the output JSON sidecar.
     """
     if not os.path.isfile(fname):
         sys.exit("ERROR: The file {} does not exist.".format(fname))
@@ -794,7 +794,7 @@ def main():
             sys.exit("ERROR: No segmentation file found in {}.".format(args.path_label))
 
     # If a custom JSON file containing metadata was provided, load it, and verify that it is a valid JSON file
-    json_metadata = load_custom_json(args.json_metadata) if args.json_metadata else None
+    json_metadata = load_json(args.json_metadata) if args.json_metadata else None
 
     # Get name of expert rater (skip if -qc-only is true)
     if not args.qc_only:
