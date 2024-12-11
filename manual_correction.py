@@ -245,9 +245,12 @@ def get_parser():
     )
     parser.add_argument(
         '-json-metadata', metavar="<file>", required=False,
-        help="R|A custom JSON file containing metadata to be added to the JSON sidecar of all corrected labels. "
+        help="R|A custom JSON file containing metadata to be added to the output JSON sidecar of all corrected labels. "
              "This flag is useful, for example, when a label was obtained automatically and you want to include this "
-             "information into the JSON sidecar. "
+             "information into the JSON sidecar. \n"
+             "NOTE: the script automatically checks whether the JSON file already exists (for example when "
+             "automatically created by SCT 6.4+). If so, the script will reuse its metadata. In such cases, you do not "
+             "need to use this flag.\n"
              "Below is an example JSON file:\n"
              + dedent(
              """
