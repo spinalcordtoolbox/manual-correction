@@ -43,7 +43,8 @@ def get_parser():
         description='Manual correction of spinal cord segmentation, gray matter segmentation, MS and SCI lesion '
                     'segmentation, disc labels, compression labels, ponto-medullary junction (PMJ) label, and '
                     'centerline. '
-                    'Manually corrected files will be saved under derivatives/ folder (according to BIDS standard).',
+                    'Manually corrected files will be saved under derivatives/labels folder (according to BIDS '
+                    'standard) if not specified otherwise.',
         formatter_class=utils.SmartFormatter,
         prog=os.path.basename(__file__).strip('.py')
     )
