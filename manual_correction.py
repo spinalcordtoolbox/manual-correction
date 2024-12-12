@@ -768,9 +768,9 @@ def main():
     # Print parsed arguments
     logging.info("-" * 100)
     logging.info("Parsing of arguments:")
-    logging.info("  Input folder ('-path-img') .............. " + path_img)
-    logging.info("  Label folder ('-path-label') .............. " + path_label)
-    logging.info("  Output folder ('-path-out') ............. " + path_out)
+    logging.info("  Input folder ('-path-img'):     " + path_img)
+    logging.info("  Label folder ('-path-label'):   " + path_label)
+    logging.info("  Output folder ('-path-out'):    " + path_out)
     logging.info("-" * 100)
 
     # check that output folder exists or create it
