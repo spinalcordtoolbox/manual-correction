@@ -297,7 +297,7 @@ class ParamFSLeyes:
     """
     Default parameters for FSLeyes viewer.
     """
-    def __init__(self, cm='red', dr='0,70', min_dr='0', max_dr='1000', a=70, second_orthoview=False):
+    def __init__(self, cm='red', dr='0,70', min_dr='0', max_dr='1000', a='70', second_orthoview=False):
         """
         :param cm: Colormap (cm) to be used for loading the label file in FSLeyes (default: red).
         :param dr: Display range (dr) in % to be used for loading the input file in FSLeyes (default: 0,70).
