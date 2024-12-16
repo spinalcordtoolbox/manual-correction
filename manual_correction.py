@@ -43,7 +43,8 @@ def get_parser():
         description='Manual correction of spinal cord segmentation, gray matter segmentation, MS and SCI lesion '
                     'segmentation, disc labels, compression labels, ponto-medullary junction (PMJ) label, and '
                     'centerline. '
-                    'Manually corrected files will be saved under derivatives/ folder (according to BIDS standard).',
+                    'Manually corrected files will be saved under derivatives/labels folder (according to BIDS '
+                    'standard) if not specified otherwise.',
         formatter_class=utils.SmartFormatter,
         prog=os.path.basename(__file__).strip('.py')
     )
@@ -107,9 +108,8 @@ def get_parser():
         metavar="<folder>",
         help=
         "R|Full path to the folder with labels (BIDS-compliant). "
-        "\nIf labels are located in the same folder as the images, provide the same path as '-path-img', for example "
-        "'output/data_processed'."
-        "\nIf not provided, '-path-img' + 'derivatives/labels' will be used. ",
+        "\nIf not provided, '-path-img' will be used (assuming that the labels are in the same folder as images). "
+        "\nIf your labels are already under 'derivatives/labels', provide the full path to this folder. ",
         default=''
     )
     parser.add_argument(
@@ -758,23 +758,20 @@ def main():
         'FILES_CENTERLINE': args.suffix_files_centerline    # e.g., _centerline or _label-centerline
     }
     path_img = utils.get_full_path(args.path_img)
-    
-    if args.path_label == '':
-        path_label = os.path.join(path_img, "derivatives/labels")
-    else:
-        path_label = utils.get_full_path(args.path_label)
-    
-    if args.path_out == '':
-        path_out = os.path.join(path_img, "derivatives/labels")
-    else:
-        path_out = utils.get_full_path(args.path_out)
+
+    # If labels are in the same folder as the images, set path_label to path_img
+    path_label = path_img if args.path_label == '' else utils.get_full_path(args.path_label)
+
+    # If not specified, output folder for corrected labels is derivatives/labels in the input folder
+    path_out = os.path.join(path_img, "derivatives/labels") if args.path_out == '' else utils.get_full_path(
+        args.path_out)
 
     # Print parsed arguments
     logging.info("-" * 100)
     logging.info("Parsing of arguments:")
-    logging.info("  Input folder ('-path-img') .............. " + path_img)
-    logging.info("  Label folder ('-path-label') .............. " + path_label)
-    logging.info("  Output folder ('-path-out') ............. " + path_out)
+    logging.info("  Input folder ('-path-img'):     " + path_img)
+    logging.info("  Label folder ('-path-label'):   " + path_label)
+    logging.info("  Output folder ('-path-out'):    " + path_out)
     logging.info("-" * 100)
 
     # check that output folder exists or create it
