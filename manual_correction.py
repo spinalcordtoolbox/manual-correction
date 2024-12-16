@@ -205,6 +205,7 @@ def get_parser():
     parser.add_argument(
         '-fsleyes-dr',
         help="R|Display range (dr) in percentages to be used for loading the input file in FSLeyes (default: 0,70). "
+             "This flag can be used to adjust the brightness and contrast of the input image. "
              "\nNote: Use comma to separate values, e.g., 0,70."
              "\nNote: If you need to provide negative values (for example for PSIR/STIR images), use the following "
              "format: -fsleyes-dr=\"-40,70\"",
