@@ -196,8 +196,16 @@ def get_parser():
         default='red'
     )
     parser.add_argument(
+        '-fsleyes-a',
+        help="Alpha (a) in percentages to be used for loading the label file in FSLeyes (default: 70). "
+             "This flag can be used to adjust the opacity of the label file (e.g., segmentation).",
+        type=str,
+        default="70"
+    )
+    parser.add_argument(
         '-fsleyes-dr',
         help="R|Display range (dr) in percentages to be used for loading the input file in FSLeyes (default: 0,70). "
+             "This flag can be used to adjust the brightness and contrast of the input image. "
              "\nNote: Use comma to separate values, e.g., 0,70."
              "\nNote: If you need to provide negative values (for example for PSIR/STIR images), use the following "
              "format: -fsleyes-dr=\"-40,70\"",
@@ -289,18 +297,20 @@ class ParamFSLeyes:
     """
     Default parameters for FSLeyes viewer.
     """
-    def __init__(self, cm='red', dr='0,70', min_dr='0', max_dr='1000', second_orthoview=False):
+    def __init__(self, cm='red', dr='0,70', min_dr='0', max_dr='1000', a='70', second_orthoview=False):
         """
         :param cm: Colormap (cm) to be used for loading the label file in FSLeyes (default: red).
         :param dr: Display range (dr) in % to be used for loading the input file in FSLeyes (default: 0,70).
         :param min_dr: Minimum pixel intensity value for the display range (dr) to be used for loading the input file in FSLeyes.
         :param max_dr: Maximum pixel intensity value for the display range (dr) to be used for loading the input file in FSLeyes.
+        :param a: Alpha (a) in percentages to be used for loading the label file in FSLeyes (default: 70).
         :param second_orthoview: Open a second orthoview in FSLeyes (i.e., open two orthoviews next to each other).
         """
         self.cm = cm
         self.dr = dr
         self.min_dr = min_dr
         self.max_dr = max_dr
+        self.a = a
         self.second_orthoview = second_orthoview
 
 
@@ -402,6 +412,7 @@ def correct_segmentation(fname, fname_seg_out, fname_other_contrast, viewer, par
             # -S, --skipfslcheck    Skip $FSLDIR check/warning
             # -dr, --displayRange   Set display range (min max) for the specified overlay
             # -cm, --cmap           Set colour map for the specified overlay
+            # -a, --alpha           Set alpha (opacity) for the specified overlay
             if fname_other_contrast:
                 # Open a second orthoview (i.e., open two orthoviews next to each other) using a custom Python script
                 # (-r flag)
@@ -412,14 +423,14 @@ def correct_segmentation(fname, fname_seg_out, fname_other_contrast, viewer, par
                                            '-r', fname_script,
                                            fname, '-dr', param_fsleyes.min_dr, param_fsleyes.max_dr,
                                            fname_other_contrast,
-                                           fname_seg_out, '-cm', param_fsleyes.cm])
+                                           fname_seg_out, '-cm', param_fsleyes.cm, '-a', param_fsleyes.a])
                 # No second orthoview
                 else:
                     subprocess.check_call(['fsleyes',
                                            '-S',
                                            fname, '-dr', param_fsleyes.min_dr, param_fsleyes.max_dr,
                                            fname_other_contrast,
-                                           fname_seg_out, '-cm', param_fsleyes.cm])
+                                           fname_seg_out, '-cm', param_fsleyes.cm, '-a', param_fsleyes.a])
             # Open a second orthoview without second contrast
             elif param_fsleyes.second_orthoview:
                 fname_script = create_fsleyes_script()
@@ -427,14 +438,14 @@ def correct_segmentation(fname, fname_seg_out, fname_other_contrast, viewer, par
                                        '-S',
                                        '-r', fname_script,
                                        fname, '-dr', param_fsleyes.min_dr, param_fsleyes.max_dr,
-                                       fname_seg_out, '-cm', param_fsleyes.cm])
+                                       fname_seg_out, '-cm', param_fsleyes.cm, '-a', param_fsleyes.a])
             # No second contrast, no second orthoview
             else:
                 subprocess.check_call(['fsleyes',
                                        '-S',
                                        fname,
                                        '-dr', param_fsleyes.min_dr, param_fsleyes.max_dr,
-                                       fname_seg_out, '-cm', param_fsleyes.cm])
+                                       fname_seg_out, '-cm', param_fsleyes.cm, '-a', param_fsleyes.a])
         else:
             viewer_not_found(viewer)
     # launch 3D Slicer
@@ -782,7 +793,8 @@ def main():
         utils.check_files_exist(dict_yml, path_img, path_label, suffix_dict)
 
     # Fetch parameters for FSLeyes
-    param_fsleyes = ParamFSLeyes(cm=args.fsleyes_cm, dr=args.fsleyes_dr, second_orthoview=args.fsleyes_second_orthoview)
+    param_fsleyes = ParamFSLeyes(cm=args.fsleyes_cm, dr=args.fsleyes_dr, a=args.fsleyes_a,
+                                 second_orthoview=args.fsleyes_second_orthoview)
 
     # Get list of segmentations files for all subjects in -path-label (if -add-seg-only)
     if args.add_seg_only:
