@@ -66,7 +66,6 @@ def test_create_json_custom_metadata(tmp_path):
         metadata = json.load(f)
     assert metadata == expected_metadata
 
-
 def test_update_json(tmp_path):
     """
     Test that the function update_json() updates (appends to) the JSON file with the expected metadata.
@@ -75,6 +74,7 @@ def test_update_json(tmp_path):
     fname_label = "sub-001_ses-01_T1w_seg-manual.nii.gz"
     nifti_file = tmp_path / fname_label
     nifti_file.touch()
+
     # Create JSON file with some metadata
     json_file = tmp_path / fname_label.replace(".nii.gz", ".json")
     with open(str(json_file), "w") as f:
