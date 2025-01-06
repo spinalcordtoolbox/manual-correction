@@ -45,12 +45,12 @@ def test_create_json_custom_metadata(tmp_path):
     nifti_file = tmp_path / fname_label
     nifti_file.touch()
 
-    custom_metada = {'Name': 'sct_deepseg_sc',
+    custom_metadata = {'Name': 'sct_deepseg_sc',
                      'Author': "SCT v6.2",
                      'Date': "2024-02-21 00:00:00"}
 
     # Call the function with modified=True
-    update_json(str(nifti_file), "Test Rater", json_metadata=custom_metada)
+    update_json(str(nifti_file), "Test Rater", json_metadata=custom_metadata)
 
     # Check that the JSON file was created and contains the expected metadata
     expected_metadata = {'SpatialReference': 'orig',
