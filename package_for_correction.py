@@ -145,8 +145,9 @@ def copy_file(fname_in, path_out):
     # create output path
     os.makedirs(path_out, exist_ok=True)
     # copy file
-    fname_out = shutil.copy(fname_in, path_out)
-    print(f'Copying: {fname_in} to {fname_out}')
+    if os.path.isfile(fname_in):
+        fname_out = shutil.copy(fname_in, path_out)
+        print(f'Copying: {fname_in} to {fname_out}')
 
 
 def main():
@@ -224,7 +225,10 @@ def main():
                 # For example: '/Users/user/dataset/data_processed/sub-001/anat/sub-001_T2w_seg.nii.gz'
                 fname_seg = utils.add_suffix(fname, suffix_dict[task])
                 if os.path.exists(fname_seg):
+                    # nii
                     copy_file(fname_seg, path_out)
+                    # json
+                    copy_file(fname_seg.replace('.nii.gz', '.json'), path_out)
 
     # Package to zip file
     print("Creating archive...")
