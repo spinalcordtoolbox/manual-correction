@@ -270,6 +270,12 @@ def get_parser():
              """),
     )
     parser.add_argument(
+        '-task-name', type=str, required=False, default='Manual',
+        help=
+        "R|The name of the task being done, which will be added in the json file. It must be added between \"\"."
+        " For example: \"Manual correction of lesions generated from model XXX\" Default: \"Manual\"g.",
+    )
+    parser.add_argument(
         '-change-orient',
         type=str,
         help=
@@ -544,7 +550,7 @@ def load_json(fname):
         sys.exit("ERROR: The file {} is not a valid JSON file.".format(fname))
 
 
-def update_json(fname_nifti, name_rater, json_metadata):
+def update_json(fname_nifti, name_rater, json_metadata, task_name):
     """
     Create/update JSON sidecar with meta information
     :param fname_nifti: str: File name of the nifti image to associate with the JSON sidecar
@@ -554,8 +560,8 @@ def update_json(fname_nifti, name_rater, json_metadata):
     """
     fname_json = fname_nifti.replace('.gz', '').replace('.nii', '.json')
 
-    # Check if the json file already exists, if so, open it
-    if os.path.exists(fname_json):
+    # Check if the json file already exists and is not empty, open it
+    if os.path.exists(fname_json) and os.path.getsize(fname_json) != 0:
         # Read already existing json file
         with open(fname_json, "r") as outfile:  # r to read
             json_dict = json.load(outfile)
@@ -583,7 +589,7 @@ def update_json(fname_nifti, name_rater, json_metadata):
                 json_dict['GeneratedBy'].append(json_metadata.copy())
 
     # If the label was modified or just checked, add "Name": "Manual" to the JSON sidecar
-    json_dict['GeneratedBy'].append({'Name': 'Manual',
+    json_dict['GeneratedBy'].append({'Name': task_name,
                                      'Author': name_rater,
                                      'Date': time.strftime('%Y-%m-%d %H:%M:%S')})
 
@@ -963,10 +969,10 @@ def main():
                             if args.add_seg_only:
                                 # We use update_json because we are adding a new segmentation, and we want to create
                                 # a JSON file
-                                update_json(fname_out, name_rater, json_metadata)
+                                update_json(fname_out, name_rater, json_metadata, args.task_name)
                             # Generate QC report
                             else:
-                                update_json(fname_out, name_rater, json_metadata)
+                                update_json(fname_out, name_rater, json_metadata, args.task_name)
                                 # Generate QC report
                                 generate_qc(fname, fname_out, task, fname_qc, subject, args.config, args.qc_lesion_plane, suffix_dict)
 
