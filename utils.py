@@ -161,19 +161,22 @@ def fetch_yaml_config(config_file):
     """
     config_file = get_full_path(config_file)
     # Check if input yml file exists
-    if os.path.isfile(config_file):
-        fname_yml = config_file
-    else:
-        sys.exit("ERROR: Input yml file {} does not exist or path is wrong.".format(config_file))
+    if not os.path.isfile(config_file):
+        sys.exit(f"ERROR: Input yml file {config_file} does not exist or path is wrong.")
 
     # Fetch input yml file as dict
-    with open(fname_yml, 'r') as stream:
-        try:
+    try:
+        with open(config_file, 'r') as stream:
             dict_yml = yaml.safe_load(stream)
-        except yaml.YAMLError as exc:
-            print(exc)
-
-    return dict_yml
+            return dict_yml
+    except yaml.YAMLError as exc:
+        # Provide more specific error message for common YAML syntax errors
+        if hasattr(exc, 'problem') and '*' in exc.problem:
+            sys.exit(f"ERROR: YAML parsing error in {config_file}.\n"
+                     f"The '*' character is a special character in YAML that denotes an alias or anchor.\n"
+                     f"To use '*' as a wildcard character, start the line with 'sub' string, e.g.: \"sub*T2w.nii.gz\"")
+        else:
+            sys.exit(f"ERROR: YAML parsing error in {config_file}.\n{exc}")
 
 
 def curate_dict_yml(dict_yml):
