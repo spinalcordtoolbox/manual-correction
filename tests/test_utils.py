@@ -204,6 +204,55 @@ def test_track_corrections(tmp_path):
     assert dict_files_updated == dict_files_test
 
 
+def test_fetch_yaml_config(tmp_path, monkeypatch):
+    """
+    Test that the fetch_yaml_config function correctly loads YAML files and handles errors.
+    """
+    # Create a temp directory for test files
+    yaml_dir = tmp_path / "yaml_tests"
+    yaml_dir.mkdir()
+
+    # Test case 1: Valid YAML file
+    valid_yaml = yaml_dir / "valid_config.yml"
+    with open(valid_yaml, 'w') as f:
+        f.write("FILES_LESION:\n  - \"*T2w.nii.gz\"\nFILES_SEG:\n  - sub-001_T1w.nii.gz")
+
+    # Test loading a valid YAML file
+    config = fetch_yaml_config(valid_yaml)
+    assert config == {"FILES_LESION": ["*T2w.nii.gz"], "FILES_SEG": ["sub-001_T1w.nii.gz"]}
+
+    # Test case 2: Invalid YAML file with unquoted asterisk
+    invalid_yaml = yaml_dir / "invalid_config.yml"
+    with open(invalid_yaml, 'w') as f:
+        f.write("FILES_LESION:\n  - *T2w.nii.gz")
+
+    # Mock sys.exit to prevent test from actually exiting
+    def mock_exit(msg):
+        raise SystemExit(msg)
+
+    monkeypatch.setattr('sys.exit', mock_exit)
+
+    # Test that the function correctly identifies the asterisk error
+    try:
+        fetch_yaml_config(invalid_yaml)
+        assert False, "Should have raised SystemExit"
+    except SystemExit as e:
+        error_msg = str(e)
+        assert "YAML parsing error" in error_msg
+        assert "The '*' character is a special character in YAML" in error_msg
+        assert "To use '*' as a wildcard character" in error_msg
+
+    # Test case 3: Non-existent YAML file
+    nonexistent_yaml = yaml_dir / "nonexistent.yml"
+
+    # Test that the function correctly handles non-existent files
+    try:
+        fetch_yaml_config(nonexistent_yaml)
+        assert False, "Should have raised SystemExit"
+    except SystemExit as e:
+        assert "does not exist" in str(e)
+
+
 def create_dummy_nii_file(tmp_path, filename):
     """
     Create a dummy nifti file for testing purposes

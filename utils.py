@@ -170,13 +170,11 @@ def fetch_yaml_config(config_file):
             dict_yml = yaml.safe_load(stream)
             return dict_yml
     except yaml.YAMLError as exc:
-        # Provide more specific error message for common YAML syntax errors
-        if hasattr(exc, 'problem') and '*' in exc.problem:
-            sys.exit(f"ERROR: YAML parsing error in {config_file}.\n"
-                     f"The '*' character is a special character in YAML that denotes an alias or anchor.\n"
-                     f"To use '*' as a wildcard character, start the line with 'sub' string, e.g.: \"sub*T2w.nii.gz\"")
-        else:
-            sys.exit(f"ERROR: YAML parsing error in {config_file}.\n{exc}")
+        # Always provide a specific error message for YAML syntax errors involving '*'
+        sys.exit(f"ERROR: YAML parsing error in {config_file}.\n"
+                 f"The '*' character is a special character in YAML that denotes an alias or anchor.\n"
+                 f"To use '*' as a wildcard character, start the line with 'sub' string, e.g.: \"sub*T2w.nii.gz\"\n"
+                 f"{exc}")
 
 
 def curate_dict_yml(dict_yml):
