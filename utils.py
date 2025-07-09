@@ -346,12 +346,13 @@ def get_orientation(file_path):
         Returns:
         str: The parsed image orientation.
         """
-
         output_string = output_bytes.decode('utf-8')
-        lines = output_string.strip().split('\n')
-        # Get only the string containing the orientation, e.g., 'RPI'
-        orientation = lines[-1].strip()
-        return orientation
+        for line in output_string.strip().split('\n'):
+            line = line.strip()
+            # Orientation string is 3 uppercase letters, e.g., LPI, AIL
+            if len(line) == 3 and line.isupper():
+                return line
+        raise ValueError(f"Could not parse orientation from:\n{output_string}")
 
     # Note: we use bash command 'sct_image' to get the orientation instead of SCT's Image class because this would
     # introduce dependency on SCT conda environment
