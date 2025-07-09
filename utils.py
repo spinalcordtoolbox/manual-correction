@@ -350,7 +350,7 @@ def get_orientation(file_path):
         output_string = output_bytes.decode('utf-8')
         lines = output_string.strip().split('\n')
         # Get only the string containing the orientation, e.g., 'RPI'
-        orientation = lines[-1].strip()
+        orientation = lines[-2].strip()
         return orientation
 
     # Note: we use bash command 'sct_image' to get the orientation instead of SCT's Image class because this would
