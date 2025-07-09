@@ -75,6 +75,8 @@ You can also use a `*` wildcard to iterate over all subjects, for example:
 ```yaml
  FILES_SEG:
      - sub-*T2w.nii.gz
+```
+
 Then run the following script, which loops across subjects listed in the YAML file and opens a viewer to correct the labels (segmentations, disc labels, etc.). 
 
 ```bash
