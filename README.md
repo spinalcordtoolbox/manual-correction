@@ -67,8 +67,8 @@ First, you need to generate a YAML file that lists the images to correct. This Y
 Example of YAML file structure:
 ```yaml
 FILES_SEG:
-    - /Users/julien/temp/results_20250709_102432/data_processed/10034_W12/T2/10034_W12__t2.nii.gz
-    - /Users/julien/temp/results_20250709_102432/data_processed/10035_BSL/T2/10035_BSL__t2.nii.gz
+    - /Users/user/temp/my_dataset/data_processed/sub-001/anat/sub-001_T1w.nii.gz
+    - /Users/user/temp/my_dataset/data_processed/sub-002/anat/sub-002_T1w.nii.gz
 ```
 
 Then run the following script, which loops across subjects listed in the YAML file and opens a viewer to correct the labels (segmentations, disc labels, etc.). 
