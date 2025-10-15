@@ -246,9 +246,11 @@ def get_parser():
     )
     parser.add_argument(
         '-add-seg-only',
-        help="Only copy the source files (segmentation) that aren't in -config list to the final dataset specified by "
+        help="R|Only copy the source files (segmentation) that aren't in -config list to the final dataset specified by "
              "'-path-out' flag. Use this flag to add automatically generated and manually QC-ed segmentations to the "
-             "final dataset.",
+             "final dataset."
+             "\nExample:"
+             "\nmanual_correction.py -path-img data_processed -path-label data_processed -path-out dataset/derivatives/labels -config config.yml -add-seg-only",
         action='store_true'
     )
     parser.add_argument(
