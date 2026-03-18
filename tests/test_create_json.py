@@ -20,12 +20,36 @@ def test_create_json(tmp_path):
     nifti_file = tmp_path / fname_label
     nifti_file.touch()
 
-    # Call the function with modified=True
-    update_json(str(nifti_file), "Test Rater", json_metadata=None)
+    # Call the function with modified=True (label was actually corrected)
+    update_json(str(nifti_file), "Test Rater", json_metadata=None, modified=True)
 
     # Check that the JSON file was created and contains the expected metadata
     expected_metadata = {'SpatialReference': 'orig',
-                         'GeneratedBy': [{'Name': 'Manual',
+                         'GeneratedBy': [{'Name': 'Manual correction',
+                                          'Author': "Test Rater",
+                                          'Date': time.strftime('%Y-%m-%d %H:%M:%S')}]}
+    json_file = tmp_path / fname_label.replace(".nii.gz", ".json")
+    assert json_file.exists()
+    with open(str(json_file), "r") as f:
+        metadata = json.load(f)
+    assert metadata == expected_metadata
+
+
+def test_create_json_visual_check(tmp_path):
+    """
+    Test that the function update_json() creates a JSON file with 'Visual check' when modified=False
+    """
+    # Create a temporary file for testing
+    fname_label = "sub-001_ses-01_T1w_seg-manual.nii.gz"
+    nifti_file = tmp_path / fname_label
+    nifti_file.touch()
+
+    # Call the function with modified=False (label was only visually checked, not modified)
+    update_json(str(nifti_file), "Test Rater", json_metadata=None, modified=False)
+
+    # Check that the JSON file was created and contains 'Visual check' as the Name
+    expected_metadata = {'SpatialReference': 'orig',
+                         'GeneratedBy': [{'Name': 'Visual check',
                                           'Author': "Test Rater",
                                           'Date': time.strftime('%Y-%m-%d %H:%M:%S')}]}
     json_file = tmp_path / fname_label.replace(".nii.gz", ".json")
@@ -49,15 +73,15 @@ def test_create_json_custom_metadata(tmp_path):
                      'Author': "SCT v6.2",
                      'Date': "2024-02-21 00:00:00"}
 
-    # Call the function with modified=True
-    update_json(str(nifti_file), "Test Rater", json_metadata=custom_metadata)
+    # Call the function with modified=True (label was actually corrected)
+    update_json(str(nifti_file), "Test Rater", json_metadata=custom_metadata, modified=True)
 
     # Check that the JSON file was created and contains the expected metadata
     expected_metadata = {'SpatialReference': 'orig',
                          'GeneratedBy': [{'Name': 'sct_deepseg_sc',
                                           'Author': "SCT v6.2",
                                           'Date': "2024-02-21 00:00:00"},
-                                         {'Name': 'Manual',
+                                         {'Name': 'Manual correction',
                                           'Author': "Test Rater",
                                           'Date': time.strftime('%Y-%m-%d %H:%M:%S')}]}
     json_file = tmp_path / fname_label.replace(".nii.gz", ".json")
@@ -79,19 +103,19 @@ def test_update_json(tmp_path):
     json_file = tmp_path / fname_label.replace(".nii.gz", ".json")
     with open(str(json_file), "w") as f:
         json.dump({'SpatialReference': 'orig',
-                        'GeneratedBy': [{'Name': 'Manual',
+                        'GeneratedBy': [{'Name': 'Manual correction',
                                          'Author': "Test Rater 1",
                                          'Date': "2023-01-01 00:00:00"}]}, f)
 
-    # Call the function with modified=True
-    update_json(str(nifti_file), "Test Rater 2", json_metadata=None)
+    # Call the function with modified=True (label was actually corrected)
+    update_json(str(nifti_file), "Test Rater 2", json_metadata=None, modified=True)
 
     # Check that the JSON file was created and contains the expected metadata
     expected_metadata = {'SpatialReference': 'orig',
-                         'GeneratedBy': [{'Name': 'Manual',
+                         'GeneratedBy': [{'Name': 'Manual correction',
                                           'Author': "Test Rater 1",
                                           'Date': "2023-01-01 00:00:00"},
-                                         {'Name': 'Manual',
+                                         {'Name': 'Manual correction',
                                           'Author': "Test Rater 2",
                                           'Date': time.strftime('%Y-%m-%d %H:%M:%S')}]}
     json_file = tmp_path / fname_label.replace(".nii.gz", ".json")
@@ -117,8 +141,8 @@ def test_update_json_generated_by_sct(tmp_path):
         'CodeURL': 'https://github.com/spinalcordtoolbox/sct_deepseg.py',
         'ModelURL': 'https://github.com/sct-pipeline/model.zip'}]}
 
-    # Call the function with modified=True
-    update_json(str(nifti_file), "Test Rater 1", json_metadata=custom_metadata)
+    # Call the function with modified=True (label was actually corrected)
+    update_json(str(nifti_file), "Test Rater 1", json_metadata=custom_metadata, modified=True)
 
     # Check that the JSON file was created and contains the expected metadata
     expected_metadata = {'SpatialReference': 'orig',
@@ -127,7 +151,7 @@ def test_update_json_generated_by_sct(tmp_path):
                              'Version': '6.5',
                              'CodeURL': 'https://github.com/spinalcordtoolbox/sct_deepseg.py',
                              'ModelURL': 'https://github.com/sct-pipeline/model.zip'},
-                             {'Name': 'Manual',
+                             {'Name': 'Manual correction',
                               'Author': "Test Rater 1",
                               'Date': time.strftime('%Y-%m-%d %H:%M:%S')}]}
     json_file = tmp_path / fname_label.replace(".nii.gz", ".json")
@@ -135,3 +159,4 @@ def test_update_json_generated_by_sct(tmp_path):
     with open(str(json_file), "r") as f:
         metadata = json.load(f)
     assert metadata == expected_metadata
+
