@@ -400,56 +400,56 @@ def correct_segmentation(fname, fname_seg_out, fname_other_contrast, viewer, par
             viewer_not_found(viewer)
     # launch FSLeyes
     elif viewer == 'fsleyes':
-        if shutil.which('fsleyes') is not None:  # Check if command 'fsleyes' exists
-            # Get min and max intensity
-            min_intensity, max_intensity = utils.get_image_intensities(fname)
-            # Set min intensity
-            param_fsleyes.min_dr = str((max_intensity * int(param_fsleyes.dr.split(',')[0]))/100)
-            # Decrease max intensity
-            param_fsleyes.max_dr = str((max_intensity * int(param_fsleyes.dr.split(',')[1]))/100)
+        # if shutil.which('fsleyes') is not None:  # Check if command 'fsleyes' exists
+        # Get min and max intensity
+        min_intensity, max_intensity = utils.get_image_intensities(fname)
+        # Set min intensity
+        param_fsleyes.min_dr = str((max_intensity * int(param_fsleyes.dr.split(',')[0]))/100)
+        # Decrease max intensity
+        param_fsleyes.max_dr = str((max_intensity * int(param_fsleyes.dr.split(',')[1]))/100)
 
-            print("In FSLeyes, click on 'Edit mode', correct the segmentation, and then save it with the same name "
-                  "(overwrite).")
-            # FSLeyes arguments explanation:
-            # -S, --skipfslcheck    Skip $FSLDIR check/warning
-            # -dr, --displayRange   Set display range (min max) for the specified overlay
-            # -cm, --cmap           Set colour map for the specified overlay
-            # -a, --alpha           Set alpha (opacity) for the specified overlay
-            if fname_other_contrast:
-                # Open a second orthoview (i.e., open two orthoviews next to each other) using a custom Python script
-                # (-r flag)
-                if param_fsleyes.second_orthoview:
-                    fname_script = create_fsleyes_script()
-                    subprocess.check_call(['fsleyes',
-                                           '-S',
-                                           '-r', fname_script,
-                                           fname, '-dr', param_fsleyes.min_dr, param_fsleyes.max_dr,
-                                           fname_other_contrast,
-                                           fname_seg_out, '-cm', param_fsleyes.cm, '-a', param_fsleyes.a])
-                # No second orthoview
-                else:
-                    subprocess.check_call(['fsleyes',
-                                           '-S',
-                                           fname, '-dr', param_fsleyes.min_dr, param_fsleyes.max_dr,
-                                           fname_other_contrast,
-                                           fname_seg_out, '-cm', param_fsleyes.cm, '-a', param_fsleyes.a])
-            # Open a second orthoview without second contrast
-            elif param_fsleyes.second_orthoview:
+        print("In FSLeyes, click on 'Edit mode', correct the segmentation, and then save it with the same name "
+              "(overwrite).")
+        # FSLeyes arguments explanation:
+        # -S, --skipfslcheck    Skip $FSLDIR check/warning
+        # -dr, --displayRange   Set display range (min max) for the specified overlay
+        # -cm, --cmap           Set colour map for the specified overlay
+        # -a, --alpha           Set alpha (opacity) for the specified overlay
+        if fname_other_contrast:
+            # Open a second orthoview (i.e., open two orthoviews next to each other) using a custom Python script
+            # (-r flag)
+            if param_fsleyes.second_orthoview:
                 fname_script = create_fsleyes_script()
                 subprocess.check_call(['fsleyes',
                                        '-S',
                                        '-r', fname_script,
                                        fname, '-dr', param_fsleyes.min_dr, param_fsleyes.max_dr,
+                                       fname_other_contrast,
                                        fname_seg_out, '-cm', param_fsleyes.cm, '-a', param_fsleyes.a])
-            # No second contrast, no second orthoview
+            # No second orthoview
             else:
                 subprocess.check_call(['fsleyes',
                                        '-S',
-                                       fname,
-                                       '-dr', param_fsleyes.min_dr, param_fsleyes.max_dr,
+                                       fname, '-dr', param_fsleyes.min_dr, param_fsleyes.max_dr,
+                                       fname_other_contrast,
                                        fname_seg_out, '-cm', param_fsleyes.cm, '-a', param_fsleyes.a])
+        # Open a second orthoview without second contrast
+        elif param_fsleyes.second_orthoview:
+            fname_script = create_fsleyes_script()
+            subprocess.check_call(['fsleyes',
+                                   '-S',
+                                   '-r', fname_script,
+                                   fname, '-dr', param_fsleyes.min_dr, param_fsleyes.max_dr,
+                                   fname_seg_out, '-cm', param_fsleyes.cm, '-a', param_fsleyes.a])
+        # No second contrast, no second orthoview
         else:
-            viewer_not_found(viewer)
+            subprocess.check_call(['fsleyes',
+                                   '-S',
+                                   fname,
+                                   '-dr', param_fsleyes.min_dr, param_fsleyes.max_dr,
+                                   fname_seg_out, '-cm', param_fsleyes.cm, '-a', param_fsleyes.a])
+        # else:
+        #     viewer_not_found(viewer)
     # launch 3D Slicer
     elif viewer == 'slicer':
         if shutil.which('slicer') is not None:
