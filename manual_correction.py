@@ -90,6 +90,9 @@ def get_parser():
             FILES_ROOTLETS:
             - sub-001_T1w.nii.gz
             - sub-002_T1w.nii.gz
+            FILES_CANALSEG:
+            - sub-001_T1w.nii.gz
+            - sub-002_T1w.nii.gz
             FILES_CENTERLINE:
             - sub-001_T1w.nii.gz
             - sub-002_T1w.nii.gz\n
@@ -171,6 +174,11 @@ def get_parser():
         '-suffix-files-rootlets',
         help="FILES-ROOTLETS suffix. Examples: '_label-rootlets_dseg' (default), '_rootlets'.",
         default='_label-rootlets_dseg'
+    )
+    parser.add_argument(
+        '-suffix-files-canalseg',
+        help="FILES-CANALSEG suffix. Examples: '_label-canal_seg' (default), '_canal_seg'.",
+        default='_label-canal_seg'
     )
     parser.add_argument(
         '-label-disc-list',
@@ -349,7 +357,7 @@ def get_function_for_qc(task):
     :param task:
     :return:
     """
-    if task == 'FILES_SEG':
+    if task == 'FILES_SEG' or task == 'FILES_CANALSEG':
         return 'sct_deepseg_sc'
     elif task == "FILES_GMSEG":
         return "sct_deepseg_gm"
@@ -774,6 +782,7 @@ def main():
         'FILES_COMPRESSION': args.suffix_files_compression,  # e.g., _label-compression
         'FILES_PMJ': args.suffix_files_pmj,                 # e.g., _pmj or _label-pmj
         'FILES_ROOTLETS': args.suffix_files_rootlets,       # e.g., _rootlets or _label-rootlets
+        'FILES_CANALSEG': args.suffix_files_canalseg,          # e.g., _label-canal_seg
         'FILES_CENTERLINE': args.suffix_files_centerline    # e.g., _centerline or _label-centerline
     }
     path_img = utils.get_full_path(args.path_img)
@@ -939,7 +948,7 @@ def main():
                             elif create_empty_mask:
                                 utils.create_empty_mask(fname, fname_out)
 
-                            if task in ['FILES_SEG', 'FILES_GMSEG', 'FILES_ROOTLETS']:
+                            if task in ['FILES_SEG', 'FILES_GMSEG', 'FILES_ROOTLETS', 'FILES_CANALSEG']:
                                 if not args.add_seg_only:
                                     correct_segmentation(fname, fname_out, fname_other_contrast, args.viewer, param_fsleyes)
                             elif task == 'FILES_LESION':
