@@ -105,7 +105,7 @@ def main() -> None:
     report = load_qc_report(args.qc_report)
     input_files = filter_input_files(report, args.qc, full_path=args.full_path)
 
-    for f in input_files:
+    for f in sorted(input_files):
         print(f)
 
     # Print total count
