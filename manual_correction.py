@@ -554,12 +554,13 @@ def load_json(fname):
         sys.exit("ERROR: The file {} is not a valid JSON file.".format(fname))
 
 
-def update_json(fname_nifti, name_rater, json_metadata):
+def update_json(fname_nifti, name_rater, json_metadata, modified=True):
     """
     Create/update JSON sidecar with meta information
     :param fname_nifti: str: File name of the nifti image to associate with the JSON sidecar
     :param name_rater: str: Name of the expert rater
     :param json_metadata: dict: Dictionary with the metadata to be added to the JSON sidecar
+    :param modified: bool: True if the label was actually modified (saved), False if it was only visually checked
     :return:
     """
     fname_json = fname_nifti.replace('.gz', '').replace('.nii', '.json')
@@ -592,8 +593,9 @@ def update_json(fname_nifti, name_rater, json_metadata):
             else:
                 json_dict['GeneratedBy'].append(json_metadata.copy())
 
-    # If the label was modified or just checked, add "Name": "Manual" to the JSON sidecar
-    json_dict['GeneratedBy'].append({'Name': 'Manual',
+    # If the label was modified, use 'Manual correction'; if only visually checked, use 'Visual check'
+    entry_name = 'Manual correction' if modified else 'Visual check'
+    json_dict['GeneratedBy'].append({'Name': entry_name,
                                      'Author': name_rater,
                                      'Date': time.strftime('%Y-%m-%d %H:%M:%S')})
 
@@ -948,24 +950,40 @@ def main():
                             elif create_empty_mask:
                                 utils.create_empty_mask(fname, fname_out)
 
+                            # Record modification time before opening the viewer to detect if the label was changed
+                            mtime_before = None
                             if task in ['FILES_SEG', 'FILES_GMSEG', 'FILES_ROOTLETS', 'FILES_CANALSEG']:
                                 if not args.add_seg_only:
+                                    mtime_before = os.path.getmtime(fname_out) if os.path.isfile(fname_out) else None
                                     correct_segmentation(fname, fname_out, fname_other_contrast, args.viewer, param_fsleyes)
                             elif task == 'FILES_LESION':
+                                mtime_before = os.path.getmtime(fname_out) if os.path.isfile(fname_out) else None
                                 correct_segmentation(fname, fname_out, fname_other_contrast, args.viewer, param_fsleyes)
                             elif task == 'FILES_LABEL':
+                                mtime_before = os.path.getmtime(fname_out) if os.path.isfile(fname_out) else None
                                 correct_vertebral_labeling(fname, fname_out, args.label_disc_list)
                             elif task == 'FILES_COMPRESSION':
                                 # Note: be aware of possibility to create compression labels also using
                                 # 'sct_label_utils -create-viewer'
                                 # Context: https://github.com/spinalcordtoolbox/spinalcordtoolbox/issues/3984
+                                mtime_before = os.path.getmtime(fname_out) if os.path.isfile(fname_out) else None
                                 correct_segmentation(fname, fname_out, fname_other_contrast, 'fsleyes', param_fsleyes)
                             elif task == 'FILES_PMJ':
+                                mtime_before = os.path.getmtime(fname_out) if os.path.isfile(fname_out) else None
                                 correct_pmj_label(fname, fname_out)
                             elif task == 'FILES_CENTERLINE':
+                                mtime_before = os.path.getmtime(fname_out) if os.path.isfile(fname_out) else None
                                 correct_centerline(fname, fname_out)
                             else:
                                 sys.exit('Task not recognized from the YAML file: {}'.format(task))
+
+                            # Determine if the label was actually modified by comparing the file's modification time
+                            if task in ['FILES_SEG', 'FILES_GMSEG', 'FILES_ROOTLETS'] and args.add_seg_only:
+                                # add_seg_only skips the viewer, so the file is always considered modified
+                                label_modified = True
+                            else:
+                                mtime_after = os.path.getmtime(fname_out) if os.path.isfile(fname_out) else None
+                                label_modified = (mtime_before is None) or (mtime_after != mtime_before)
                             if args.denoise:
                                 # Remove the denoised file (we do not need it anymore)
                                 remove_denoised_file(fname)
@@ -974,10 +992,10 @@ def main():
                             if args.add_seg_only:
                                 # We use update_json because we are adding a new segmentation, and we want to create
                                 # a JSON file
-                                update_json(fname_out, name_rater, json_metadata)
+                                update_json(fname_out, name_rater, json_metadata, modified=label_modified)
                             # Generate QC report
                             else:
-                                update_json(fname_out, name_rater, json_metadata)
+                                update_json(fname_out, name_rater, json_metadata, modified=label_modified)
                                 # Generate QC report
                                 generate_qc(fname, fname_out, task, fname_qc, subject, args.config, args.qc_lesion_plane, suffix_dict)
 
