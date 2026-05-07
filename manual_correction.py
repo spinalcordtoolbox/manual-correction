@@ -797,9 +797,14 @@ def main():
         args.path_out)
 
     # Print parsed arguments
+    # Count total number of images to process across all tasks
+    total_files = sum(len(files) for task, files in dict_yml.items()
+                      if task.startswith('FILES') and isinstance(files, list))
+
     logging.info("-" * 100)
     logging.info("Parsing of arguments:")
     logging.info("  Input folder ('-path-img'):     " + path_img)
+    logging.info("  Number of images to correct:    " + str(total_files))
     logging.info("  Label folder ('-path-label'):   " + path_label)
     logging.info("  Output folder ('-path-out'):    " + path_out)
     logging.info("-" * 100)
