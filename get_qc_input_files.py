@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 """
-Extract file names from SCT's qc_report.json for a given QC emoji.
+Extract file names from SCT's qc_report.json for a given QC status.
+
+The QC status is passed as a keyword (``pass``, ``warn``, or ``fail``) rather
+than the raw emoji, which interacts awkwardly with some shells (e.g. zsh on
+macOS). The keyword is mapped internally to the emoji stored in the report.
 
 By default prints each matching entry's ``inputFile`` (the source image, e.g.
 the T2w). Pass ``--label`` to instead print the label file being QC'd, parsed
@@ -8,15 +12,15 @@ from the ``-s`` argument of the entry's ``cmdline``. This distinguishes sessions
 that have several QC entries (one per label: seg, canal, disc, pmj, ...).
 
 Usage:
-  python get_qc_input_files.py --qc "✅" qc_report.json
-  python get_qc_input_files.py --qc "✅" --label qc_report.json
-  python get_qc_input_files.py --qc "⚠️" --label --full-path qc_report.json
+  python get_qc_input_files.py --qc pass qc_report.json
+  python get_qc_input_files.py --qc pass --label qc_report.json
+  python get_qc_input_files.py --qc warn --label --full-path qc_report.json
 
 Example output:
-$ python ~/code/manual-correction/get_qc_input_files.py --qc ✅ qc_report.json
+$ python ~/code/manual-correction/get_qc_input_files.py --qc pass qc_report.json
     sub-001_T2w.nii.gz
     sub-004_T2w.nii.gz
-$ python ~/code/manual-correction/get_qc_input_files.py --qc ✅ --label qc_report.json
+$ python ~/code/manual-correction/get_qc_input_files.py --qc pass --label qc_report.json
     sub-001_T2w_seg.nii.gz
     sub-001_T2w_pmj.nii.gz
 """
@@ -28,7 +32,14 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 
-EMOJI_CHOICES: List[str] = ["✅", "⚠️", "❌"]
+# Maps the string keyword accepted on the command line to the emoji stored in
+# the QC report. Emojis are avoided as CLI arguments because they interact
+# awkwardly with some shells (e.g. zsh on macOS).
+QC_STATUS_TO_EMOJI: Dict[str, str] = {
+    "pass": "✅",
+    "warn": "⚠️",
+    "fail": "❌",
+}
 
 # Matches the label/segmentation passed to `-s` in an entry's cmdline.
 SEG_ARG_RE = re.compile(r"-s\s+(\S+\.nii\.gz)")
@@ -136,7 +147,7 @@ def parse_args() -> argparse.Namespace:
         Parsed arguments namespace.
     """
     parser = argparse.ArgumentParser(
-        description="Get files for a given QC emoji from qc_report.json."
+        description="Get files for a given QC status from qc_report.json."
     )
     parser.add_argument(
         "qc_report",
@@ -147,8 +158,8 @@ def parse_args() -> argparse.Namespace:
         "--qc",
         "-q",
         required=True,
-        choices=EMOJI_CHOICES,
-        help="QC emoji to filter by (✅, ⚠️, or ❌).",
+        choices=list(QC_STATUS_TO_EMOJI),
+        help="QC status to filter by: 'pass' (✅), 'warn' (⚠️), or 'fail' (❌).",
     )
     parser.add_argument(
         "--label",
@@ -171,16 +182,18 @@ def main() -> None:
     args = parse_args()
     report = load_qc_report(args.qc_report)
 
+    emoji = QC_STATUS_TO_EMOJI[args.qc]
+
     if args.label:
-        files = filter_label_files(report, args.qc, full_path=args.full_path)
+        files = filter_label_files(report, emoji, full_path=args.full_path)
     else:
-        files = filter_input_files(report, args.qc, full_path=args.full_path)
+        files = filter_input_files(report, emoji, full_path=args.full_path)
 
     for f in sorted(files):
         print(f)
 
     # Print total count
-    print(f"Total files with QC '{args.qc}': {len(files)}")
+    print(f"Total files with QC '{args.qc}' ({emoji}): {len(files)}")
 
 
 if __name__ == "__main__":
