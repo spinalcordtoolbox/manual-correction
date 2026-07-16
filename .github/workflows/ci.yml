@@ -52,3 +52,4 @@ jobs:
           python -m pytest -v tests/test_utils.py
           python -m pytest -v tests/test_ask_if_modify.py
           python -m pytest -v tests/test_create_json.py
+          python -m pytest -v tests/test_get_qc_input_files.py
