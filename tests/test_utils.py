@@ -72,6 +72,22 @@ def test_fetch_subject_and_session():
     assert filename == "invalid_filename_path.nii.gz"
     assert contrast == "anat"
 
+    # Test 8: Test for correct contrast detection of func (fMRI) data from folder path
+    filename_path = "/home/user/MRI/bids/sub-004/func/sub-004_task-rest_bold.nii.gz"
+    subjectID, sessionID, filename, contrast = fetch_subject_and_session(filename_path)
+    assert subjectID == "sub-004"
+    assert sessionID == ""
+    assert filename == "sub-004_task-rest_bold.nii.gz"
+    assert contrast == "func"
+
+    # Test 9: Test for correct contrast detection of func (fMRI) data from filename only (no folder path)
+    filename_path = "sub-004_task-rest_bold.nii.gz"
+    subjectID, sessionID, filename, contrast = fetch_subject_and_session(filename_path)
+    assert subjectID == "sub-004"
+    assert sessionID == ""
+    assert filename == "sub-004_task-rest_bold.nii.gz"
+    assert contrast == "func"
+
 
 def test_splitext():
     assert splitext('sub-001_ses-01_T1w.nii') == ('sub-001_ses-01_T1w', '.nii')
