@@ -12,7 +12,8 @@ import numpy as np
 import nibabel as nib
 
 from utils import fetch_subject_and_session, add_suffix, remove_suffix, splitext, curate_dict_yml, get_full_path, \
-    check_files_exist, fetch_yaml_config, track_corrections, get_orientation, change_orientation
+    check_files_exist, fetch_yaml_config, track_corrections, get_orientation, change_orientation, \
+    expand_wildcard_files
 
 
 def test_fetch_subject_and_session():
@@ -115,6 +116,31 @@ def test_curate_dict_yml():
                                             'sub-002_acq-sag_T2w.nii.gz',
                                             'sub-003_acq-sag_T2w.nii.gz']}
     assert curate_dict_yml(input_dict) == expected_output_dict
+
+
+def test_expand_wildcard_files(tmp_path):
+    """
+    Test that expand_wildcard_files resolves a wildcard pattern (e.g., 'sub-*_T2w.nii.gz') to the actual list of
+    matching files, excluding files under 'derivatives' and files already tracked as corrected (CORR_* key).
+    Context: the "Number of images to correct" printout was wrong when a wildcard was used because the count was
+    computed on the raw (unexpanded) 1-item wildcard list instead of the resolved file list.
+    """
+    path_img = tmp_path
+    for sub in ['sub-001', 'sub-002', 'sub-003']:
+        (path_img / sub / 'anat').mkdir(parents=True)
+        (path_img / sub / 'anat' / f'{sub}_T2w.nii.gz').touch()
+    # File under derivatives should be excluded
+    (path_img / 'derivatives' / 'labels' / 'sub-001' / 'anat').mkdir(parents=True)
+    (path_img / 'derivatives' / 'labels' / 'sub-001' / 'anat' / 'sub-001_T2w.nii.gz').touch()
+
+    dict_yml = {'FILES_LESION': ['sub-*_T2w.nii.gz']}
+    resolved_files = expand_wildcard_files(dict_yml['FILES_LESION'], 'FILES_LESION', dict_yml, str(path_img))
+    assert len(resolved_files) == 3
+
+    # Already corrected files (tracked under CORR_LESION) should be excluded
+    dict_yml['CORR_LESION'] = ['sub-002_T2w.nii.gz']
+    resolved_files = expand_wildcard_files(dict_yml['FILES_LESION'], 'FILES_LESION', dict_yml, str(path_img))
+    assert len(resolved_files) == 2
 
 
 def test_get_full_path(tmp_path):

@@ -8,6 +8,7 @@
 
 import os
 import re
+import glob
 import logging
 import sys
 import textwrap
@@ -192,6 +193,32 @@ def curate_dict_yml(dict_yml):
     for task, files in dict_yml.items():
         dict_yml_curate[task] = [os.path.basename(file) for file in files]
     return dict_yml_curate
+
+
+def expand_wildcard_files(files, task, dict_yml, path_img):
+    """
+    Expand a wildcard file pattern (e.g., 'sub-*_T2w.nii.gz') into the actual list of matching files found
+    under path_img, excluding files under 'derivatives' and files already tracked as corrected (CORR_* key).
+    :param files: list containing a single wildcard pattern, e.g., ['sub-*_T2w.nii.gz']
+    :param task: task name, e.g., 'FILES_SEG'
+    :param dict_yml: dict with the full YAML config (used to look up already corrected files under CORR_*)
+    :param path_img: full path to the folder with images
+    :return: list of absolute paths to the files matching the wildcard pattern
+    """
+    _, _, filename, _ = fetch_subject_and_session(files[0])
+    # Get list of files recursively
+    glob_files = sorted(glob.glob(os.path.join(path_img, '**', filename), recursive=True))
+    # Skip filenames containing "notused"
+    glob_files = [file for file in glob_files if 'notused' not in file]
+    # Get list of already corrected files
+    corr_files = dict_yml.get(task.replace('FILES', 'CORR'), [])
+    # Remove labels under derivatives and already corrected files
+    resolved_files = []
+    for file in glob_files:
+        _, _, filename, _ = fetch_subject_and_session(file)
+        if 'derivatives' not in file and filename not in corr_files:
+            resolved_files.append(file)
+    return resolved_files
 
 
 def get_full_path(path):
