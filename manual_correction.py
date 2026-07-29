@@ -797,9 +797,15 @@ def main():
         args.path_out)
 
     # Print parsed arguments
-    # Count total number of images to process across all tasks
-    total_files = sum(len(files) for task, files in dict_yml.items()
-                      if task.startswith('FILES') and isinstance(files, list))
+    # Count total number of images to process across all tasks, expanding wildcard patterns (e.g., 'sub-*_T2w.nii.gz')
+    # to the actual number of matching files
+    total_files = 0
+    for task, files in dict_yml.items():
+        if task.startswith('FILES') and isinstance(files, list) and files:
+            if '*' in files[0] and len(files) == 1:
+                total_files += len(utils.expand_wildcard_files(files, task, dict_yml, path_img))
+            else:
+                total_files += len(files)
 
     logging.info("-" * 100)
     logging.info("Parsing of arguments:")
@@ -868,23 +874,7 @@ def main():
             if len(files) > 0:
                 # Handle regex (i.e., iterate over all subjects)
                 if '*' in files[0] and len(files) == 1:
-                    subject, ses, filename, contrast = utils.fetch_subject_and_session(files[0])
-                    # Get list of files recursively
-                    glob_files = sorted(glob.glob(os.path.join(path_img, '**', filename),
-                                            recursive=True))
-                    # Skip filenames containing "notused"
-                    glob_files = [file for file in glob_files if 'notused' not in file]
-                    # Get list of already corrected files
-                    if task.replace('FILES', 'CORR') in dict_yml.keys():
-                        corr_files = dict_yml[task.replace('FILES', 'CORR')]
-                    else:
-                        corr_files = []
-                    #  Remove labels under derivatives and already corrected files
-                    files = []
-                    for file in glob_files:
-                        subject, ses, filename, contrast = utils.fetch_subject_and_session(file)
-                        if ('derivatives' not in file) and (filename not in corr_files):
-                            files.append(file)
+                    files = utils.expand_wildcard_files(files, task, dict_yml, path_img)
                 # Loop across files
                 for file in tqdm.tqdm(files, desc="{}".format(task), unit="file"):
                     # Print empty line to not overlay with tqdm progress bar
