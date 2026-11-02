@@ -307,6 +307,46 @@ def check_software_installed(list_software=['sct']):
     return install_ok
 
 
+def is_gzip_file(file_path):
+    """
+    Check whether a file starts with the gzip magic number
+    :param file_path: str: path to the file
+    :return: bool: True if the file is gzip-compressed, False otherwise (including broken symlinks)
+    """
+    try:
+        with open(file_path, 'rb') as f:
+            return f.read(2) == b'\x1f\x8b'
+    except OSError:
+        return False
+
+
+def download_file(file_path):
+    """
+    Download a file using git annex get.
+    The command runs from the folder of the file because it has to run inside the git-annex repository, which
+    is usually different from the folder manual_correction.py is launched from.
+    :param file_path: str: absolute path to the file
+    :return: None
+    """
+    try:
+        subprocess.run(['git', 'annex', 'get', os.path.basename(file_path)], check=True,
+                       cwd=os.path.dirname(file_path))
+    except (subprocess.CalledProcessError, FileNotFoundError) as e:
+        logging.error(f"Could not download file {file_path}: {e}")
+
+
+def download_if_annexed(file_path):
+    """
+    Download a .nii.gz file using git annex get if only its git-annex pointer is present (i.e., a small text file
+    or a broken symlink instead of the actual gzip-compressed image).
+    :param file_path: str: absolute path to the file
+    :return: None
+    """
+    if file_path.endswith('.gz') and os.path.lexists(file_path) and not is_gzip_file(file_path):
+        logging.info(f"File {file_path} is not a gzip file, attempting to download it using 'git annex get'")
+        download_file(file_path)
+
+
 def get_image_intensities(fname_image):
     """
     Get min and max intensities for input nifti image
