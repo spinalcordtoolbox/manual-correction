@@ -905,6 +905,11 @@ def main():
                     # The information regarding the modified data will be stored within the sidecar .json file
                     fname_out = utils.add_suffix(os.path.join(path_out, subject, ses, contrast, filename), suffix_dict[task])
 
+                    # Download the files if they are git-annexed and only their pointers are present
+                    for fname_input in (fname, fname_other_contrast, fname_label):
+                        if fname_input:
+                            utils.download_if_annexed(fname_input)
+
                     # Change orientation of the input image (if different from the original orientation)
                     if args.change_orient:
                         # Get image and label orientation

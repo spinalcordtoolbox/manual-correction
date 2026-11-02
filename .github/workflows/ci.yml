@@ -28,7 +28,7 @@ jobs:
       - name: Install Python 3
         uses: actions/setup-python@v4
         with:
-          python-version: 3.8.18
+          python-version: '3.13'
 
       - name: Install dependencies
         run: |
@@ -52,3 +52,4 @@ jobs:
           python -m pytest -v tests/test_utils.py
           python -m pytest -v tests/test_ask_if_modify.py
           python -m pytest -v tests/test_create_json.py
+          python -m pytest -v tests/test_download_if_annexed.py
