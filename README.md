@@ -88,7 +88,7 @@ python manual_correction.py -path-img <INPUT_PATH> -config <YAML_FILE>
 - `INPUT_PATH`: Path to the BIDS-compliant folder with data to be corrected.
 - `YAML_FILE`: YAML file that lists images to be corrected.  
 
-For full help, please run: `python manual_correction.py -h`.
+For short help (main arguments only), please run: `python manual_correction.py -h`. For full help, please run: `python manual_correction.py -help-full`.
 
 ---
 
