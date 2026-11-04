@@ -54,13 +54,23 @@ class HelpAction(argparse.Action):
         parser.exit()
 
 
+class ArgumentParser(argparse.ArgumentParser):
+    """
+    ArgumentParser printing the short help when called with missing or invalid arguments (e.g., without any arguments).
+    Inspired by SCT's SCTArgumentParser.error().
+    """
+    def error(self, message):
+        get_parser(short=True).print_help(sys.stderr)
+        self.exit(2, f'\n{self.prog}: error: {message}\n')
+
+
 def get_parser(short=False):
     """
     parser function
     :param short: bool: if True, build the parser for the short help, i.e., show only the main arguments with brief
     descriptions (used by '-h', '--help'). If False, build the parser for the full help (used by '-help-full').
     """
-    parser = argparse.ArgumentParser(
+    parser = ArgumentParser(
         description='Manual correction of spinal cord segmentation, gray matter segmentation, MS and SCI lesion '
                     'segmentation, disc labels, compression labels, ponto-medullary junction (PMJ) label, and '
                     'centerline.\n'
