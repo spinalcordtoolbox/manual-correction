@@ -78,9 +78,7 @@ def get_parser(short=False):
                     'standard) if not specified otherwise.',
         formatter_class=utils.SmartFormatter,
         prog=os.path.basename(__file__).strip('.py'),
-        add_help=False,
-        epilog="This is a short help showing only the main arguments. For the full help listing all arguments, "
-               "run: python manual_correction.py -help-full" if short else None
+        add_help=False
     )
 
     # Argument groups
