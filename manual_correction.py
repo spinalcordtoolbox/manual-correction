@@ -16,6 +16,7 @@
 #
 
 import argparse
+from functools import partial
 import tempfile
 import coloredlogs
 import glob
@@ -42,16 +43,28 @@ def get_parser():
     parser = argparse.ArgumentParser(
         description='Manual correction of spinal cord segmentation, gray matter segmentation, MS and SCI lesion '
                     'segmentation, disc labels, compression labels, ponto-medullary junction (PMJ) label, and '
-                    'centerline. '
+                    'centerline.\n'
                     'Manually corrected files will be saved under derivatives/labels folder (according to BIDS '
                     'standard) if not specified otherwise.',
         formatter_class=utils.SmartFormatter,
-        prog=os.path.basename(__file__).strip('.py')
+        prog=os.path.basename(__file__).strip('.py'),
+        add_help=False
     )
-    parser.add_argument(
+
+    # Argument groups
+    mandatory = parser.add_argument_group('MANDATORY ARGUMENTS')
+    # Force arguments in the mandatory group to be required via in-place function override (same trick as SCT's
+    # SCTArgumentParser.mandatory_arggroup)
+    mandatory.add_argument = partial(mandatory.add_argument, required=True)
+    optional = parser.add_argument_group('OPTIONAL ARGUMENTS')
+    suffixes = parser.add_argument_group('FILE SUFFIXES')
+    fsleyes = parser.add_argument_group('FSLEYES OPTIONS')
+    misc = parser.add_argument_group('MISC')
+
+    # MANDATORY ARGUMENTS
+    mandatory.add_argument(
         '-config',
         metavar="<file>",
-        required=True,
         help=
         "R|Config YAML file listing images that require manual corrections for segmentation and vertebral "
         "labeling. "
@@ -62,6 +75,7 @@ def get_parser():
         "'FILES_COMPRESSION' lists images associated with compression labeling, "
         "'FILES_PMJ' lists images associated with pontomedullary junction labeling, "
         "'FILES_ROOTLETS' lists images associated with rootlets segmentation, "
+        "'FILES_CANALSEG' lists images associated with spinal canal segmentation, "
         "and 'FILES_CENTERLINE' lists images associated with centerline. "
         "You can validate your YAML file at this website: http://www.yamllint.com/."
         "\nNote: if you want to iterate over all subjects, you can use the wildcard '*' (Examples: sub-*_T1w.nii.gz, "
@@ -98,24 +112,25 @@ def get_parser():
             - sub-002_T1w.nii.gz\n
             """)
     )
-    parser.add_argument(
+    mandatory.add_argument(
         '-path-img',
         metavar="<folder>",
-        required=True,
         help=
         "R|Full path to the folder with images (BIDS-compliant). "
         "Examples: '~/<your_dataset>' or 'output/data_processed'."
     )
-    parser.add_argument(
+
+    # OPTIONAL ARGUMENTS
+    optional.add_argument(
         '-path-label',
         metavar="<folder>",
         help=
-        "R|Full path to the folder with labels (BIDS-compliant). "
+        "R|Full path to the folder with labels to be corrected (BIDS-compliant). "
         "\nIf not provided, '-path-img' will be used (assuming that the labels are in the same folder as images). "
         "\nIf your labels are already under 'derivatives/labels', provide the full path to this folder. ",
         default=''
     )
-    parser.add_argument(
+    optional.add_argument(
         '-path-out',
         metavar="<folder>",
         help=
@@ -125,68 +140,7 @@ def get_parser():
         "\nNote: If the specified path does not exist, it will be created.",
         default=''
     )
-    parser.add_argument(
-        '-suffix-files-in',
-        help=
-        "R|Suffix of the input files."
-        "This flag is useful in cases when the input files have been processed and thus contain a specific suffix. "
-        "For example, if the input image listed under '-config' contains the suffix '_RPI_r' "
-        "(e.g., sub-001_T1w_RPI_r.nii.gz), but the label file does not contain this suffix "
-        "(e.g., sub-001_T1w_seg.nii.gz), then you would need to provide the suffix '_RPI_r' to this flag.",
-        default=''
-    )
-    parser.add_argument(
-        '-suffix-files-seg',
-        help="FILES-SEG suffix. Examples: '_seg' (default), '_seg-manual', '_label-SC_mask'.",
-        default='_seg'
-    )
-    parser.add_argument(
-        '-suffix-files-gmseg',
-        help="FILES-GMSEG suffix. Examples: '_gmseg' (default), '_label-GM_mask'.",
-        default='_gmseg'
-    )
-    parser.add_argument(
-        '-suffix-files-lesion',
-        help="FILES-LESION suffix. Examples: '_lesion' (default).",
-        default='_lesion'
-    )
-    parser.add_argument(
-        '-suffix-files-label',
-        help="FILES-LABEL suffix. Examples: '_labels', '_label-disc' (default).",
-        default='_label-disc'
-    )
-    parser.add_argument(
-        '-suffix-files-compression',
-        help="FILES-COMPRESSION suffix. Examples: '_compression', '_label-compression' (default).",
-        default='_label-compression'
-    )
-    parser.add_argument(
-        '-suffix-files-pmj',
-        help="FILES-PMJ suffix. Examples: '_pmj' (default), '_label-pmj'.",
-        default='_pmj'
-    )
-    parser.add_argument(
-        '-suffix-files-centerline',
-        help="FILES-CENTERLINE suffix. Examples: '_centerline' (default), '_label-centerline'.",
-        default='_centerline'
-    )
-    parser.add_argument(
-        '-suffix-files-rootlets',
-        help="FILES-ROOTLETS suffix. Examples: '_label-rootlets_dseg' (default), '_rootlets'.",
-        default='_label-rootlets_dseg'
-    )
-    parser.add_argument(
-        '-suffix-files-canalseg',
-        help="FILES-CANALSEG suffix. Examples: '_label-canal_seg' (default), '_canal_seg'.",
-        default='_label-canal_seg'
-    )
-    parser.add_argument(
-        '-label-disc-list',
-        help="Comma-separated list containing individual values and/or intervals for disc labeling. Example: '1:4,6,8' "
-             "or 1:25 (default)",
-        default='1:25'
-    )
-    parser.add_argument(
+    optional.add_argument(
         '-viewer',
         help="Viewer used for manual correction. Available options: 'fsleyes' (default), 'itksnap', 'slicer'. "
              "For details about viewers, visit their websites: "
@@ -196,41 +150,18 @@ def get_parser():
         choices=['fsleyes', 'itksnap', 'slicer'],
         default='fsleyes'
     )
-    parser.add_argument(
-        '-fsleyes-cm',
-        help="Colormap (cm) to be used for loading the label file in FSLeyes (default: red). `fsleyes -h` gives all "
-             "the available color options. If using a combination of colors, specify them with '-', e.g. 'red-yellow'.",
-        type=str,
-        default='red'
+    optional.add_argument(
+        '-label-disc-list',
+        help="Comma-separated list containing individual values and/or intervals for disc labeling. Example: '1:4,6,8' "
+             "or 1:25 (default)",
+        default='1:25'
     )
-    parser.add_argument(
-        '-fsleyes-a',
-        help="Alpha (a) in percentages to be used for loading the label file in FSLeyes (default: 70). "
-             "This flag can be used to adjust the opacity of the label file (e.g., segmentation).",
-        type=str,
-        default="70"
-    )
-    parser.add_argument(
-        '-fsleyes-dr',
-        help="R|Display range (dr) in percentages to be used for loading the input file in FSLeyes (default: 0,70). "
-             "This flag can be used to adjust the brightness and contrast of the input image. "
-             "\nNote: Use comma to separate values, e.g., 0,70."
-             "\nNote: If you need to provide negative values (for example for PSIR/STIR images), use the following "
-             "format: -fsleyes-dr=\"-40,70\"",
-        type=str,
-        default='0,70'
-    )
-    parser.add_argument(
-        '-fsleyes-second-orthoview',
-        help="Open a second orthoview in FSLeyes (i.e., open two orthoviews next to each other).",
-        action='store_true'
-    )
-    parser.add_argument(
+    optional.add_argument(
         '-denoise',
         help="Denoise the input image using 'sct_maths -denoise p=1,b=2'.",
         action='store_true'
     )
-    parser.add_argument(
+    optional.add_argument(
         '-load-other-contrast',
         help="Load additional image to the viewer. This flag is useful if you want to use an additional contrast than "
              "provided by the YAML file. Only valid for '-viewer fsleyes'. The filenames of the additional contrast "
@@ -240,19 +171,19 @@ def get_parser():
         type=str,
         default=None
     )
-    parser.add_argument(
+    optional.add_argument(
         '-qc-only',
         help="Only output QC report based on the manually-corrected files already present in the 'derivatives' folder. "
              "Skip the copy of the source files, and the opening of the manual correction pop-up windows.",
         action='store_true'
     )
-    parser.add_argument(
+    optional.add_argument(
         '-qc-lesion-plane',
         help="Plane of the lesion QC. Available options: sagittal (default), axial.",
         choices=['sagittal', 'axial'],
         default='sagittal'
     )
-    parser.add_argument(
+    optional.add_argument(
         '-add-seg-only',
         help="R|Only copy the source files (segmentation) that aren't in -config list to the final dataset specified by "
              "'-path-out' flag. Use this flag to add automatically generated and manually QC-ed segmentations to the "
@@ -261,7 +192,7 @@ def get_parser():
              "\nmanual_correction.py -path-img data_processed -path-label data_processed -path-out dataset/derivatives/labels -config config.yml -add-seg-only",
         action='store_true'
     )
-    parser.add_argument(
+    optional.add_argument(
         '-json-metadata', metavar="<file>", required=False,
         help="R|A custom JSON file containing metadata to be added to the output JSON sidecar of all corrected labels. "
              "This flag is useful, for example, when a label was obtained automatically and you want to include this "
@@ -279,7 +210,7 @@ def get_parser():
              }\n
              """),
     )
-    parser.add_argument(
+    optional.add_argument(
         '-change-orient',
         type=str,
         help=
@@ -294,7 +225,102 @@ def get_parser():
                  'IRA', 'IRP', 'IAL', 'IAR', 'IPL', 'IPR'],
         default=''
     )
-    parser.add_argument(
+
+    # FILE SUFFIXES
+    suffixes.add_argument(
+        '-suffix-files-in',
+        help=
+        "R|Suffix of the input files."
+        "This flag is useful in cases when the input files have been processed and thus contain a specific suffix. "
+        "For example, if the input image listed under '-config' contains the suffix '_RPI_r' "
+        "(e.g., sub-001_T1w_RPI_r.nii.gz), but the label file does not contain this suffix "
+        "(e.g., sub-001_T1w_seg.nii.gz), then you would need to provide the suffix '_RPI_r' to this flag.",
+        default=''
+    )
+    suffixes.add_argument(
+        '-suffix-files-seg',
+        help="FILES-SEG suffix. Examples: '_seg' (default), '_seg-manual', '_label-SC_mask'.",
+        default='_seg'
+    )
+    suffixes.add_argument(
+        '-suffix-files-gmseg',
+        help="FILES-GMSEG suffix. Examples: '_gmseg' (default), '_label-GM_mask'.",
+        default='_gmseg'
+    )
+    suffixes.add_argument(
+        '-suffix-files-lesion',
+        help="FILES-LESION suffix. Examples: '_lesion' (default).",
+        default='_lesion'
+    )
+    suffixes.add_argument(
+        '-suffix-files-label',
+        help="FILES-LABEL suffix. Examples: '_labels', '_label-disc' (default).",
+        default='_label-disc'
+    )
+    suffixes.add_argument(
+        '-suffix-files-compression',
+        help="FILES-COMPRESSION suffix. Examples: '_compression', '_label-compression' (default).",
+        default='_label-compression'
+    )
+    suffixes.add_argument(
+        '-suffix-files-pmj',
+        help="FILES-PMJ suffix. Examples: '_pmj' (default), '_label-pmj'.",
+        default='_pmj'
+    )
+    suffixes.add_argument(
+        '-suffix-files-centerline',
+        help="FILES-CENTERLINE suffix. Examples: '_centerline' (default), '_label-centerline'.",
+        default='_centerline'
+    )
+    suffixes.add_argument(
+        '-suffix-files-rootlets',
+        help="FILES-ROOTLETS suffix. Examples: '_label-rootlets_dseg' (default), '_rootlets'.",
+        default='_label-rootlets_dseg'
+    )
+    suffixes.add_argument(
+        '-suffix-files-canalseg',
+        help="FILES-CANALSEG suffix. Examples: '_label-canal_seg' (default), '_canal_seg'.",
+        default='_label-canal_seg'
+    )
+
+    # FSLEYES OPTIONS
+    fsleyes.add_argument(
+        '-fsleyes-cm',
+        help="Colormap (cm) to be used for loading the label file in FSLeyes (default: red). `fsleyes -h` gives all "
+             "the available color options. If using a combination of colors, specify them with '-', e.g. 'red-yellow'.",
+        type=str,
+        default='red'
+    )
+    fsleyes.add_argument(
+        '-fsleyes-a',
+        help="Alpha (a) in percentages to be used for loading the label file in FSLeyes (default: 70). "
+             "This flag can be used to adjust the opacity of the label file (e.g., segmentation).",
+        type=str,
+        default="70"
+    )
+    fsleyes.add_argument(
+        '-fsleyes-dr',
+        help="R|Display range (dr) in percentages to be used for loading the input file in FSLeyes (default: 0,70). "
+             "This flag can be used to adjust the brightness and contrast of the input image. "
+             "\nNote: Use comma to separate values, e.g., 0,70."
+             "\nNote: If you need to provide negative values (for example for PSIR/STIR images), use the following "
+             "format: -fsleyes-dr=\"-40,70\"",
+        type=str,
+        default='0,70'
+    )
+    fsleyes.add_argument(
+        '-fsleyes-second-orthoview',
+        help="Open a second orthoview in FSLeyes (i.e., open two orthoviews next to each other).",
+        action='store_true'
+    )
+
+    # MISC
+    misc.add_argument(
+        '-h', '--help',
+        action='help',
+        help="Show this help message and exit."
+    )
+    misc.add_argument(
         '-v', '--verbose',
         help="Full verbose (for debugging)",
         action='store_true'
